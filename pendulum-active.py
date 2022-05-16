@@ -30,6 +30,9 @@ class Model(nn.Module):
         super().__init__()
         self.net = net
 
+    def transform(self, z):
+        return z
+
     def forward_x(self, x):
         dx = torch.zeros_like(x)
         dx[:, 0] = x[:, 1]
@@ -42,6 +45,7 @@ class Model(nn.Module):
         return dx
 
     def forward(self, z):
+        z = self.transform(z)
         x = z[:, :d]
         u = z[:, d]
 
@@ -56,7 +60,7 @@ x0 = np.array([phi_0, 0])
 n_samples = 50
 # for agent_ in [Random, Active]:
 for agent_ in [Random, Passive, OptimalDesign, Spacing]:
-# for agent_ in [Random]:
+# for agent_ in [Spacing]:
     test_values = np.zeros((n_samples, T))
     for sample_index in tqdm(range(n_samples)):
         net = nn.Sequential(

@@ -29,7 +29,6 @@ grid_q, grid_p = torch.meshgrid(interval_q, interval_p)
 grid = torch.cat([
     grid_q.reshape(-1, 1),
     grid_p.reshape(-1, 1),
-    # torch.randn(n_points*n_points, 2)
 ], 1)
 phi_0 = 0.9*np.pi
 x0 = np.array([phi_0, 0])

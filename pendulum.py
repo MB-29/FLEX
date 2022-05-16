@@ -29,6 +29,9 @@ class Model(nn.Module):
     def __init__(self, net):
         super().__init__()
         self.net = net
+    
+    def transform(self, z):
+        return z
 
     def forward_x(self, x):
         dx = torch.zeros_like(x)
@@ -42,6 +45,7 @@ class Model(nn.Module):
         return dx
 
     def forward(self, z):
+        z = self.transform(z)
         x = z[:, :d]
         u = z[:, d]
 
