@@ -24,7 +24,7 @@ class Agent:
 
         self.dynamics = dynamics
     
-    def identify(self, T, test_function=None):
+    def identify(self, T, test_function=None, plot=False):
 
         self.u_values = np.zeros((T, self.m))
         self.x_values = np.zeros((T, self.d))
@@ -44,12 +44,12 @@ class Agent:
             self.x_values[t] = self.x.copy()
             if test_function is not None:
                 with torch.no_grad():
-                    test_error = test_function(self.model, self.x, u_t, t)
+                    test_error = test_function(self.model, self.x, u_t, plot, t=t)
                 test_values[t] = test_error.data
             
-            z = np.array([self.x[0], np.sin(self.x[0])])
+            # z = np.array([self.x[0], np.sin(self.x[0])])
 
-            self.M += z[:, None]@z[None, :]
+            # self.M += z[:, None]@z[None, :]
 
         return test_values
 

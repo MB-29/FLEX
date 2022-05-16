@@ -35,13 +35,17 @@ phi_0 = 0.9*np.pi
 x0 = np.array([phi_0, 0])
 
 
-def test_error(model, x, u, t=0):
+def test_error(model, x, u, plot, t=0):
     truth = f_star(grid)
     loss_function = nn.MSELoss()
     predictions = model.forward_x(grid.clone()).squeeze()
     # # print(f'prediction {predictions.shape} target {truth.shape} ')
     loss = loss_function(predictions, truth)
-
+    if plot:
+        plot_pendulum(x)
+        plot_portrait(model.forward_x)
+        plt.pause(0.1)
+        plt.close()
     # print(f'loss = {loss}')
     return loss
 

@@ -55,8 +55,8 @@ x0 = np.array([phi_0, 0])
 # theta0 = 2*np.random.rand(q)
 n_samples = 50
 # for agent_ in [Random, Active]:
-# for agent_ in [Random, Passive, OptimalDesign, Spacing]:
-for agent_ in [Random]:
+for agent_ in [Random, Passive, OptimalDesign, Spacing]:
+# for agent_ in [Random]:
     test_values = np.zeros((n_samples, T))
     for sample_index in tqdm(range(n_samples)):
         net = nn.Sequential(

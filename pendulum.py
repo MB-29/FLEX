@@ -16,7 +16,6 @@ plot = False
 # plot = True
 
 d, m = 2, 1
-g = 1
 
 period = 2*np.pi / np.sqrt(pendulum.omega_2)
 gamma = 1
@@ -71,13 +70,13 @@ plt.subplot(221)
 plt.title(r'$f_\theta, \quad t=0$')
 pendulum.plot_portrait(model.forward_x)
 
-# agent = Passive(x0.copy(), m, dynamics, model, gamma, dt)
-# agent = Random(x0.copy(), m, dynamics, model, gamma, dt)
+# agent = Passive(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
+agent = Random(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
 # agent = Periodic(x0.copy(), m, dynamics, model, gamma, dt)
-agent = Spacing(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
+# agent = Spacing(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
 # agent = Oracle(x0.copy(), m, dynamics, model, gamma, dt)
 
-test_values = agent.identify(T, test_function=pendulum.test_error)
+test_values = agent.identify(T, test_function=pendulum.test_error, plot=plot)
 plt.subplot(222)
 plt.title(fr'$f_\theta, \quad t={T}$')
 pendulum.plot_portrait(model.forward_x)
