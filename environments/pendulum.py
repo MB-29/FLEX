@@ -46,6 +46,7 @@ def test_error(model, x, u, plot, t=0):
         plt.pause(0.1)
         plt.close()
     # print(f'loss = {loss}')
+    # print(x)
     return loss
 
 
@@ -72,3 +73,4 @@ def plot_portrait(f):
         vector_y.T,
         color='black',
         linewidth=linewidth)
+    # plt.gca().set_aspect('equal', adjustable='box')

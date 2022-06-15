@@ -19,7 +19,7 @@ d, m = 4, 1
 
 period = 2*np.pi * np.sqrt(cartpole.l / cartpole.g)
 gamma = 10
-T = 200
+T = 1000
 dt = 1e-2 * period
 sigma = 0.01
 
@@ -52,7 +52,6 @@ class Model(nn.Module):
         # dx = self.forward_u(dx, u)
         return dx
 
-
 net = nn.Sequential(
     nn.Linear(5, 16),
     nn.Tanh(),
@@ -66,12 +65,15 @@ x0 = np.array([0.0, 0.0, phi0, 0.0])
 
 
 model = Model(net)
-agent = Random(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
+# agent = Random(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
+# agent = Passive(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
+agent = Spacing(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
+# agent = Periodic(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
 test_values = agent.identify(T, test_function=cartpole.test_error, plot=plot)
 
 fig = plt.figure(figsize=(14,8))
 plt.subplot(211)
-plt.scatter(agent.x_values[:, 2], agent.x_values[:, 3], alpha=.5, marker='x', color='black')
+plt.plot(agent.x_values[:, 2], agent.x_values[:, 3], alpha=.5, color='black')
 plt.subplot(212)
 plt.plot(np.arange(T), test_values, color="black", lw=1)
 plt.show()

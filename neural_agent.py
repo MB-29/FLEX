@@ -147,11 +147,12 @@ class Active(Agent):
         # print(f'u: {u}, -u: {-u}')
         # print(f'u: {utility}, -u: {utility_}')
         u = -u if utility_ > utility else u
-        # print(u)
-        return u
+        # print(u)  
+        return u.numpy()
 
     def choose_control(self, t):
-        if t < 100:
+        if t < 50 :
+        # or t%100 == 0:
             return self.draw_random_control(t)
         return self.maximum_utility(t)
 
@@ -185,23 +186,36 @@ class Spacing(Active):
 
         z = torch.zeros(1, self.d + self.m)
         x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
-        u = torch.tensor(u, dtype=torch.float32).unsqueeze(0)
+        u = u.unsqueeze(0)
         z[:, :self.d] = x
         z[:, self.d:] = u
         dx = self.model.forward(z)
         # dx = self.model.forward_u(dx, u)
         x_ = x + self.dt * dx
-        past = self.model.transform(torch.tensor(self.x_values[:t]))
-        future = self.model.transform(x_)
+
+        z_ = torch.zeros_like(z)
+        z_[:, :self.d] = x_
+        # z_[:, self.d:] = u
+        z_values = torch.zeros(t, self.d + self.m)
+        z_values[:, :self.d] = torch.tensor(self.x_values[:t])
+        # z_values[:, self.d:] = torch.tensor(self.u_values[:t])
+        past = self.model.transform(z_values)
+        future = self.model.transform(z_)
         differences = past - future
-        distance = torch.sum(differences**2) + torch.sum(x_**2)
+        # print(f'x {x}, u = {u}')
+        # print(f'transform {self.model.transform(z)}')
+        # print(f'future {future}')
+        distance = torch.mean(differences**2)
+        # print(f'distance {distance}')
         return distance
 
 
 class Periodic(Agent):
 
     def choose_control(self, t):
-        return self.gamma * np.sin(t/100)
+        if t < 50:
+            return self.draw_random_control(t)
+        return self.gamma * np.sign(np.sin(2*np.pi*t/100))
 
 
 class Oracle(Agent):

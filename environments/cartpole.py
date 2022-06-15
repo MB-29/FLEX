@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 mass, Mass, l = 1.0, 2.0, 1.0
 g = 9.8
 
-alpha, beta = 1.0, 5.0
+alpha, beta = 0, 5.0
 
 def acceleration(d_y, c_phi, s_phi, d_phi, u):
     friction_y = -beta * d_y
@@ -43,7 +43,7 @@ def f_star(z):
     return dd
 
 
-n_points = 10
+n_points = 20
 phi_max = np.pi
 dphi_max = np.sqrt(2*g/l)
 dy_max = np.sqrt(2*mass*g*l/Mass)
@@ -67,27 +67,29 @@ grid = torch.cat([
 # phi_0 = 0.9*np.pi
 # x0 = np.array([phi_0, 0])
 
-
 def test_error(model, x, u, plot, t=0):
     truth = f_star(grid)
     loss_function = nn.MSELoss()
     predictions = model.net(grid.clone()).squeeze()
     # # # print(f'prediction {predictions.shape} target {truth.shape} ')
     loss = loss_function(predictions, truth)
-    if plot:
-        # plot_cartpole(x)
-        plot_portrait(model.net)
+    if plot :
+    # and t%10==0:
+        plot_cartpole(x, u)
+        # plot_portrait(model.net)
         plt.pause(0.1)
         plt.close()
     # print(f'loss = {loss}')
     return loss
 
-def plot_cartpole(x):
+def plot_cartpole(x, u):
     y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
+    push = 0.7*np.sign(np.mean(u))
     c_phi, s_phi = np.cos(phi), np.sin(phi)
+    plt.arrow(y, 0, push, 0, color='red', head_width=0.1, alpha=0.5)
     plt.plot([y-l/2, y+l/2], [0, 0], color='black')
-    plt.plot([y, y+l*s_phi], [0, l*c_phi], color='red')
-    plt.xlim((-2*l, 2*l))
+    plt.plot([y, y+l*s_phi], [0, l*c_phi], color='blue')
+    plt.xlim((y-2*l, y+2*l))
     plt.ylim((-2*l, 2*l))
     plt.gca().set_aspect('equal', adjustable='box')
 
@@ -97,7 +99,7 @@ def plot_portrait(f):
 
     # plt.xlim((-phi_max, phi_max))
     # plt.ylim((-dphi_max, dphi_max))
-    vectors = predictions.shape(n_points, n_points, n_points, n_points, 2)
+    # vectors = predictions.shape(n_points, n_points, n_points, n_points, 2)
     vector_x = predictions[:, 0].reshape(n_points, n_points).detach().numpy()
     vector_y = predictions[:, 1].reshape(n_points, n_points).detach().numpy()
     magnitude = np.sqrt(vector_x.T**2 + vector_y.T**2)

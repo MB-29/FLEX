@@ -18,8 +18,8 @@ plot = False
 d, m = 2, 1
 
 period = 2*np.pi / np.sqrt(pendulum.omega_2)
-gamma = 1
-T = 200
+gamma = 0.5
+T = 1000
 dt = 1e-2 * period
 sigma = 0.01
 
@@ -31,7 +31,7 @@ class Model(nn.Module):
         self.net = net
     
     def transform(self, z):
-        return z
+        return z[:, :d]
 
     def forward_x(self, x):
         dx = torch.zeros_like(x)
@@ -45,8 +45,8 @@ class Model(nn.Module):
         return dx
 
     def forward(self, z):
-        z = self.transform(z)
-        x = z[:, :d]
+        x = self.transform(z)
+        # x = z[:, :d]
         u = z[:, d]
 
         dx = self.forward_x(x)
@@ -63,39 +63,43 @@ net = nn.Sequential(
 )
 model = Model(net)
 
-
-
 phi_0 = 0.9*np.pi
 x0 = np.array([phi_0, 0])
 
-fig = plt.figure(figsize=(14,8))
+fig = plt.figure(figsize=(7,4))
 
-plt.subplot(221)
+plt.subplot(121)
 plt.title(r'$f_\theta, \quad t=0$')
 pendulum.plot_portrait(model.forward_x)
 
 # agent = Passive(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
-agent = Random(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
-# agent = Periodic(x0.copy(), m, dynamics, model, gamma, dt)
-# agent = Spacing(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
-# agent = Oracle(x0.copy(), m, dynamics, model, gamma, dt)
+# agent = Random(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
+# agent = Periodic(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
+agent = Spacing(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
 
 test_values = agent.identify(T, test_function=pendulum.test_error, plot=plot)
-plt.subplot(222)
+plt.subplot(122)
 plt.title(fr'$f_\theta, \quad t={T}$')
 pendulum.plot_portrait(model.forward_x)
-plt.scatter(agent.x_values[:, 0], agent.x_values[:, 1], alpha=.5, marker='x', color='black')
 
+plt.savefig('learnt-portraits.pdf')
+plt.show()
+
+
+fig = plt.figure(figsize=(7,4))
 
 plt.subplot(223)
+plt.plot(agent.x_values[:, 0], agent.x_values[:, 1], alpha=.5, color='black')
 plt.title(r'$f_\star$')
 pendulum.plot_portrait(pendulum.f_star)
+# plt.show()
+# plt.savefig('trajectory.pdf')
 
 # plt.savefig('portraits.pdf')
 plt.subplot(224)
 plt.plot(np.arange(T), test_values, color="black", lw=1)
 plt.xlabel(r'$t$')
-plt.title('loss')
+plt.title(r'Loss')
 # plt.savefig('pendulum-loss.pdf')
 # plt.yticks([])
 # plt.yscale('log')
