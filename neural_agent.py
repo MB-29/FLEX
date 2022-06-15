@@ -196,10 +196,10 @@ class Spacing(Active):
         z_ = torch.zeros_like(z)
         z_[:, :self.d] = x_
         # z_[:, self.d:] = u
-        z_values = torch.zeros(t, self.d + self.m)
-        z_values[:, :self.d] = torch.tensor(self.x_values[:t])
+        # z_values = torch.zeros(t, self.d + self.m)
+        # z_values[:, :self.d] = torch.tensor(self.x_values[:t])
         # z_values[:, self.d:] = torch.tensor(self.u_values[:t])
-        past = self.model.transform(z_values)
+        past = self.model.transform(z)
         future = self.model.transform(z_)
         differences = past - future
         # print(f'x {x}, u = {u}')

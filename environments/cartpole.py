@@ -19,11 +19,8 @@ def acceleration_x(d_y, c_phi, s_phi, d_phi):
     dd_phi /= Mass*l - mass*l*c_phi**2
 
     return dd_y, dd_phi
-def acceleration_u(d_y, c_phi, s_phi, d_phi, u):
-    friction_y = -beta * d_y
-    friction_phi = - alpha * d_phi
+def acceleration_u(c_phi, u):
     dd_y = u / (Mass - mass *c_phi**2)
-
     dd_phi =  - c_phi*u/ (Mass*l - mass*l*c_phi**2)
 
     return dd_y, dd_phi
@@ -33,8 +30,8 @@ def dynamics(x, u):
     x_dot = np.zeros_like(x)
     c_phi, s_phi = np.cos(phi), np.sin(phi)
     dd_y, dd_phi = acceleration_x(d_y, c_phi, s_phi, d_phi)
-    dd_y_y, dd_phi_u = acceleration_u(d_y, c_phi, s_phi, d_phi, u)
-    dd_y += dd_y_y
+    dd_y_u, dd_phi_u = acceleration_u(c_phi, u)
+    dd_y += dd_y_u
     dd_phi += dd_phi_u
     # noise = sigma * np.random.randn(d)
     x_dot[0] = d_y
@@ -44,11 +41,8 @@ def dynamics(x, u):
     return x_dot
 
 def f_star(z):
-    d_y, c_phi, s_phi, d_phi, u = z[:, 0], z[:, 1], z[:, 2], z[:, 3], z[:, 4]
+    d_y, c_phi, s_phi, d_phi = z[:, 0], z[:, 1], z[:, 2], z[:, 3]
     dd_y, dd_phi = acceleration_x(d_y, c_phi, s_phi, d_phi)
-    dd_y_y, dd_phi_u = acceleration_u(d_y, c_phi, s_phi, d_phi, u)
-    dd_y += dd_y_y
-    dd_phi += dd_phi_u
     dd = torch.zeros_like(z[:, :2])
     # dx[:, 0] = z[:, 1]
     # dx[:, 2] = z[:, 1]
@@ -75,8 +69,8 @@ grid = torch.cat([
     grid_dy.reshape(-1, 1),
     grid_phi.reshape(-1, 1),
     grid_phi.reshape(-1, 1),
-    grid_dphi.reshape(-1, 1),
-    grid_u.reshape(-1, 1),
+    grid_dphi.reshape(-1, 1)
+    # grid_u.reshape(-1, 1),
 ], 1)
 # phi_0 = 0.9*np.pi
 # x0 = np.array([phi_0, 0])
