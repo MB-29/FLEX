@@ -9,14 +9,22 @@ g = 9.8
 
 alpha, beta = 0, 5.0
 
-def acceleration(d_y, c_phi, s_phi, d_phi, u):
+def acceleration_x(d_y, c_phi, s_phi, d_phi):
     friction_y = -beta * d_y
     friction_phi = - alpha * d_phi
-    dd_y = u + mass*l*s_phi*d_phi**2 + friction_y + friction_phi*c_phi/l - mass*g*s_phi*c_phi
+    dd_y =  mass*l*s_phi*d_phi**2 + friction_y + friction_phi*c_phi/l - mass*g*s_phi*c_phi
     dd_y /=  Mass - mass *c_phi**2
 
-    dd_phi = Mass*g*s_phi - c_phi*(u+mass*l*d_phi**2*s_phi + friction_y) + Mass*friction_phi/(mass*l)
+    dd_phi = Mass*g*s_phi - c_phi*(mass*l*d_phi**2*s_phi + friction_y) + Mass*friction_phi/(mass*l)
     dd_phi /= Mass*l - mass*l*c_phi**2
+
+    return dd_y, dd_phi
+def acceleration_u(d_y, c_phi, s_phi, d_phi, u):
+    friction_y = -beta * d_y
+    friction_phi = - alpha * d_phi
+    dd_y = u / (Mass - mass *c_phi**2)
+
+    dd_phi =  - c_phi*u/ (Mass*l - mass*l*c_phi**2)
 
     return dd_y, dd_phi
 
@@ -24,7 +32,10 @@ def dynamics(x, u):
     y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
     x_dot = np.zeros_like(x)
     c_phi, s_phi = np.cos(phi), np.sin(phi)
-    dd_y, dd_phi = acceleration(d_y, c_phi, s_phi, d_phi, u)
+    dd_y, dd_phi = acceleration_x(d_y, c_phi, s_phi, d_phi)
+    dd_y_y, dd_phi_u = acceleration_u(d_y, c_phi, s_phi, d_phi, u)
+    dd_y += dd_y_y
+    dd_phi += dd_phi_u
     # noise = sigma * np.random.randn(d)
     x_dot[0] = d_y
     x_dot[1] = dd_y
@@ -34,7 +45,10 @@ def dynamics(x, u):
 
 def f_star(z):
     d_y, c_phi, s_phi, d_phi, u = z[:, 0], z[:, 1], z[:, 2], z[:, 3], z[:, 4]
-    dd_y, dd_phi = acceleration(d_y, c_phi, s_phi, d_phi, u)
+    dd_y, dd_phi = acceleration_x(d_y, c_phi, s_phi, d_phi)
+    dd_y_y, dd_phi_u = acceleration_u(d_y, c_phi, s_phi, d_phi, u)
+    dd_y += dd_y_y
+    dd_phi += dd_phi_u
     dd = torch.zeros_like(z[:, :2])
     # dx[:, 0] = z[:, 1]
     # dx[:, 2] = z[:, 1]
@@ -73,8 +87,7 @@ def test_error(model, x, u, plot, t=0):
     predictions = model.net(grid.clone()).squeeze()
     # # # print(f'prediction {predictions.shape} target {truth.shape} ')
     loss = loss_function(predictions, truth)
-    if plot :
-    # and t%10==0:
+    if plot and t%10==0:
         plot_cartpole(x, u)
         # plot_portrait(model.net)
         plt.pause(0.1)
