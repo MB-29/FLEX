@@ -13,7 +13,7 @@ rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
 plot = False
-# plot = True
+plot = True
 
 d, m = 4, 1
 
@@ -31,12 +31,13 @@ class Model(nn.Module):
         self.net = net
     
     def transform(self, z):
-        z_ = torch.zeros_like(z[:, :d])
+        z_ = z[:, :d].clone()
         z_[:, 0] = z[:, 1]
         phi = z[:, 2]
         z_[:, 1] = torch.cos(phi)
         z_[:, 2] = torch.sin(phi)
         return z_
+
     def acceleration_u(self, z):
         phi = z[:, 2]
         u = z[:, -1]
@@ -78,8 +79,8 @@ x0 = np.array([0.0, 0.0, phi0, 0.0])
 model = Model(net)
 # agent = Random(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
 # agent = Passive(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
-# agent = Spacing(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
-agent = Periodic(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
+agent = Spacing(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
+# agent = Periodic(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
 test_values = agent.identify(T, test_function=cartpole.test_error, plot=plot)
 
 fig = plt.figure(figsize=(14,8))

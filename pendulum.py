@@ -19,7 +19,7 @@ d, m = 2, 1
 
 period = 2*np.pi / np.sqrt(pendulum.omega_2)
 gamma = 0.5
-T = 1000
+T = 200
 dt = 1e-2 * period
 sigma = 0.01
 
