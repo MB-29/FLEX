@@ -19,6 +19,7 @@ def acceleration_x(d_y, c_phi, s_phi, d_phi):
     dd_phi /= Mass*l - mass*l*c_phi**2
 
     return dd_y, dd_phi
+    
 def acceleration_u(c_phi, u):
     dd_y = u / (Mass - mass *c_phi**2)
     dd_phi =  - c_phi*u/ (Mass*l - mass*l*c_phi**2)

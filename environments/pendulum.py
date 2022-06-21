@@ -40,7 +40,7 @@ def test_error(model, x, u, plot, t=0):
     predictions = model.forward_x(grid.clone()).squeeze()
     # # print(f'prediction {predictions.shape} target {truth.shape} ')
     loss = loss_function(predictions, truth)
-    if plot:
+    if plot and t%5 == 0:
         plot_pendulum(x)
         plot_portrait(model.forward_x)
         plt.pause(0.1)

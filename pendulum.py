@@ -5,7 +5,7 @@ from matplotlib import rc, rcParams
 import torch 
 import torch.nn as nn
 
-from neural_agent import Random, Passive, Oracle, Periodic, Spacing, OptimalDesign
+from neural_agent import Random, Passive, Periodic, Spacing, OptimalDesign
 import environments.pendulum as pendulum
 
 rc('font', size=15)
@@ -43,6 +43,11 @@ class Model(nn.Module):
     def forward_u(self, dx, u):
         dx[:, 1] += u.view(-1)
         return dx
+    
+    def predictor(self, z):
+        zeta = self.transform(z)
+        return self.net(zeta).view(-1)
+
 
     def forward(self, z):
         x = self.transform(z)
@@ -75,7 +80,8 @@ pendulum.plot_portrait(model.forward_x)
 # agent = Passive(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
 # agent = Random(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
 # agent = Periodic(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
-agent = Spacing(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
+agent = OptimalDesign(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
+# agent = Spacing(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
 
 test_values = agent.identify(T, test_function=pendulum.test_error, plot=plot)
 plt.subplot(122)

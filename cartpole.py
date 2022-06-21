@@ -5,7 +5,7 @@ from matplotlib import rc, rcParams
 import torch 
 import torch.nn as nn
 
-from neural_agent import Random, Passive, Oracle, Periodic, Spacing, OptimalDesign
+from neural_agent import Random, Passive, Periodic, Spacing, OptimalDesign
 import environments.cartpole as cartpole
 
 rc('font', size=15)
@@ -13,12 +13,12 @@ rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
 plot = False
-plot = True
+# plot = True
 
 d, m = 4, 1
 
 period = 2*np.pi * np.sqrt(cartpole.l / cartpole.g)
-gamma = 10
+gamma = 2
 T = 1000
 dt = 1e-2 * period
 sigma = 0.01
@@ -63,6 +63,7 @@ class Model(nn.Module):
         # dx = self.forward_x(x)
         # dx = self.forward_u(dx, u)
         return dx
+    
 
 net = nn.Sequential(
     nn.Linear(4, 16),
@@ -79,8 +80,9 @@ x0 = np.array([0.0, 0.0, phi0, 0.0])
 model = Model(net)
 # agent = Random(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
 # agent = Passive(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
-agent = Spacing(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
+# agent = Spacing(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
 # agent = Periodic(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
+agent = OptimalDesign(x0.copy(), m, cartpole.dynamics, model, gamma, dt)
 test_values = agent.identify(T, test_function=cartpole.test_error, plot=plot)
 
 fig = plt.figure(figsize=(14,8))

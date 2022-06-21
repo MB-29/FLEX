@@ -1,11 +1,26 @@
-from re import U
 import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
-from utils import greedy_optimal_input
-
+def jacobian(model, z):
+    y = model(z)
+    _, d = y.shape 
+    q = sum(parameter.numel() for parameter in model.parameters())
+    J = torch.zeros(d, q, dtype=torch.float)
+    for i in range(d):
+        tensor_gradients = torch.autograd.grad(
+              y[:, i],
+              model.parameters(),
+              create_graph=True,
+              retain_graph=True
+              )
+        derivatives = []
+        for tensor in tensor_gradients:
+            derivatives.append(tensor.view(-1, 1))
+        gradient = torch.cat(derivatives).squeeze()
+        J[i] = gradient
+    return J
 
 class Agent:
 
@@ -36,7 +51,7 @@ class Agent:
             u_t = self.choose_control(t)
             x_dot = self.dynamics(self.x, u_t)
 
-            self.gradient_step(self.x, x_dot, u_t)
+            self.learning_step(self.x, x_dot, u_t)
 
             self.x += self.dt*x_dot
 
@@ -51,13 +66,14 @@ class Agent:
 
             # z = np.array([self.x[0], np.sin(self.x[0])])
             # self.M += z[:, None]@z[None, :]
+            # self.update_information(self.x.copy())
 
         return test_values
 
-    def gradient_step(self, x, x_dot, u):
+    def learning_step(self, x, x_dot, u):
         z = torch.zeros(1, self.d + self.m)
         x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
-        u = torch.tensor(u, dtype=torch.float32).unsqueeze(0)
+        u = torch.tensor(u).unsqueeze(0)
         z[:, :self.d] = x
         z[:, self.d:] = u
         # dx = self.model.forward(z)
@@ -70,6 +86,9 @@ class Agent:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+    
+    # def update_information(self, x):
+        
 
     def draw_random_control(self, t):
         u = np.random.randn(self.m)
@@ -134,66 +153,114 @@ class Random(Agent):
 class Passive(Agent):
 
     def choose_control(self, t):
-        return torch.zeros(self.m)
+        return np.zeros(self.m)
 
 
 class Active(Agent):
 
+    def predict_x(self, x, u):
+        z = torch.zeros(1, self.d + self.m)
+        z[:, :self.d] = x
+        z[:, self.d:] = u
+        dx = self.model(z)
+        # dx = self.model.forward_u(dx, u)
+        x_ = x + self.dt * dx
+        return x_
+
     def maximum_utility(self, t):
-        u = torch.randn(self.m)
-        u *= self.gamma / torch.linalg.norm(u)
+        u = np.random.randn(self.m)
+        u *= self.gamma / np.linalg.norm(u)
         utility = self.utility(u, t)
         utility_ = self.utility(-u, t)
         # print(f'u: {u}, -u: {-u}')
         # print(f'u: {utility}, -u: {utility_}')
         u = -u if utility_ > utility else u
         # print(u)  
-        return u.numpy()
+        return u
 
     def choose_control(self, t):
         if t < 50 :
         # or t%100 == 0:
             return self.draw_random_control(t)
-        return self.maximum_utility(t)
+        u = self.maximum_utility(t)
+        # print(f't={t}, u = {u}')
+        return u
 
 
 class OptimalDesign(Active):
-    def utility(self, u, t):
-        z = torch.zeros(1, self.d + self.m)
+
+    def utility__(self, u, t):
         # z.requires_grad = True
+        u = torch.tensor(u).unsqueeze(0)
         x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
         # print(z)
         with torch.no_grad():
-            dx = self.model.forward_x(x)
-        dx = self.model.forward_u(dx, u)
-        x_ = x + self.dt * dx
-        y = self.model.net(x_)
-        tensor_gradients = torch.autograd.grad(
-            y,
-            self.model.net.parameters(),
-            create_graph=True
-        )
-        # print(torch.autograd.grad(tensor_gradients[-2].sum(), u))
+            x_ = self.predict_x(x, u)
+        z = torch.zeros(1, self.d + self.m)
+        z[:, :self.d] = x_
+        y = self.model(z)
         uncertainty = 0
-        for tensor in tensor_gradients:
-            uncertainty += torch.sum(tensor**2)
+        for i in range(self.d):
+            tensor_gradients = torch.autograd.grad(
+                y[:, i],
+                self.model.net.parameters(),
+                # create_graph=True,
+                retain_graph=True
+            )
+            for tensor in tensor_gradients:
+                uncertainty += torch.sum(tensor**2)
         return uncertainty
+    def utility(self, u, t):
+        # z.requires_grad = True
+        u = torch.tensor(u).unsqueeze(0)
+        x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
+        # print(z)
+        with torch.no_grad():
+            x_ = self.predict_x(x, u)
+        z = torch.zeros(1, self.d + self.m)
+        z[:, :self.d] = x_
+        uncertainty = 0
+        J = jacobian(self.model, z)
+        self.J = J
+        uncertainty = torch.sum(J**2)
+        return uncertainty
+
+    def utility_(self, u, t):
+        # z.requires_grad = True
+        u = torch.tensor(u).unsqueeze(0)
+        x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
+        # print(z)
+        with torch.no_grad():
+            x_ = self.predict_x(x, u)
+        z = torch.zeros(1, self.d + self.m)
+        z[:, :self.d] = x_
+        y = self.model(z)
+        uncertainty = 0
+        M_x = torch.tensor(self.M, requires_grad=True)
+        for i in range(self.d):
+            output = y[:, i]
+            gradient = torch.autograd.grad(
+                output,
+                self.model.net.parameters(),
+                # create_graph=True,
+                retain_graph=True
+            )
+            increment =  (gradient[:, None]@gradient[None, :])
+            M_x += increment
+        uncertainty = torch.logdet(M_x)
+
+        return uncertainty
+
 
 
 class Spacing(Active):
 
     def utility(self, u, t):
 
-        z = torch.zeros(1, self.d + self.m)
         x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
-        u = u.unsqueeze(0)
-        z[:, :self.d] = x
-        z[:, self.d:] = u
-        dx = self.model(z)
-        # dx = self.model.forward_u(dx, u)
-        x_ = x + self.dt * dx
-
-        z_ = torch.zeros_like(z)
+        u = torch.tensor(u).unsqueeze(0)
+        x_ = self.predict_x(x, u)
+        z_ = torch.zeros(1, self.d + self.m)
         z_[:, :self.d] = x_
         # z_[:, self.d:] = u
         z_values = torch.zeros(t, self.d + self.m)
@@ -218,14 +285,14 @@ class Periodic(Agent):
         return self.gamma * np.sign(np.sin(2*np.pi*t/100))
 
 
-class Oracle(Agent):
+# class Oracle(Agent):
 
-    def choose_control(self, t):
-        if np.allclose(self.M, 0) or t < 100:
-            return self.draw_random_control(t)
-        A = np.array([[1, self.dt], [self.dt, 1-0.1*self.dt]])
-        B = np.array([[0], [self.dt]])
-        u = greedy_optimal_input(self.M, A, B, self.x, self.gamma)
-        u *= self.gamma / np.linalg.norm(u)
-        # print(u)
-        return u
+#     def choose_control(self, t):
+#         if np.allclose(self.M, 0) or t < 100:
+#             return self.draw_random_control(t)
+#         A = np.array([[1, self.dt], [self.dt, 1-0.1*self.dt]])
+#         B = np.array([[0], [self.dt]])
+#         u = greedy_optimal_input(self.M, A, B, self.x, self.gamma)
+#         u *= self.gamma / np.linalg.norm(u)
+#         # print(u)
+#         return u
