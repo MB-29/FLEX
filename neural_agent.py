@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 
 def jacobian(model, z):
     y = model(z)
-    _, d = y.shape 
+    batch_size, d = y.shape 
+    assert batch_size == 1
     q = sum(parameter.numel() for parameter in model.parameters())
     J = torch.zeros(d, q, dtype=torch.float)
     for i in range(d):
@@ -32,7 +33,8 @@ class Agent:
 
         self.model = model
         self.q = sum(parameter.numel() for parameter in model.parameters())
-        self.M = 1e-6*np.diag(np.random.rand(self.d))
+        self.M = 1e-6*np.diag(np.random.rand(self.q))
+        self.Mx = 1e-6*np.diag(np.random.rand(self.d))
 
         self.gamma = gamma
 
@@ -65,14 +67,21 @@ class Agent:
                 test_values[t] = test_error.data
 
             # z = np.array([self.x[0], np.sin(self.x[0])])
-            # self.M += z[:, None]@z[None, :]
+            z = torch.zeros(1, self.d + self.m)
+            z[:, :self.d] = torch.tensor(self.x)
+            z[:, self.d:] = torch.tensor(u_t)
+            J = jacobian(self.model, z).detach().numpy()
+            self.M += J.T@J
+            self.Mx += self.x[:, None]@self.x[None, :]
+            # print(f'M = {self.M}')
+            # print(f'Mx={self.Mx}')
             # self.update_information(self.x.copy())
 
         return test_values
 
     def learning_step(self, x, x_dot, u):
         z = torch.zeros(1, self.d + self.m)
-        x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
+        x = torch.tensor(x, dtype=torch.float32).unsqueeze(0)
         u = torch.tensor(u).unsqueeze(0)
         z[:, :self.d] = x
         z[:, self.d:] = u
@@ -95,9 +104,9 @@ class Agent:
         u *= self.gamma / np.linalg.norm(u)
         return u
 
-    def optimal_design_(self, t, n_gradient=2):
+    # def optimal_design_(self, t, n_gradient=2):
         # print(f't = {t}')
-        u = self.gamma * torch.randn(1, self.m)
+        # u = self.gamma * torch.randn(1, self.m)
         # u.requires_grad = True
         # designer = torch.optim.Adam([u], lr=0.0001)
         # for step_index in range(n_gradient):
@@ -106,42 +115,42 @@ class Agent:
         #     designer.zero_grad() ; loss.backward() ; designer.step()
         #     with torch.no_grad():
         #         u *= self.gamma / torch.linalg.norm(u)
-        return u.detach().numpy()
+        # return u.detach().numpy()
 
-    def gradient_design(self, t, n_gradient=20):
-        u = self.gamma * torch.randn(self.m)
-        u.requires_grad = True
+    # def gradient_design(self, t, n_gradient=20):
+    #     u = self.gamma * torch.randn(self.m)
+    #     u.requires_grad = True
 
-        designer = torch.optim.Adam([u], lr=0.01)
-        i = np.random.randint(0, self.d)
-        for step_index in range(n_gradient):
-            z = torch.zeros(self.d + self.m)
-            z[:self.d] = torch.tensor(self.x)
-            z[self.d:] = u
-            prediction = self.model(z)[i]
-            tensor_gradients = torch.autograd.grad(
-                prediction,
-                self.model.parameters(),
-                create_graph=True)
-            derivatives = []
-            for tensor in tensor_gradients:
-                derivatives.append(tensor.view(-1, 1))
-            gradient = torch.cat(derivatives).squeeze()
-            Q = torch.tensor(np.linalg.inv(self.M), dtype=torch.float32)
-            loss = - gradient.T@Q@gradient
-            designer.zero_grad()
-            loss.backward()
-            designer.step()
+    #     designer = torch.optim.Adam([u], lr=0.01)
+    #     i = np.random.randint(0, self.d)
+    #     for step_index in range(n_gradient):
+    #         z = torch.zeros(self.d + self.m)
+    #         z[:self.d] = torch.tensor(self.x)
+    #         z[self.d:] = u
+    #         prediction = self.model(z)[i]
+    #         tensor_gradients = torch.autograd.grad(
+    #             prediction,
+    #             self.model.parameters(),
+    #             create_graph=True)
+    #         derivatives = []
+    #         for tensor in tensor_gradients:
+    #             derivatives.append(tensor.view(-1, 1))
+    #         gradient = torch.cat(derivatives).squeeze()
+    #         Q = torch.tensor(np.linalg.inv(self.M), dtype=torch.float32)
+    #         loss = - gradient.T@Q@gradient
+    #         designer.zero_grad()
+    #         loss.backward()
+    #         designer.step()
 
             # print(f'step {step_index}, loss={loss:2e}')
 
-            u.data *= self.gamma / np.linalg.norm(u.data)
+        #     u.data *= self.gamma / np.linalg.norm(u.data)
 
-        increment = (gradient[:, None]@gradient[None, :]).detach().numpy()
-        # print(f'increment {increment}')
-        self.M += increment
+        # increment = (gradient[:, None]@gradient[None, :]).detach().numpy()
+        # # print(f'increment {increment}')
+        # self.M += increment
 
-        return u.detach().numpy()
+        # return u.detach().numpy()
 
 
 class Random(Agent):
@@ -189,7 +198,7 @@ class Active(Agent):
 
 class OptimalDesign(Active):
 
-    def utility__(self, u, t):
+    def utility_(self, u, t):
         # z.requires_grad = True
         u = torch.tensor(u).unsqueeze(0)
         x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
@@ -198,18 +207,35 @@ class OptimalDesign(Active):
             x_ = self.predict_x(x, u)
         z = torch.zeros(1, self.d + self.m)
         z[:, :self.d] = x_
-        y = self.model(z)
+        M_z = torch.tensor(self.M, dtype=torch.float)
+        J = jacobian(self.model, z)[1]
+        M_z += J.T@J
+        M_inv = torch.linalg.inv(M_z)
+        y = jacobian(self.model, torch.randn(1, self.d+self.m))
         uncertainty = 0
-        for i in range(self.d):
-            tensor_gradients = torch.autograd.grad(
-                y[:, i],
-                self.model.net.parameters(),
-                # create_graph=True,
-                retain_graph=True
-            )
-            for tensor in tensor_gradients:
-                uncertainty += torch.sum(tensor**2)
+        uncertainty +=y[1]@M_inv@y[1]
+        # print(f'u = {u}, uncertainty = {uncertainty}')
+
         return uncertainty
+
+    def utility(self, u, t):
+        # z.requires_grad = True
+        u = torch.tensor(u).unsqueeze(0)
+        x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
+        # print(z)
+        with torch.no_grad():
+            x_ = self.predict_x(x, u)
+        z = torch.zeros(1, self.d + self.m)
+        z[:, :self.d] = x_
+        M_z = torch.tensor(self.M)
+        J = jacobian(self.model, z)[1]
+        M_z += J.T@J
+        uncertainty = torch.logdet(M_z)
+        # print(f'u = {u}, uncertainty = {uncertainty}')
+
+        return uncertainty
+
+class Variation(Active):
     def utility(self, u, t):
         # z.requires_grad = True
         u = torch.tensor(u).unsqueeze(0)
@@ -221,37 +247,8 @@ class OptimalDesign(Active):
         z[:, :self.d] = x_
         uncertainty = 0
         J = jacobian(self.model, z)
-        self.J = J
         uncertainty = torch.sum(J**2)
         return uncertainty
-
-    def utility_(self, u, t):
-        # z.requires_grad = True
-        u = torch.tensor(u).unsqueeze(0)
-        x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
-        # print(z)
-        with torch.no_grad():
-            x_ = self.predict_x(x, u)
-        z = torch.zeros(1, self.d + self.m)
-        z[:, :self.d] = x_
-        y = self.model(z)
-        uncertainty = 0
-        M_x = torch.tensor(self.M, requires_grad=True)
-        for i in range(self.d):
-            output = y[:, i]
-            gradient = torch.autograd.grad(
-                output,
-                self.model.net.parameters(),
-                # create_graph=True,
-                retain_graph=True
-            )
-            increment =  (gradient[:, None]@gradient[None, :])
-            M_x += increment
-        uncertainty = torch.logdet(M_x)
-
-        return uncertainty
-
-
 
 class Spacing(Active):
 

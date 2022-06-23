@@ -5,7 +5,7 @@ from matplotlib import rc, rcParams
 import torch 
 import torch.nn as nn
 
-from neural_agent import Random, Passive, Periodic, Spacing, OptimalDesign
+from neural_agent import Random, Passive, Periodic, Spacing, OptimalDesign, Variation
 import environments.pendulum as pendulum
 
 rc('font', size=15)
@@ -81,6 +81,7 @@ pendulum.plot_portrait(model.forward_x)
 # agent = Random(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
 # agent = Periodic(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
 agent = OptimalDesign(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
+# agent = Variation(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
 # agent = Spacing(x0.copy(), m, pendulum.dynamics, model, gamma, dt)
 
 test_values = agent.identify(T, test_function=pendulum.test_error, plot=plot)
