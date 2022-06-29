@@ -6,56 +6,42 @@ import matplotlib.pyplot as plt
 
 R = 1
 K = 1
-period = 2*np.pi*R**(3/2)
+period = 2*np.pi*(R**3/K)**(1/2)
 omega = 2*np.pi / period
-alpha  = 0.1
+alpha  = 0.1*K
 
 def dynamics(x, u):
+    # print(np.linalg.norm(u))
     dx = np.zeros_like(x)
     dx[0] = x[1]
-    r_2 = x[0]**2 + x[2]**2
-    dx[1] = -(K / r_2**(3/2)) * x[0] - alpha*x[1] + u[0]
     dx[2] = x[3]
+    r_2 = x[0]**2 + x[2]**2
+    v = np.sqrt(x[1]**2 + x[3]**2)
+    dx[1] = -(K / r_2**(3/2)) * x[0] - alpha*x[1] + u[0]
     dx[3] = - (K / r_2**(3/2)) * x[2] - alpha*x[3] + u[1]
     return dx
 
-def f_star(x):
-    dx = torch.zeros_like(x)
-    r_2 = x[:, 0]**2 + x[:, 1]**2
-    dx[:, 0] = -(K / r_2**(3/2)) * x[:, 0] 
-    dx[:, 1] = -(K / r_2**(3/2)) * x[:, 1]
-    return dx
+def f_star_r(r):
+    return - K / r**3
+# def f_star_v(v):
+#     return - alpha *torch.linalg.norm(v, dim=1).unsqueeze(1)*v 
 
-v_max = R**2 * omega**2
+v_max = R* omega
 
-n_points = 50
-interval_x = torch.linspace(-R, R, n_points)
-interval_y = torch.linspace(-R, R, n_points)
-interval_r = torch.linspace(R/2, R, n_points)
-interval_theta = torch.linspace(0, 2*np.pi, n_points)
-grid_x, grid_y = torch.meshgrid(
-    interval_x,
-    interval_y,
-    # interval_v,
-    # interval_v
-    )
-grid_r, grid_theta = torch.meshgrid(
-    interval_r,
-    interval_theta,
+n_points = 20
+# interval_x = torch.linspace(-R, R, n_points)
+# interval_y = torch.linspace(-R, R, n_points)
+interval_r = torch.linspace(0.2*R, 1*R, n_points).unsqueeze(1)
+interval_v = torch.linspace(-1*v_max, 1*v_max, n_points)
+grid_vx, grid_vy = torch.meshgrid(
+    interval_v,
+    interval_v,
     # interval_v,
     # interval_v
     )
 grid = torch.cat([
-    grid_x.reshape(-1, 1),
-    grid_y.reshape(-1, 1),
-    # grid_vx.reshape(-1, 1),
-    # grid_vy.reshape(-1, 1),
-    # torch.randn(n_points*n_points, 2)
-], 1)
-disk  = torch.cat([
-    grid_r.reshape(-1, 1)*torch.cos(grid_theta.reshape(-1,1)),
-    grid_r.reshape(-1, 1)*torch.sin(grid_theta.reshape(-1,1)),
-    # grid_y.reshape(-1, 1),
+    grid_vx.reshape(-1, 1),
+    grid_vy.reshape(-1, 1),
     # grid_vx.reshape(-1, 1),
     # grid_vy.reshape(-1, 1),
     # torch.randn(n_points*n_points, 2)
@@ -64,36 +50,29 @@ x0 = np.array([R, 0, 0,  R*omega])
 
 
 def test_error(model, x, u, plot, t=0):
-    predictions = model.prediction(disk)
-    plot_predictions = model.prediction(grid)
-    # predictions /= torch.linalg.norm(predictions, dim=1).unsqueeze(1)
-    truth = f_star(disk) 
-    # truth /= torch.linalg.norm(truth, dim=1).unsqueeze(1)
     loss_function = nn.MSELoss(reduction='mean')
+    predictions_r = model.r_net(interval_r)
+    truth_r = f_star_r(interval_r) 
+    loss_r = loss_function(predictions_r, truth_r) / (K**2 / R**4)
+    # predictions_v = model.v_net(grid)
+    # truth_v = f_star_v(grid) 
+    # loss_v = loss_function(predictions_v, truth_v) / (alpha**2 * v_max**4)
+    # plot_predictions = model.prediction(grid)
     if plot and t%10 == 0:
-        plot_portrait(plot_predictions)
-        plot_planet(x)
+        # plot_portrait(plot_predictions, t)
+        plot_planet(x, t)
         # plt.savefig(f'figures/space-animation/space_{t}.pdf')
         plt.pause(0.1)
         plt.close()
-    loss = loss_function(predictions, truth)
-    return loss
+    return loss_r 
 
-
-def plot_portrait(predictions):
+def plot_portrait(predictions, t=None):
     vector_x = predictions[:, 0].reshape(n_points, n_points).detach().numpy()
     vector_y = predictions[:, 1].reshape(n_points, n_points).detach().numpy()
     magnitude = np.sqrt(vector_x.T**2 + vector_y.T**2)
     linewidth = magnitude / magnitude.max()
-    plt.streamplot(
-        grid_x.numpy().T,
-        grid_y.numpy().T,
-        vector_x.T,
-        vector_y.T,
-        color='black',
-        linewidth=linewidth)
 
-def plot_planet(x):
+def plot_planet(x, t=None):
     plt.scatter(x[0], x[2], label='ship', marker="2", s=200)
     plt.scatter(0, 0, marker='*', s=200)
     plt.xlim((-R, R))
@@ -102,4 +81,5 @@ def plot_planet(x):
     # plt.legend()
     plt.xlabel(r'$x$')
     plt.ylabel(r'$y$')
-    plt.title(r'$f_\theta(x,y)$')
+    plt.title(f't = {t}')
+    # plt.title(r'$f_\theta(x,y)$')
