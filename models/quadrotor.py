@@ -2,12 +2,14 @@ import torch
 import torch.nn as nn
 
 import environments.quadrotor as quadrotor
-d, m = 6, 2
 
+
+d, m = 6, 2
+dt = quadrotor.dt
 
 class Model(nn.Module):
 
-    def __init__(self, dt):
+    def __init__(self):
         super().__init__()
         self.net = net = nn.Sequential(
             nn.Linear(2, 16),
@@ -16,13 +18,12 @@ class Model(nn.Module):
             # nn.Tanh(),
             nn.Linear(16, 2)
         )
-        self.dt = dt
 
     def transform(self, z):
         return z[:, 1:4:2]
 
     def get_B(self, X):
-        return self.dt * quadrotor.get_B(X)
+        return dt * quadrotor.get_B(X)
 
     def forward(self, z):
         dx = torch.zeros_like(z[:, :d])

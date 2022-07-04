@@ -3,48 +3,9 @@ import numpy as np
 from sklearn.feature_selection import SelectFdr
 import torch
 import torch.nn as nn
-import matplotlib.pyplot as plt
 
-from utils import linear_D_optimal
+from utils import linear_D_optimal, compute_gradient, jacobian
 
-def compute_gradient(model, output, **grad_kwargs):
-    # print(grad_kwargs)
-    tensor_gradients = torch.autograd.grad(
-        output,
-        model.parameters(),
-        **grad_kwargs
-        )
-    derivatives = []
-    # print(f'output = {output}')
-    for index, tensor in enumerate(tensor_gradients):
-        if tensor is None:
-            tensor = torch.zeros_like(list(model.parameters())[index])
-        derivatives.append(tensor.view(-1, 1))
-    gradient = torch.cat(derivatives).squeeze()
-    return gradient
-
-def jacobian(model, z):
-    y = model(z)
-    # g = torch.autograd.grad(z.sum(), u)
-    # print(f'g = {g}')
-    batch_size, d = y.shape
-    assert batch_size == 1
-    q = sum(parameter.numel() for parameter in model.parameters())
-    J = torch.zeros(d, q, dtype=torch.float)
-    for i in range(d):
-        tensor_gradients = torch.autograd.grad(
-            y[:, i],
-            model.parameters(),
-            create_graph=True,
-            retain_graph=True
-        )
-        derivatives = []
-        for tensor in tensor_gradients:
-            derivatives.append(tensor.view(-1, 1))
-        gradient = torch.cat(derivatives).squeeze()
-        J[i] = gradient
-        # print(f'J[i] = {J[i]}')
-    return J
 
 
 class Agent:
@@ -65,7 +26,9 @@ class Agent:
         self.dt = dt
         self.dynamics = dynamics
 
-    def identify(self, T, test_function=None, plot=False):
+    def identify(self, T, T0=None, test_function=None, plot=False):
+
+        self.T_random = T//10 if T0 is None else T0
 
         self.u_values = np.zeros((T, self.m))
         self.x_values = np.zeros((T, self.d))
@@ -217,7 +180,7 @@ class Gradient(Active):
         return u
 
     def choose_control(self, t):
-        if t < 50:
+        if t < self.T_random:
             # or t%100 == 0:
             return self.draw_random_control(t)
         u = self.maximum_utility(t)
@@ -363,8 +326,6 @@ class Linearized(Active):
         u = linear_D_optimal(self.M, B, v, self.gamma)
 
         return u
-
-
 
 
 class Periodic(Agent):

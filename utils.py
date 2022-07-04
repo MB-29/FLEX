@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import brentq
+import torch
 
 def lstsq_update(prior_estimate, prior_gram, z, y):
 
@@ -87,3 +88,44 @@ def minimize_quadratic_sphere(Q, b, gamma):
     u = np.real(u)
 
     return u
+
+
+def compute_gradient(model, output, **grad_kwargs):
+    # print(grad_kwargs)
+    tensor_gradients = torch.autograd.grad(
+        output,
+        model.parameters(),
+        **grad_kwargs
+    )
+    derivatives = []
+    # print(f'output = {output}')
+    for index, tensor in enumerate(tensor_gradients):
+        if tensor is None:
+            tensor = torch.zeros_like(list(model.parameters())[index])
+        derivatives.append(tensor.view(-1, 1))
+    gradient = torch.cat(derivatives).squeeze()
+    return gradient
+
+
+def jacobian(model, z):
+    y = model(z)
+    # g = torch.autograd.grad(z.sum(), u)
+    # print(f'g = {g}')
+    batch_size, d = y.shape
+    assert batch_size == 1
+    q = sum(parameter.numel() for parameter in model.parameters())
+    J = torch.zeros(d, q, dtype=torch.float)
+    for i in range(d):
+        tensor_gradients = torch.autograd.grad(
+            y[:, i],
+            model.parameters(),
+            create_graph=True,
+            retain_graph=True
+        )
+        derivatives = []
+        for tensor in tensor_gradients:
+            derivatives.append(tensor.view(-1, 1))
+        gradient = torch.cat(derivatives).squeeze()
+        J[i] = gradient
+        # print(f'J[i] = {J[i]}')
+    return J
