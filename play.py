@@ -3,24 +3,32 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rc, rcParams
 
-from agents import Random, Passive, OptimalDesign, Spacing, Periodic, Variation, Linearized
+from agents import Random, Passive
+from active_agents import OptimalDesign, Spacing, Variation, Linearized
+from oracles.cartpole import Oracle
 
-ENVIRONMENT_NAME = 'cartpole'
 ENVIRONMENT_NAME = 'quadrotor'
+# ENVIRONMENT_NAME = 'quadrotor'
 # ENVIRONMENT_NAME = 'pendulum'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
 MODEL_PATH = f'models.{ENVIRONMENT_NAME}'
+ORACLE_PATH = f'oracles.{ENVIRONMENT_NAME}'
 
 environment = importlib.import_module(ENVIRONMENT_PATH)
 Model = getattr(importlib.import_module(MODEL_PATH), 'Model')
+try:
+    Oracle = getattr(importlib.import_module(ORACLE_PATH), 'Oracle')
+    print('Oracle imported')
+except ModuleNotFoundError:
+    print('No Oracle found')
 
 rc('font', size=15)
 rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
 plot = False
-# plot = True
+plot = True
 
 T = environment.T
 # T = 100
@@ -32,6 +40,7 @@ x0 = environment.x0
 
 agent_ = Random
 agent_ = Linearized
+# agent_ = Oracle
 
 test_values = np.zeros(T)
 model = Model()

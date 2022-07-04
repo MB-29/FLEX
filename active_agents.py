@@ -228,11 +228,3 @@ class Linearized(Active):
         u = linear_D_optimal(self.M, B, v, self.gamma)
 
         return u
-
-
-class Periodic(Agent):
-
-    def choose_control(self, t):
-        if t < 50:
-            return self.draw_random_control(t)
-        return self.gamma * np.sign(np.sin(2*np.pi*t/100))
