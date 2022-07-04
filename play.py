@@ -7,7 +7,7 @@ from agents import Random, Passive, OptimalDesign, Spacing, Periodic, Variation,
 
 ENVIRONMENT_NAME = 'cartpole'
 ENVIRONMENT_NAME = 'quadrotor'
-ENVIRONMENT_NAME = 'pendulum'
+# ENVIRONMENT_NAME = 'pendulum'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
 MODEL_PATH = f'models.{ENVIRONMENT_NAME}'
@@ -20,7 +20,7 @@ rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
 plot = False
-plot = True
+# plot = True
 
 T = environment.T
 # T = 100
@@ -32,7 +32,7 @@ x0 = environment.x0
 
 agent_ = Random
 test_values = np.zeros(T)
-model = Model(dt)
+model = Model()
 agent = agent_(
     x0.copy(),
     environment.m,

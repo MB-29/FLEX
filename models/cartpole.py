@@ -4,10 +4,11 @@ import torch.nn as nn
 import environments.cartpole as cartpole
 
 d, m = cartpole.d, cartpole.m
+dt = cartpole.dt
 
 class Model(nn.Module):
 
-    def __init__(self, dt):
+    def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(4, 16),
@@ -16,10 +17,9 @@ class Model(nn.Module):
             # nn.Tanh(),
             nn.Linear(16, 2)
         )
-        self.dt = dt
 
     def get_B(self, x):
-        return self.dt*cartpole.get_B(x)
+        return dt*cartpole.get_B(x)
 
     def transform(self, z):
         z_ = z[:, :d].clone()
