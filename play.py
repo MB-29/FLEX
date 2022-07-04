@@ -31,6 +31,8 @@ sigma = environment.sigma
 x0 = environment.x0
 
 agent_ = Random
+agent_ = Linearized
+
 test_values = np.zeros(T)
 model = Model()
 agent = agent_(
