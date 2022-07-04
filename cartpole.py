@@ -5,7 +5,7 @@ from matplotlib import rc, rcParams
 import torch 
 import torch.nn as nn
 
-from neural_agent import Random, Passive, Periodic, Spacing, OptimalDesign
+from agents import Random, Passive, Periodic, Spacing, OptimalDesign
 import environments.cartpole as cartpole
 
 rc('font', size=15)

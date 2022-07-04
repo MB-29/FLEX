@@ -8,6 +8,11 @@ m, I, r = 1.0, 10, 1.0
 g = 0
 rho = 0.2   
 
+d, m = 6, 2
+
+T = 500
+dt = 0.1
+sigma = 0.01
 gamma = 10
 
 def get_B(X):
@@ -52,8 +57,7 @@ def dynamics(X, u):
 def g_star(v):
     return -(rho/m)*torch.abs(v)*v
 
-y0 = 0.0
-X0 = np.array([0, 0, y0, 0, 0, 0])
+x0 = np.array([0, 0, 0.0, 0, 0, 0])
 n_points = 20
 v_max = 2*np.sqrt(gamma)
 interval_v = torch.linspace(-v_max, v_max, n_points)

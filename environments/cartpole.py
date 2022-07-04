@@ -4,10 +4,31 @@ import torch as torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
+d, m = 4, 1
+
 mass, Mass, l = 1.0, 2.0, 1.0
 g = 9.8
-
 alpha, beta = 0, 5.0
+phi0 = 0.1
+x0 = np.array([0.0, 0.0, phi0, 0.0])
+
+period = 2*np.pi * np.sqrt(l / g)
+T = 1000
+dt = 1e-2 * period
+sigma = 0.01
+
+gamma = 2
+
+def get_B(x):
+    y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
+    c_phi, s_phi = np.cos(phi), np.sin(phi)
+    B = np.array([
+        [0],
+        [1/(Mass - mass * c_phi**2)],
+        [0],
+        [- c_phi/ (Mass*l - mass*l*c_phi**2)]
+    ])
+    return B
 
 def acceleration_x(d_y, c_phi, s_phi, d_phi):
     friction_y = -beta * d_y
@@ -73,8 +94,6 @@ grid = torch.cat([
     grid_dphi.reshape(-1, 1)
     # grid_u.reshape(-1, 1),
 ], 1)
-# phi_0 = 0.9*np.pi
-# x0 = np.array([phi_0, 0])
 
 def test_error(model, x, u, plot, t=0):
     truth = f_star(grid)
