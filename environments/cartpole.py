@@ -13,7 +13,7 @@ phi0 = 0.1
 x0 = np.array([0.0, 0.0, phi0, 0.0])
 
 period = 2*np.pi * np.sqrt(l / g)
-T = 1000
+T = 500
 dt = 1e-2 * period
 sigma = 0.01
 

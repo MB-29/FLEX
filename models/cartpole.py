@@ -6,7 +6,7 @@ import environments.cartpole as cartpole
 d, m = cartpole.d, cartpole.m
 dt = cartpole.dt
 
-class Model(nn.Module):
+class NeuralModel(nn.Module):
 
     def __init__(self):
         super().__init__()

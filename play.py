@@ -4,21 +4,20 @@ import matplotlib.pyplot as plt
 from matplotlib import rc, rcParams
 
 from agents import Random, Passive
-from active_agents import OptimalDesign, Spacing, Variation, Linearized
-from oracles.cartpole import Oracle
+from active_agents import GradientDesign, Spacing, Variation, Linearized
 
 ENVIRONMENT_NAME = 'quadrotor'
-# ENVIRONMENT_NAME = 'quadrotor'
-# ENVIRONMENT_NAME = 'pendulum'
+ENVIRONMENT_NAME = 'aircraft'
+ENVIRONMENT_NAME = 'pendulum'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
 MODEL_PATH = f'models.{ENVIRONMENT_NAME}'
 ORACLE_PATH = f'oracles.{ENVIRONMENT_NAME}'
 
 environment = importlib.import_module(ENVIRONMENT_PATH)
-Model = getattr(importlib.import_module(MODEL_PATH), 'Model')
+models = importlib.import_module(MODEL_PATH)
 try:
-    Oracle = getattr(importlib.import_module(ORACLE_PATH), 'Oracle')
+    oracles = importlib.import_module(ORACLE_PATH)
     print('Oracle imported')
 except ModuleNotFoundError:
     print('No Oracle found')
@@ -31,20 +30,21 @@ plot = False
 plot = True
 
 T = environment.T
-# T = 100
 dt = environment.dt
 gamma = environment.gamma
 sigma = environment.sigma
 
 x0 = environment.x0
 
-agent_ = Random
-agent_ = Linearized
-# agent_ = Oracle
+Agent = Random
+Agent = Linearized
+Agent = oracles.LinearOracle
 
-test_values = np.zeros(T)
-model = Model()
-agent = agent_(
+# model = models.Model()
+model = models.NeuralModel()
+model = models.LinearModel()
+
+agent = Agent(
     x0.copy(),
     environment.m,
     environment.dynamics,
@@ -53,7 +53,12 @@ agent = agent_(
     dt
     )
 
-test_values = agent.identify(T, test_function=environment.test_error, plot=plot)
+test_values = agent.identify(
+    T,
+    test_function=environment.test_error,
+    plot=plot,
+    T_random=0
+    )
 
 plt.plot(test_values, alpha=0.7)
 plt.legend()

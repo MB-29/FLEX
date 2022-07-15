@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 d, m = 2, 1
 
 gamma = 1
-T = 1000
+T = 500
 dt = 1 / (np.sqrt(gamma) * T)
 sigma = 0.01
 
@@ -25,6 +25,8 @@ def dynamics(x, u):
     dx = A@x + B@u
     return dx
 
+
+x0 = np.array([0.0, 0.0])
 
 def f_star(x):
     dx = A_@x.T

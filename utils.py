@@ -54,6 +54,7 @@ def linear_D_optimal(M,  B, v, gamma):
     M_inv = np.linalg.inv(M)
     Q = - B.T @ M_inv @ B
     b = B.T @ M_inv @ v
+
     return minimize_quadratic_sphere(Q, b, gamma)
 
 

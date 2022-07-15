@@ -7,7 +7,7 @@ import environments.quadrotor as quadrotor
 d, m = 6, 2
 dt = quadrotor.dt
 
-class Model(nn.Module):
+class NeuralModel(nn.Module):
 
     def __init__(self):
         super().__init__()

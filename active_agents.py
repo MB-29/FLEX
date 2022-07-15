@@ -15,9 +15,6 @@ class Active(Agent):
         z = torch.zeros(1, self.d + self.m)
         z[:, :self.d] = x
         z[:, self.d:] += u
-        # with torch.no_grad():
-        #     dx = self.model.forward_x(z)
-        # dx = self.model.forward_u(dx, u)
         dx = self.model(z)
         x_ = x + self.dt * dx
 
@@ -34,14 +31,12 @@ class Active(Agent):
         z[:, :self.d] = x
         z[:, self.d:] += u
         dx = self.model(z)
-        # dx = self.model.forward_u(dx, u)
         x_ = x + self.dt * dx
 
         z_ = torch.zeros(1, self.d + self.m)
         z_[:, :self.d] += x_
         z_[:, self.d:] += u
         dx_ = self.model(z_)
-        # dx = self.model.forward_u(dx, u)
         x__ = x_ + self.dt * dx_
 
         for param in self.model.parameters():
@@ -87,7 +82,7 @@ class Gradient(Active):
         return u
 
 
-class OptimalDesign(Gradient):
+class GradientDesign(Gradient):
 
     def utility_(self, u, t):
         # z.requires_grad = True
@@ -189,42 +184,31 @@ class Linearized(Active):
 
     def choose_control(self, t):
         if t < 50:
-            # or t%100 == 0:
             return self.draw_random_control(t)
 
-        # print(f't = {t}')
-        # print(f'gradients')
         z = torch.zeros(1, self.d + self.m)
         x = torch.tensor(self.x, dtype=torch.float, requires_grad=True)
         z[:, :self.d] = x
 
         j = 1
-        # j = np.random.randint(self.d)
 
         y = self.model(z)
-        # print(f'y = {y}')
         da_dtheta = compute_gradient(self.model, y[:, j])
-        # print(f'da_dtheta = {da_dtheta}')
 
         D = np.zeros((self.q, self.d))
         y = self.model(z)
         da_dx = torch.autograd.grad(y[:, j], x, create_graph=True)[
             0].unsqueeze(0)
-        # print(f'grad = {self.model.net[2].bias.grad}')
-        # print(f'da_dx = {da_dx}')
-        # g = torch.autograd.grad(da_dx[:, 1], self.model.net[2].bias, allow_unused=True)
-        # print(f'g = {g}')
 
         for i in range(self.d):
             d2a_dxidtheta = compute_gradient(
                 self.model, da_dx[:, i], retain_graph=True, allow_unused=True)
             D[:, i] = d2a_dxidtheta
-        # print(f'D = {D}')
-
-        B = D @ self.model.get_B(self.x)
+        B_ = self.model.get_B(self.x)
+        B = D @ B_
 
         v = da_dtheta.detach().numpy()
-        # print(f'optimization')
         u = linear_D_optimal(self.M, B, v, self.gamma)
+        u *= self.gamma / np.linalg.norm(u)
 
         return u

@@ -3,13 +3,23 @@ import torch as torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
+d, m = 2, 1
+
 alpha = 1
 omega_2 = 1
+
+period = 2*np.pi / np.sqrt(omega_2)
+gamma = 0.5
+T = 300
+dt = 1e-2 * period
+sigma = 0.1
 
 def dynamics(x, u):
     dx = np.zeros_like(x)
     dx[0] = x[1]
     dx[1] = -omega_2 * np.sin(x[0]) - alpha*x[1] + u
+    noise = sigma * np.random.randn(d)
+    dx += noise
     return dx
 
 
