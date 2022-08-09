@@ -41,7 +41,7 @@ grid = torch.cat([
     grid_p.reshape(-1, 1),
 ], 1)
 phi_0 = 0.9*np.pi
-x0 = np.array([phi_0, 0])
+x0 = np.array([0.0, 0.0])
 
 
 def test_error(model, x, u, plot, t=0):

@@ -8,12 +8,12 @@ d, m = 4, 1
 
 mass, Mass, l = 1.0, 2.0, 1.0
 g = 9.8
-alpha, beta = 0, 5.0
-phi0 = 0.1
+alpha, beta = 0.2, 1.0
+phi0 = np.pi
 x0 = np.array([0.0, 0.0, phi0, 0.0])
 
 period = 2*np.pi * np.sqrt(l / g)
-T = 500
+T = 1000
 dt = 1e-2 * period
 sigma = 0.01
 
@@ -30,14 +30,24 @@ def get_B(x):
     ])
     return B
 
-def acceleration_x(d_y, c_phi, s_phi, d_phi):
-    friction_y = -beta * d_y
+def sign(x, tensor=False):
+    if tensor:
+        return torch.sign(x)
+    return np.sign(x)
+
+
+def acceleration_x(d_y, c_phi, s_phi, d_phi, tensor=False):
     friction_phi = - alpha * d_phi
-    dd_y =  mass*l*s_phi*d_phi**2 + friction_y + friction_phi*c_phi/l - mass*g*s_phi*c_phi
-    dd_y /=  Mass - mass *c_phi**2
+    # friction_y = -beta * Mass * g * sign(d_y, tensor=tensor)
+    friction_y = -beta * d_y
 
     dd_phi = Mass*g*s_phi - c_phi*(mass*l*d_phi**2*s_phi + friction_y) + Mass*friction_phi/(mass*l)
     dd_phi /= Mass*l - mass*l*c_phi**2
+
+    vertical = mass*l*(dd_phi*s_phi+d_phi**2*c_phi) - Mass*g
+    # friction_y = -beta * sign(d_y, tensor=tensor) * vertical * sign(vertical, tensor=tensor)
+    dd_y =  mass*l*s_phi*d_phi**2 + friction_y + friction_phi*c_phi/l - mass*g*s_phi*c_phi
+    dd_y /=  Mass - mass *c_phi**2
 
     return dd_y, dd_phi
     
@@ -64,7 +74,7 @@ def dynamics(x, u):
 
 def f_star(z):
     d_y, c_phi, s_phi, d_phi = z[:, 0], z[:, 1], z[:, 2], z[:, 3]
-    dd_y, dd_phi = acceleration_x(d_y, c_phi, s_phi, d_phi)
+    dd_y, dd_phi = acceleration_x(d_y, c_phi, s_phi, d_phi, tensor=True)
     dd = torch.zeros_like(z[:, :2])
     # dx[:, 0] = z[:, 1]
     # dx[:, 2] = z[:, 1]
@@ -76,21 +86,20 @@ def f_star(z):
 n_points = 20
 phi_max = np.pi
 dphi_max = np.sqrt(2*g/l)
-dy_max = np.sqrt(2*mass*g*l/Mass)
+dy_max = 2*np.sqrt(2*mass*g*l/Mass)
 interval_dy = torch.linspace(-dy_max, dy_max, n_points)
-interval_phi = torch.linspace(-1, 1, n_points)
+interval_phi = torch.linspace(0, np.pi, n_points)
 interval_dphi = torch.linspace(-dphi_max, dphi_max, n_points)
-interval_u = torch.linspace(-10, 10, n_points)
-grid_dy, grid_phi, grid_dphi, grid_u = torch.meshgrid(
+# interval_u = torch.linspace(-10, 10, n_points)
+grid_dy, grid_phi, grid_dphi = torch.meshgrid(
     interval_dy,
     interval_phi,
-    interval_dphi,
-    interval_u
+    interval_dphi
     )
 grid = torch.cat([
     grid_dy.reshape(-1, 1),
-    grid_phi.reshape(-1, 1),
-    grid_phi.reshape(-1, 1),
+    torch.cos(grid_phi.reshape(-1, 1)),
+    torch.sin(grid_phi.reshape(-1, 1)),
     grid_dphi.reshape(-1, 1)
     # grid_u.reshape(-1, 1),
 ], 1)

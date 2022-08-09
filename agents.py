@@ -4,7 +4,6 @@ import torch.nn as nn
 
 from utils import jacobian
 
-
 class Agent:
 
     def __init__(self, x0, m, dynamics, model, gamma, dt):
@@ -17,19 +16,21 @@ class Agent:
         self.q = sum(parameter.numel() for parameter in model.parameters())
         self.M = 1e-3*np.diag(np.random.rand(self.q))
         self.Mx = 1e-3*np.diag(np.random.rand(self.d))
+        self.My = 1e-3*np.diag(np.random.rand(self.d))
 
         self.gamma = gamma
 
         self.dt = dt
         self.dynamics = dynamics
 
-    def identify(self, T, T0=None, test_function=None, plot=False):
+    def identify(self, T, T_random=None, test_function=None, plot=False):
 
-        self.T_random = T//10 if T0 is None else T0
+        self.T_random = T//10 if T_random is None else T_random
 
         self.u_values = np.zeros((T, self.m))
         self.x_values = np.zeros((T, self.d))
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
+        lr = getattr(self.model, 'lr', 0.001)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         test_values = np.zeros(T)
 
         for t in range(T):
@@ -59,8 +60,12 @@ class Agent:
             # self.M += J[:, None]@J[None, :]
             self.M += J.T @ J
             self.Mx += self.x[:, None]@self.x[None, :]
+            # self.y = self.x.copy()
+            # self.y[0] = np.sin(self.x[0])
+            # self.My += self.y[:, None]@self.y[None, :]
             # print(f'M = {self.M}')
             # print(f'Mx={self.Mx}')
+            # print(f'My={self.My}')
             # self.update_information(self.x.copy())
 
         return test_values
@@ -71,9 +76,6 @@ class Agent:
         u = torch.tensor(u).unsqueeze(0)
         z[:, :self.d] = x
         z[:, self.d:] = u
-        # dx = self.model.forward(z)
-        # dx = self.model.forward_x(torch.tensor(x, dtype=torch.float32).unsqueeze(0))
-        # prediction = self.model.forward_u(dx, torch.tensor(u, dtype=torch.float32).unsqueeze(0))
         prediction = self.model(z)
         x_dot = torch.tensor(x_dot, dtype=torch.float32)
         loss = nn.MSELoss()(prediction.squeeze(), x_dot.squeeze())
@@ -89,14 +91,15 @@ class Agent:
         u *= self.gamma / np.linalg.norm(u)
         return u
 
-    def choose_contorl(self, t):
+    def choose_control(self, t):
         raise NotImplementedError
 
 
 class Random(Agent):
 
     def choose_control(self, t):
-        return self.draw_random_control(t)
+        u = self.draw_random_control(t)
+        return u
 
 
 class Passive(Agent):

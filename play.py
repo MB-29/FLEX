@@ -6,9 +6,12 @@ from matplotlib import rc, rcParams
 from agents import Random, Passive
 from active_agents import GradientDesign, Spacing, Variation, Linearized
 
-ENVIRONMENT_NAME = 'quadrotor'
 ENVIRONMENT_NAME = 'aircraft'
+ENVIRONMENT_NAME = 'quadrotor'
+ENVIRONMENT_NAME = 'arm'
+ENVIRONMENT_NAME = 'cartpole'
 ENVIRONMENT_NAME = 'pendulum'
+ENVIRONMENT_NAME = 'pendulum-gym'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
 MODEL_PATH = f'models.{ENVIRONMENT_NAME}'
@@ -38,11 +41,12 @@ x0 = environment.x0
 
 Agent = Random
 Agent = Linearized
-Agent = oracles.LinearOracle
+# Agent = Spacing
+# Agent = oracles.LinearOracle
 
 # model = models.Model()
 model = models.NeuralModel()
-model = models.LinearModel()
+# model = models.LinearModel()
 
 agent = Agent(
     x0.copy(),

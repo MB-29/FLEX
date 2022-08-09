@@ -183,7 +183,7 @@ class Spacing(Gradient):
 class Linearized(Active):
 
     def choose_control(self, t):
-        if t < 50:
+        if t < self.T_random:
             return self.draw_random_control(t)
 
         z = torch.zeros(1, self.d + self.m)
