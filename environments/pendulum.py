@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 d, m = 2, 1
 
+l = 1
 alpha = 1
 omega_2 = 1
 
@@ -12,7 +13,7 @@ period = 2*np.pi / np.sqrt(omega_2)
 gamma = 0.5
 T = 300
 dt = 1e-2 * period
-sigma = 0.1
+sigma = 0.01
 
 def dynamics(x, u):
     dx = np.zeros_like(x)
@@ -51,7 +52,7 @@ def test_error(model, x, u, plot, t=0):
     # # print(f'prediction {predictions.shape} target {truth.shape} ')
     loss = loss_function(predictions, truth)
     if plot and t%5 == 0:
-        plot_pendulum(x)
+        plot_phase(x)
         plot_portrait(model.forward_x)
         plt.pause(0.1)
         plt.close()
@@ -61,6 +62,14 @@ def test_error(model, x, u, plot, t=0):
 
 
 def plot_pendulum(x):
+    phi = x[0]
+    c_phi, s_phi = np.cos(phi), np.sin(phi)
+    plt.plot([0, l*s_phi], [0, -l*c_phi], color='blue')
+    plt.xlim((-2*l, 2*l))
+    plt.ylim((-2*l, 2*l))
+    plt.gca().set_aspect('equal', adjustable='box')
+
+def plot_phase(x):
     plt.scatter(x[0], x[1])
     plt.xlim((-phi_max, phi_max))
     plt.ylim((-dphi_max, dphi_max))
