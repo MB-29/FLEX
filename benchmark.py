@@ -8,11 +8,12 @@ import pickle
 from agents import Random, Passive
 from active_agents import GradientDesign, Spacing, Variation, Linearized
 
-ENVIRONMENT_NAME = 'quadrotor'
 # ENVIRONMENT_NAME = 'aircraft'
 ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'cartpole'
 ENVIRONMENT_NAME = 'pendulum'
+ENVIRONMENT_NAME = 'quadrotor'
+ENVIRONMENT_NAME = 'pendulum_gym'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
 MODEL_PATH = f'models.{ENVIRONMENT_NAME}'
@@ -30,19 +31,18 @@ rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
 
 T = environment.T
-# T = 60
 dt = environment.dt
 gamma = environment.gamma
 sigma = environment.sigma
 
 x0 = environment.x0
 
-n_samples = 100
+n_samples = 10
 # for agent_ in [Random, Active]:
 agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
     'random': {'agent': Random, 'color': 'red'},
-    'uniform': {'agent': Spacing, 'color': 'green'},
+    # 'uniform': {'agent': Spacing, 'color': 'green'},
     # # 'gradientOD': {'agent': GradientDesign, 'color': 'purple'},
     # # 'variation': {'agent': Variation, 'color': 'color'},
     'D-optimal': {'agent': Linearized, 'color': 'blue'}
@@ -79,7 +79,10 @@ for name, value in agents.items():
             )
 
         test_values[sample_index, :] = agent.identify(
-            T, test_function=environment.test_error)
+            T,
+            test_function=environment.test_error,
+            T_random=0
+            )
     output[name] = test_values
 
     test_mean = np.mean(test_values, axis=0)
