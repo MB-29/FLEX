@@ -14,7 +14,9 @@ class Model(nn.Module):
         super().__init__()
 
     def get_B(self, x):
-        return dt*np.eye(d, m)
+        B = np.zeros((d, m))
+        B[1, 0] = dt
+        return B
 
     def transform(self, z):
         return z[:, :d]
