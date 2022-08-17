@@ -35,7 +35,7 @@ def greedy_optimal_input(M, A, B, x, gamma):
 def linear_D_optimal(M,  B, v, gamma):
     """Compute the one-step-ahead optimal design for the estimation of A:
         maximize log det (M + x x^T)
-        with x_ = v + Bu and u of norm gamma
+        with x = v + Bu and u of norm gamma
 
     :param M: Current moment matrix;
     :type M: size d x d numpy array
@@ -55,11 +55,17 @@ def linear_D_optimal(M,  B, v, gamma):
     Q = - B.T @ M_inv @ B
     b = B.T @ M_inv @ v
 
-    return minimize_quadratic_sphere(Q, b, gamma)
+    # print(f'Q = {Q}')
+    # print(f'b = {b}')
+
+    u = minimize_quadratic_sphere(Q, b, gamma)
+    # print(f'u = {u}')
+    return u
 
 
 def minimize_quadratic_sphere(Q, b, gamma):
-    """Minimize the corresponding quadratic function over the sphere.
+    """Minimize the following quadratic function phi over the sphere of radius gamma:
+        phi(x) = <x, Qx> - 2<x, b>
 
     :return: minimizer
     :rtype: size m numpy array
@@ -121,7 +127,8 @@ def jacobian(model, z):
             y[:, i],
             model.parameters(),
             create_graph=True,
-            retain_graph=True
+            retain_graph=True,
+            # allow_unused=True
         )
         derivatives = []
         for tensor in tensor_gradients:

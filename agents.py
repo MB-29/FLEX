@@ -23,9 +23,9 @@ class Agent:
         self.dt = dt
         self.dynamics = dynamics
 
-    def identify(self, T, T_random=None, test_function=None, plot=False):
+    def identify(self, T, T_random=0, test_function=None, plot=False):
 
-        self.T_random = T//10 if T_random is None else T_random
+        self.T_random =  T_random
 
         self.u_values = np.zeros((T, self.m))
         self.x_values = np.zeros((T, self.d))

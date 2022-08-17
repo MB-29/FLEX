@@ -204,7 +204,7 @@ class Linearized(Active):
             d2a_dxidtheta = compute_gradient(
                 self.model, da_dx[:, i], retain_graph=True, allow_unused=True)
             D[:, i] = d2a_dxidtheta
-        B_ = self.model.get_B(self.x)
+        B_ = self.dt * self.model.get_B(self.x)
         B = D @ B_
 
         v = da_dtheta.detach().numpy()

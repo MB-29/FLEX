@@ -23,7 +23,7 @@ class NeuralModel(nn.Module):
         return z[:, 1:4:2]
 
     def get_B(self, X):
-        return dt * quadrotor.get_B(X)
+        return quadrotor.get_B(X)
 
     def forward(self, z):
         dx = torch.zeros_like(z[:, :d])
