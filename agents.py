@@ -13,7 +13,7 @@ class Agent:
         self.m = m
 
         self.model = model
-        self.q = sum(parameter.numel() for parameter in model.parameters())
+        self.q = sum(parameter.numel() for parameter in model.a_net.parameters())
         self.M = 1e-3*np.diag(np.random.rand(self.q))
         self.Mx = 1e-3*np.diag(np.random.rand(self.d))
         self.My = 1e-3*np.diag(np.random.rand(self.d))
@@ -56,7 +56,7 @@ class Agent:
             z = torch.zeros(1, self.d + self.m)
             z[:, :self.d] = torch.tensor(self.x)
             z[:, self.d:] = torch.tensor(u_t)
-            J = jacobian(self.model, z).detach().numpy()
+            J = jacobian(self.model.a_net, z).detach().numpy()
             # self.M += J[:, None]@J[None, :]
             self.M += J.T @ J
             self.Mx += self.x[:, None]@self.x[None, :]
