@@ -192,17 +192,17 @@ class Linearized(Active):
 
         j = 1
 
-        y = self.model(z)
-        da_dtheta = compute_gradient(self.model, y[:, j])
+        y = self.model.a_net(z)
+        da_dtheta = compute_gradient(self.model.a_net, y[:, j])
 
         D = np.zeros((self.q, self.d))
-        y = self.model(z)
+        y = self.model.a_net(z)
         da_dx = torch.autograd.grad(y[:, j], x, create_graph=True)[
             0].unsqueeze(0)
 
         for i in range(self.d):
             d2a_dxidtheta = compute_gradient(
-                self.model, da_dx[:, i], retain_graph=True, allow_unused=True)
+                self.model.a_net, da_dx[:, i], retain_graph=True, allow_unused=True)
             D[:, i] = d2a_dxidtheta
         B_ = self.dt * self.model.get_B(self.x)
         B = D @ B_
