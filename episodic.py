@@ -27,9 +27,10 @@ sigma = environment.sigma
 
 x0 = environment.x0
 
-n_samples = 2
+n_samples = 10
 T_random = 0
-n_episodes = 5
+n_episodes = 20
+n_gradient = 500
 # for agent_ in [Random, Active]:
 agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
@@ -57,26 +58,30 @@ for name, value in agents.items():
         # print(f'Model = {Model}')
     # for agent_ in [Spacing]:
         model = Model()
+        agent = agent_(
+            x0.copy(),
+            environment.m,
+            environment.dynamics,
+            model,
+            gamma,
+            dt
+        )
+        # print('exploration')
         for episode in range(n_episodes):
-            agent = agent_(
-                x0.copy(),
-                environment.m,
-                environment.dynamics,
-                model,
-                gamma,
-                dt
-            )
-            # print('exploration')
             estimation_error = agent.identify(
                 T,
                 test_function=environment.test_error,
-                T_random=T_random
+                T_random=0
             )
             # output[name] = estimation_values
             estimation_values[sample_index, episode*T:(episode+1)*T] = estimation_error
 
             # print('exploitation')
-            cost, loss_values = exploitation(model.model, environment.dynamics, n_gradient=500)
+            cost, loss_values = exploitation(
+                model.model,
+                environment.dynamics,
+                n_gradient=n_gradient
+                )
             exploitation_values[sample_index, episode] = cost
     output[name]['estimation'] = estimation_values
     output[name]['exploitation'] = exploitation_values

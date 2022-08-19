@@ -37,15 +37,16 @@ sigma = environment.sigma
 
 x0 = environment.x0
 
-n_samples = 10
+n_samples = 100
+T_random = 0
 # for agent_ in [Random, Active]:
 agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
+    'D-optimal': {'agent': Linearized, 'color': 'blue'},
     'random': {'agent': Random, 'color': 'red'},
     # 'uniform': {'agent': Spacing, 'color': 'green'},
     # # 'gradientOD': {'agent': GradientDesign, 'color': 'purple'},
     # # 'variation': {'agent': Variation, 'color': 'color'},
-    'D-optimal': {'agent': Linearized, 'color': 'blue'}
     }
 try:
     oracles = importlib.import_module(ORACLE_PATH).oracles
@@ -81,7 +82,7 @@ for name, value in agents.items():
         test_values[sample_index, :] = agent.identify(
             T,
             test_function=environment.test_error,
-            T_random=0
+            T_random=T_random
             )
     output[name] = test_values
 
