@@ -3,6 +3,8 @@ import torch as torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
+from environments.environment import Environment
+
 d, m = 2, 1
 g = 10.0
 
@@ -12,30 +14,14 @@ omega_2 = (3/2)*(g /l)
 
 period = 2*np.pi / np.sqrt(omega_2)
 gamma = 2
-T = 2000
-dt = 80e-4
+T = 100
+dt = 0.008
 sigma = 0
 
 A_star = torch.tensor([
     [0, 0, 1],
     [0, -omega_2, 0]
 ])
-
-def dynamics(x, u):
-    dx = np.zeros_like(x)
-    dx[0] = x[1]
-    dx[1] = -omega_2 * np.sin(x[0]) + u
-    noise = sigma * np.random.randn(d)
-    dx += noise
-    return dx
-
-
-def f_star(zeta):
-    dx = torch.zeros_like(zeta[:, :d])
-    dx[:, 0] = zeta[:, 2]
-    dx[:, 1] = -omega_2 * zeta[:, 1]
-    return dx
-
 
 n_points = 100
 phi_max = np.pi
@@ -51,22 +37,56 @@ grid = torch.cat([
 
 x0 = np.array([0.0, 0.0])
 
+class PendulumGym(Environment):
 
-def test_error(model, x, u, plot, t=0):
-    truth = f_star(grid)
-    loss_function = nn.MSELoss()
-    predictions = model.a_net(grid.clone()).squeeze()
-    # # print(f'prediction {predictions.shape} target {truth.shape} ')
-    loss = loss_function(predictions, truth)
-    # loss = torch.linalg.norm(A_star-model.a_net[0].weight)
-    if plot and t%5 == 0:
-        plot_pendulum(x)
-        # plot_portrait(model.forward_x)
-        plt.pause(0.1)
-        plt.close()
-    # print(f'loss = {loss}')
-    # print(x)
-    return loss
+
+    def dynamics(self, x, u):
+        dx = np.zeros_like(x)
+        dx[0] = x[1]
+        d_phi = -omega_2 * np.sin(x[0]) + u
+        dx[1] = d_phi
+        # dx[1] = np.clip(d_phi, -10, 10)
+        noise = sigma * np.random.randn(d)
+        dx += noise
+        return dx
+
+
+    def d_dynamics(self, x, u):
+        dx = torch.zeros_like(x)
+        # dx[0] = torch.clip(x[1], -8, 8)
+        dx[0] = x[1]
+        dx[1] = -omega_2 * torch.sin(x[0]) + u
+        return dx
+
+    def f_star(self, zeta):
+        dx = torch.zeros_like(zeta[:, :d])
+        dx[:, 0] = zeta[:, 2]
+        dx[:, 1] = -omega_2 * zeta[:, 1]
+        return dx
+
+
+    def step_cost(self, x, u):
+        c_phi, s_phi = torch.cos(x[0]), torch.sin(x[0])
+        d_phi = x[1]
+        c = 100*(c_phi + 1)**2 + 0.1*s_phi**2 + 0.1*d_phi**2 + 0.001*u**2
+        # print(f'x = {x}, u={u}, c={c}')
+        return c
+
+    def test_error(self, model, x, u, plot, t=0):
+        truth = self.f_star(grid)
+        loss_function = nn.MSELoss()
+        predictions = model.a_net(grid.clone()).squeeze()
+        # # print(f'prediction {predictions.shape} target {truth.shape} ')
+        loss = loss_function(predictions, truth)
+        # loss = torch.linalg.norm(A_star-model.a_net[0].weight)
+        if plot and t%5 == 0:
+            plot_pendulum(x)
+            # plot_portrait(model.forward_x)
+            plt.pause(0.1)
+            plt.close()
+        # print(f'loss = {loss}')
+        # print(x)
+        return loss
 
 
 def plot_phase(x):
