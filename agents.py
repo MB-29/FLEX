@@ -52,7 +52,6 @@ class Agent:
                         self.model, self.x, u_t, plot, t=t)
                 test_values[t] = test_error.data
 
-            # z = np.array([self.x[0], np.sin(self.x[0])])
             z = torch.zeros(1, self.d + self.m)
             z[:, :self.d] = torch.tensor(self.x)
             z[:, self.d:] = torch.tensor(u_t)
@@ -60,13 +59,6 @@ class Agent:
             # self.M += J[:, None]@J[None, :]
             self.M += J.T @ J
             self.Mx += self.x[:, None]@self.x[None, :]
-            # self.y = self.x.copy()
-            # self.y[0] = np.sin(self.x[0])
-            # self.My += self.y[:, None]@self.y[None, :]
-            # print(f'M = {self.M}')
-            # print(f'Mx={self.Mx}')
-            # print(f'My={self.My}')
-            # self.update_information(self.x.copy())
 
         return test_values
 
@@ -83,8 +75,6 @@ class Agent:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
-    # def update_information(self, x):
 
     def draw_random_control(self, t):
         u = np.random.randn(self.m)

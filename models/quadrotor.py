@@ -11,7 +11,7 @@ class NeuralModel(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.net = net = nn.Sequential(
+        self.net = nn.Sequential(
             nn.Linear(2, 16),
             nn.Tanh(),
             # nn.Linear(16, 16),

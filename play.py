@@ -6,33 +6,27 @@ from matplotlib import rc, rcParams
 from agents import Random, Passive
 from active_agents import GradientDesign, Spacing, Variation, Linearized
 
+from environments import get_environment
+
 ENVIRONMENT_NAME = 'aircraft'
 ENVIRONMENT_NAME = 'quadrotor'
 ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'pendulum'
-ENVIRONMENT_NAME = 'pendulum_gym'
+ENVIRONMENT_NAME = 'gym_pendulum'
 # ENVIRONMENT_NAME = 'cartpole'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
 MODEL_PATH = f'models.{ENVIRONMENT_NAME}'
 ORACLE_PATH = f'oracles.{ENVIRONMENT_NAME}'
-
-environment = importlib.import_module(ENVIRONMENT_PATH)
+Environment = get_environment(ENVIRONMENT_NAME)
+# Environment = importlib.import_module(ENVIRONMENT_PATH).GymPendulum
 models = importlib.import_module(MODEL_PATH)
-try:
-    oracles = importlib.import_module(ORACLE_PATH)
-    print('Oracle imported')
-except ModuleNotFoundError:
-    print('No Oracle found')
-
-rc('font', size=15)
-rc('text', usetex=True)
-rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
 plot = False
-# plot = True
+plot = True
 
-T = environment.T
+T = 100
+environment = Environment(80e-4)
 dt = environment.dt
 gamma = environment.gamma
 sigma = environment.sigma

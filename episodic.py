@@ -8,29 +8,32 @@ import pickle
 from agents import Random
 from active_agents import Linearized
 from exploitation import exploitation
+from environments.gym_pendulum import GymPendulum as Environment
+from models.gym_pendulum import NeuralModel, LinearModel
+from environments import get_environment
 
-# ENVIRONMENT_NAME = 'aircraft'
-ENVIRONMENT_NAME = 'pendulum_gym'
 
-ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
-MODEL_PATH = f'models.{ENVIRONMENT_NAME}'
-ORACLE_PATH = f'oracles.{ENVIRONMENT_NAME}'
+ENVIRONMENT_NAME = 'gym_pendulum'
 
-environment = importlib.import_module(ENVIRONMENT_PATH)
-models = importlib.import_module(MODEL_PATH)
-DefaultModel = models.NeuralModel
+Environment = get_environment(ENVIRONMENT_NAME)
 
-T = environment.T
-dt = environment.dt
+dt = 80e-4
+task_dt = 80e-3
+
+T = 100
+T_task = 100
+n_samples = 10
+T_random = 0
+n_episodes = 20
+n_gradient = 1
+
+environment = Environment(dt=dt)
+exploitation_environment = Environment(dt=task_dt)
 gamma = environment.gamma
 sigma = environment.sigma
 
 x0 = environment.x0
 
-n_samples = 10
-T_random = 0
-n_episodes = 20
-n_gradient = 500
 # for agent_ in [Random, Active]:
 agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
@@ -46,28 +49,26 @@ fig, (ax1, ax2) = plt.subplots(2, 1)
 
 for name, value in agents.items():
     print(f'agent {name}')
-
-
     estimation_values = np.zeros((n_samples, n_episodes*T))
     exploitation_values = np.zeros((n_samples, n_episodes))
     output[name] = {'estimation': estimation_values, 'exploitation':exploitation_values}
     for sample_index in tqdm(range(n_samples)):
         agent_ = value['agent']
         color = value['color']
-        Model = getattr(agent_, 'Model', DefaultModel)
+        NeuralModel
         # print(f'Model = {Model}')
     # for agent_ in [Spacing]:
-        model = Model()
-        agent = agent_(
-            x0.copy(),
-            environment.m,
-            environment.dynamics,
-            model,
-            gamma,
-            dt
-        )
+        model = NeuralModel()
         # print('exploration')
         for episode in range(n_episodes):
+            agent = agent_(
+                x0.copy(),
+                environment.m,
+                environment.dynamics,
+                model,
+                gamma,
+                dt
+            )
             estimation_error = agent.identify(
                 T,
                 test_function=environment.test_error,
@@ -78,8 +79,9 @@ for name, value in agents.items():
 
             # print('exploitation')
             cost, loss_values = exploitation(
+                exploitation_environment,
                 model.model,
-                environment.dynamics,
+                T_task,
                 n_gradient=n_gradient
                 )
             exploitation_values[sample_index, episode] = cost

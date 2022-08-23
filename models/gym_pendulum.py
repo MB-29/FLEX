@@ -2,10 +2,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import environments.pendulum_gym as pendulum_gym
+import environments.gym_pendulum as gym_pendulum
 
-d, m = pendulum_gym.d, pendulum_gym.m
-dt = pendulum_gym.dt
+d, m = gym_pendulum.d, gym_pendulum.m
 
 
 class Model(nn.Module):
@@ -36,10 +35,7 @@ class NeuralModel(Model):
 
     def __init__(self):
         super().__init__()
-        # self.a_net = nn.Sequential(
-        #     nn.Linear(3, 2, bias=False),
-        # )
-        # self.lr = 0.001
+
     
         self.a_net = nn.Sequential(
             nn.Linear(3, 16),
@@ -92,3 +88,12 @@ class NeuralModel(Model):
         zeta = self.transform(torch.tensor(x, dtype=torch.float).unsqueeze(0))
         return self.B_net(zeta).view(d, m).detach().numpy()
         return np.array([0, 1]).reshape(d, m)
+
+class LinearModel(NeuralModel):
+
+    def __init__(self):
+        super().__init__()
+        self.a_net = nn.Sequential(
+            nn.Linear(3, 2, bias=False),
+        )
+        self.lr = 0.01

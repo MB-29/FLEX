@@ -7,37 +7,37 @@ import pickle
 
 from agents import Random, Passive
 from active_agents import GradientDesign, Spacing, Variation, Linearized
+from environments import get_environment
 
 # ENVIRONMENT_NAME = 'aircraft'
 ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'cartpole'
 ENVIRONMENT_NAME = 'pendulum'
 ENVIRONMENT_NAME = 'quadrotor'
-ENVIRONMENT_NAME = 'pendulum_gym'
+ENVIRONMENT_NAME = 'gym_pendulum'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
 MODEL_PATH = f'models.{ENVIRONMENT_NAME}'
 ORACLE_PATH = f'oracles.{ENVIRONMENT_NAME}'
 
-environment = importlib.import_module(ENVIRONMENT_PATH)
+Environment = get_environment(ENVIRONMENT_NAME)
 models = importlib.import_module(MODEL_PATH)
 DefaultModel = models.NeuralModel
-
+# DefaultModel = models.LinearModel
 
 rc('font', size=15)
 rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
-
-
-T = environment.T
+T = 500
+environment = Environment(80e-4)
 dt = environment.dt
 gamma = environment.gamma
 sigma = environment.sigma
 
 x0 = environment.x0
 
-n_samples = 100
+n_samples = 5
 T_random = 0
 # for agent_ in [Random, Active]:
 agents = {
