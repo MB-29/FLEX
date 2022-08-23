@@ -22,7 +22,7 @@ task_dt = 80e-3
 
 T = 100
 T_task = 100
-n_samples = 1
+n_samples = 10
 T_random = 0
 n_episodes = 20
 n_gradient = 400
@@ -62,6 +62,7 @@ if __name__ == '__main__':
             model = NeuralModel()
             # print('exploration')
             for episode in range(n_episodes):
+                # print(f'episode {episode}')
                 agent = agent_(
                     x0.copy(),
                     environment.m,
