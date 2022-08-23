@@ -30,15 +30,18 @@ rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
 T = 500
-environment = Environment(80e-4)
+T_random = 0
+dt = 80e-4
+
+n_samples = 50
+
+environment = Environment(dt)
 dt = environment.dt
 gamma = environment.gamma
 sigma = environment.sigma
 
 x0 = environment.x0
 
-n_samples = 5
-T_random = 0
 # for agent_ in [Random, Active]:
 agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
