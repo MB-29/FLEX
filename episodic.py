@@ -105,7 +105,7 @@ if __name__ == '__main__':
         #     estimation_mean-estimation_std,
         #     estimation_mean+estimation_std,
         #     alpha=0.5)
-OUTPUT_PATH = f'output/{ENVIRONMENT_NAME}_exploit-{task_id}.pkl'
+OUTPUT_PATH = f'output/{ENVIRONMENT_NAME}_episodic-{task_id}.pkl'
 with open(OUTPUT_PATH, 'wb') as output_file:
     pickle.dump(output, output_file)
 plt.legend()
