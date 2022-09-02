@@ -22,7 +22,7 @@ task_dt = 80e-3
 
 T = 100
 T_task = 100
-n_samples = 5
+n_samples = 30
 T_random = 0
 n_episodes = 20
 n_gradient = 400
@@ -45,7 +45,7 @@ agents = {
     # # 'variation': {'agent': Variation, 'color': 'color'},
 output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma, 'n_gradient': n_gradient}
 name = 'D-optimal'
-name = 'random'
+# name = 'random'
 Agent = agents[name]
 fig, (ax1, ax2) = plt.subplots(2, 1)
 if __name__ == '__main__':
