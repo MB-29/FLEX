@@ -22,10 +22,10 @@ task_dt = 80e-3
 
 T = 100
 T_task = 100
-n_samples = 10
+n_samples = 1
 T_random = 0
-n_episodes = 5
-n_gradient = 300
+n_episodes = 20
+n_gradient = 400
 
 environment = Environment(dt=dt)
 exploitation_environment = Environment(dt=task_dt)
@@ -90,25 +90,27 @@ if __name__ == '__main__':
     output[name]['exploitation'] = exploitation_values
     exploitation_mean = exploitation_values.mean(axis=0)
     exploitation_std = np.sqrt(exploitation_values.var(axis=0)/n_samples)
-    ax1.plot(exploitation_mean, label=name)
-    ax1.fill_between(
-        np.arange(n_episodes),
-        exploitation_mean-exploitation_std,
-        exploitation_mean+exploitation_std,
-        alpha=0.5)
-    estimation_mean = estimation_values.mean(axis=0)
-    estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
-    ax2.plot(estimation_mean, label=name)
-    ax2.fill_between(
-        np.arange(n_episodes*T),
-        estimation_mean-estimation_std,
-        estimation_mean+estimation_std,
-        alpha=0.5)
+
+    # ax1.plot(exploitation_mean, label=name)
+    # ax1.fill_between(
+    #     np.arange(n_episodes),
+    #     exploitation_mean-exploitation_std,
+    #     exploitation_mean+exploitation_std,
+    #     alpha=0.5)
+    # estimation_mean = estimation_values.mean(axis=0)
+    # estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
+    # ax2.plot(estimation_mean, label=name)
+    # ax2.fill_between(
+    #     np.arange(n_episodes*T),
+    #     estimation_mean-estimation_std,
+    #     estimation_mean+estimation_std,
+    #     alpha=0.5)
+# plt.legend()
+# plt.show()
+
 OUTPUT_PATH = f'output/{ENVIRONMENT_NAME}_{name}_episodic-{task_id}.pkl'
 with open(OUTPUT_PATH, 'wb') as output_file:
     pickle.dump(output, output_file)
-plt.legend()
 # plt.legend()
 # plt.title(r'Test loss')
 # plt.savefig(f'output/{ENVIRONMENT_NAME}_benchmark.pdf')
-plt.show()
