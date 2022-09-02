@@ -22,7 +22,7 @@ task_dt = 80e-3
 
 T = 100
 T_task = 100
-n_samples = 1
+n_samples = 5
 T_random = 0
 n_episodes = 20
 n_gradient = 400
@@ -43,7 +43,7 @@ agents = {
     # 'uniform': {'agent': Spacing, 'color': 'green'},
     # # 'gradientOD': {'agent': GradientDesign, 'color': 'purple'},
     # # 'variation': {'agent': Variation, 'color': 'color'},
-output = {}
+output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma, 'n_gradient': n_gradient}
 name = 'D-optimal'
 # name = 'random'
 Agent = agents[name]
