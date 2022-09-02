@@ -9,7 +9,7 @@ from agents import Random
 from active_agents import Linearized
 from exploitation import exploitation
 from environments.gym_pendulum import GymPendulum as Environment
-from models.gym_pendulum import NeuralModel, NetModel, LinearModel
+from models.gym_pendulum import NeuralModel, LinearModel
 from environments import get_environment
 
 
@@ -45,7 +45,7 @@ agents = {
     # # 'variation': {'agent': Variation, 'color': 'color'},
 output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma, 'n_gradient': n_gradient}
 name = 'D-optimal'
-# name = 'random'
+name = 'random'
 Agent = agents[name]
 fig, (ax1, ax2) = plt.subplots(2, 1)
 if __name__ == '__main__':
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     for sample_index in tqdm(range(n_samples)):
         # print(f'Model = {Model}')
     # for Agent in [Spacing]:
-        model = NetModel()
+        model = NeuralModel(environment)
         # print('exploration')
         for episode in range(n_episodes):
             print(f'episode {episode}')
