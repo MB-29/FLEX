@@ -4,12 +4,11 @@ import torch.nn as nn
 import environments.quadrotor as quadrotor
 
 
-d, m = 6, 2
-dt = quadrotor.dt
+d, m = quadrotor.d, quadrotor.m
 
 class NeuralModel(nn.Module):
 
-    def __init__(self):
+    def __init__(self, environment):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(2, 16),
@@ -19,11 +18,12 @@ class NeuralModel(nn.Module):
             nn.Linear(16, 2)
         )
 
+        self.known_acceleration = environment.known_acceleration
+        self.get_B = environment.get_B
+
     def transform(self, z):
         return z[:, 1:4:2]
 
-    def get_B(self, X):
-        return quadrotor.get_B(X)
 
     def forward(self, z):
         dx = torch.zeros_like(z[:, :d])
@@ -32,7 +32,7 @@ class NeuralModel(nn.Module):
         u = z[:, d:]
         c_phi, s_phi, ux, uy = torch.cos(phi), torch.sin(phi), u[:, 0], u[:, 1]
         friction = self.net(v)
-        a_x, a_y, a_phi = quadrotor.known_acceleration(c_phi, s_phi, ux, uy)
+        a_x, a_y, a_phi = self.known_acceleration(c_phi, s_phi, ux, uy)
         dx[:, 0] = z[:, 1]
         dx[:, 2] = z[:, 3]
         dx[:, 4] = z[:, 3]
