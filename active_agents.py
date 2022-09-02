@@ -188,23 +188,33 @@ class Linearized(Active):
 
         z = torch.zeros(1, self.d + self.m)
         x = torch.tensor(self.x, dtype=torch.float, requires_grad=True)
+        # u = torch.tensor(self.u, dtype=torch.float)
+        u = torch.zeros(self.m, requires_grad=True)
         z[:, :self.d] = x
+        z[:, self.d:] = u
 
         j = 1
 
-        y = self.model.a_net(z)
-        da_dtheta = compute_gradient(self.model.a_net, y[:, j])
+        y = self.model(z)
+        da_dtheta = compute_gradient(self.model, y[:, j])
 
         D = np.zeros((self.q, self.d))
-        y = self.model.a_net(z)
+        y = self.model(z)
         da_dx = torch.autograd.grad(y[:, j], x, create_graph=True)[
             0].unsqueeze(0)
 
         for i in range(self.d):
             d2a_dxidtheta = compute_gradient(
-                self.model.a_net, da_dx[:, i], retain_graph=True, allow_unused=True)
+                self.model, da_dx[:, i], retain_graph=True, allow_unused=True)
             D[:, i] = d2a_dxidtheta
-        B_ = self.dt * self.model.get_B(self.x)
+        if False:
+            B_ = self.dt * self.model.get_B(self.x)
+        else:
+            B_ = np.zeros((self.d, self.m))
+            y = self.model(z)
+            for i in range(self.d):
+                dfi_du = torch.autograd.grad(y[:, i], u, retain_graph=True)
+                B_[i, :] = dfi_du
         B = D @ B_
 
         v = da_dtheta.detach().numpy()

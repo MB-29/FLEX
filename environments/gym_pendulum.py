@@ -15,40 +15,55 @@ class Pendulum(Environment):
         self.mass = mass
         self.g = g
         self.l = l
-        self.omega_2 = g/l
         self.inertia = (1/3)*m*l**2
+        self.omega_2 = g/(2*l*self.inertia)
         self.alpha = alpha
         self.period = 2*np.pi / np.sqrt(self.omega_2)
-        self.A_star = torch.tensor([
-            [0, 0, 1],
-            [0, -(3/2)*self.omega_2, 0]
-        ])
+
 
         self.x0 = np.array([0.0, 0.0])
 
-        n_points = 100
-
+        n_points = 10
 
         self.phi_max = np.pi
         self.dphi_max = 2*np.sqrt(-2*self.omega_2*np.cos(self.phi_max))
         interval_phi = torch.linspace(-self.phi_max, self.phi_max, n_points)
         interval_dphi = torch.linspace(-self.dphi_max, self.dphi_max, n_points)
-        grid_phi, grid_dphi = torch.meshgrid(interval_phi, interval_dphi)
+        interval_u = torch.linspace(-self.gamma, self.gamma, n_points)
+        grid_phi, grid_dphi, grid_u = torch.meshgrid(interval_phi, interval_dphi, interval_u)
         self.grid = torch.cat([
             torch.cos(grid_phi.reshape(-1, 1)),
             torch.sin(grid_phi.reshape(-1, 1)),
-            grid_dphi.reshape(-1, 1)
+            grid_dphi.reshape(-1, 1),
+            grid_u.reshape(-1, 1)
         ], 1)
+
+        self.B_star = torch.tensor([[0.0], [(1/self.inertia)]])
+        self.A_star = torch.tensor([
+            [0, 0, 1],
+            [0, -(3/2)*self.omega_2, 0]
+        ])
 
     def dynamics(self, x, u):
         dx = np.zeros_like(x)
         dx[0] = x[1]
-        d_phi = (1/self.inertia)*(-(1/2)*self.m*self.g*self.l * np.sin(x[0]) + u)
-        dx[1] = d_phi
+        dx[1] = (1/self.inertia)*(-(1/2)*self.m*self.g*self.l * np.sin(x[0]) + u)
+        # dx += np.array([[0.0], [1/self.inertia]]) @ u
+        # dx[1] = d_phi
         # dx[1] = np.clip(d_phi, -10, 10)
         noise = self.sigma * np.random.randn(d)
         dx += noise
         return dx
+    def a(self, x):
+        dx = np.zeros_like(x)
+        dx[0] = x[1]
+        dx[1] = (1/self.inertia)*(-(1/2)*self.m*self.g*self.l * np.sin(x[0]))
+        return dx
+    def b(self, x, u):
+        return np.array([[0.0], [1/self.inertia]]) @ u
+    # def dynamics(self, x, u):
+    #     dx = self.a(x) + self.b(x, u)
+    #     return dx
 
 
     def d_dynamics(self, x, u):
@@ -58,10 +73,12 @@ class Pendulum(Environment):
         dx[1] = (1/self.inertia) * (-(1/2)*self.m*self.g*self.l * torch.sin(x[0]) + u)
         return dx
 
-    def f_star(self, zeta):
-        dx = torch.zeros_like(zeta[:, :d])
-        dx[:, 0] = zeta[:, 2]
-        dx[:, 1] = -(1/self.inertia)*(1/2)*self.m*self.g*self.l*zeta[:, 1]
+    def f_star(self, zeta_u):
+        dx = torch.zeros_like(zeta_u[:, :d])
+        u = zeta_u[:, -1]
+        # print(zeta_u[:, 1].shape)
+        dx[:, 0] = zeta_u[:, 2]
+        dx[:, 1] = (1/self.inertia)*(-(1/2)*self.m*self.g*self.l*zeta_u[:, 1] + u)
         return dx
 
 
@@ -73,10 +90,21 @@ class Pendulum(Environment):
         return c
 
     def test_error(self, model, x, u, plot, t=0):
-        truth = self.f_star(self.grid)
         loss_function = nn.MSELoss()
-        predictions = model.a_net(self.grid.clone()).squeeze()
-        # # print(f'prediction {predictions.shape} target {truth.shape} ')
+        
+        # predictions = model.a_net(self.grid.clone()).squeeze()
+        # truth = self.f_star(self.grid)
+        # print(f'prediction {predictions.shape} target {truth.shape} ')
+        
+        # predictions = model.B_net(self.grid.clone())
+        # batch_size, _ = predictions.shape
+        # truth = self.B_star.view(1, 2).expand(batch_size,  -1)
+
+        predictions = model.net(self.grid.clone())
+        batch_size, _ = predictions.shape
+        truth = self.f_star(self.grid.clone())
+        # print(predictions)
+        
         loss = loss_function(predictions, truth)
         # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
         if plot and t%5 == 0:

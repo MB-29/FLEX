@@ -12,7 +12,8 @@ class Periodic1D(Agent):
     def choose_control(self, t):
         if t < self.T_random:
             return self.draw_random_control(t)
-        return self.gamma * np.sign(np.sin(2*np.pi*t*self.dt/self.period))
+        u = self.gamma * np.sign(np.sin(2*np.pi*t*self.dt/self.period))
+        return np.array([u])
 
 class Periodic2D(Agent):
 

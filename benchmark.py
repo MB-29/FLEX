@@ -23,17 +23,18 @@ ORACLE_PATH = f'oracles.{ENVIRONMENT_NAME}'
 Environment = get_environment(ENVIRONMENT_NAME)
 models = importlib.import_module(MODEL_PATH)
 DefaultModel = models.NeuralModel
+DefaultModel = models.NetModel
 # DefaultModel = models.LinearModel
 
 rc('font', size=15)
 rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
-T = 500
-T_random = 0
+T = 300
+T_random = 50
 dt = 80e-4
 
-n_samples = 50
+n_samples = 20
 
 environment = Environment(dt)
 dt = environment.dt
@@ -45,19 +46,20 @@ x0 = environment.x0
 # for agent_ in [Random, Active]:
 agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
+    # 'periodic': {'agent': PeriodicOracle, 'color': 'blue'},
     'D-optimal': {'agent': Linearized, 'color': 'blue'},
     'random': {'agent': Random, 'color': 'red'},
     # 'uniform': {'agent': Spacing, 'color': 'green'},
     # # 'gradientOD': {'agent': GradientDesign, 'color': 'purple'},
     # # 'variation': {'agent': Variation, 'color': 'color'},
     }
-try:
-    oracles = importlib.import_module(ORACLE_PATH).oracles
-    for name, oracle_ in oracles.items():
-        agents[name] = {'agent': oracle_, 'color': 'black'}
-        print(f'imported oracle {name}')
-except ModuleNotFoundError:
-    print('No Oracle found')
+# try:
+#     oracles = importlib.import_module(ORACLE_PATH).oracles
+#     for name, oracle_ in oracles.items():
+#         agents[name] = {'agent': oracle_, 'color': 'black'}
+#         print(f'imported oracle {name}')
+# except ModuleNotFoundError:
+#     print('No Oracle found')
 
 # for name in ['explorer', 'passive', 'random', 'periodic']:
 # for name in ['linearized']:

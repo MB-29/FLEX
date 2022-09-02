@@ -25,21 +25,27 @@ models = importlib.import_module(MODEL_PATH)
 plot = False
 plot = True
 
-T = 100
-environment = Environment(80e-4)
-dt = environment.dt
+T = 300
+T_random = 50
+dt = 80e-4  
+environment = Environment(dt)
 gamma = environment.gamma
 sigma = environment.sigma
 
-x0 = environment.x0
+# x0 = np.array([np.pi/2, 0.0])
+x0 = environment.x0.copy()
 
+from oracles.gym_pendulum import PeriodicOracle
+Agent = Passive
 Agent = Random
-Agent = Linearized
+# Agent = Linearized
+# Agent = PeriodicOracle
 # Agent = Spacing
 # Agent = oracles.LinearOracle
 
 # model = models.Model()
 model = models.NeuralModel()
+model = models.NetModel()
 # model = models.LinearModel()
 
 agent = Agent(
@@ -55,10 +61,9 @@ test_values = agent.identify(
     T,
     test_function=environment.test_error,
     plot=plot,
-    T_random=0
+    T_random=T_random
     )
 
 plt.plot(test_values, alpha=0.7)
-plt.legend()
 plt.title(r'Test loss')
 plt.show()
