@@ -9,10 +9,10 @@ from active_agents import GradientDesign, Spacing, Variation, Linearized
 from environments import get_environment
 
 ENVIRONMENT_NAME = 'aircraft'
-ENVIRONMENT_NAME = 'quadrotor'
 ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'pendulum'
 ENVIRONMENT_NAME = 'gym_pendulum'
+# ENVIRONMENT_NAME = 'quadrotor'
 # ENVIRONMENT_NAME = 'cartpole'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
@@ -22,13 +22,12 @@ Environment = get_environment(ENVIRONMENT_NAME)
 # Environment = importlib.import_module(ENVIRONMENT_PATH).GymPendulum
 models = importlib.import_module(MODEL_PATH)
 
-plot = False
+plot = False    
 plot = True
 
 T = 300
-T_random = 50
-dt = 80e-4  
-environment = Environment(dt)
+T_random = 10
+environment = Environment()
 gamma = environment.gamma
 sigma = environment.sigma
 
@@ -38,14 +37,13 @@ x0 = environment.x0.copy()
 from oracles.gym_pendulum import PeriodicOracle
 Agent = Passive
 Agent = Random
-# Agent = Linearized
+Agent = Linearized
 # Agent = PeriodicOracle
 # Agent = Spacing
 # Agent = oracles.LinearOracle
 
 # model = models.Model()
-model = models.NeuralModel()
-model = models.NetModel()
+model = models.NeuralModel(environment)
 # model = models.LinearModel()
 
 agent = Agent(
@@ -54,7 +52,7 @@ agent = Agent(
     environment.dynamics,
     model,
     gamma,
-    dt
+    environment.dt
     )
 
 test_values = agent.identify(

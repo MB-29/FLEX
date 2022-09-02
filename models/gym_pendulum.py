@@ -9,7 +9,7 @@ d, m = gym_pendulum.d, gym_pendulum.m
 
 class Model(nn.Module):
 
-    def __init__(self):
+    def __init__(self, environment):
         super().__init__()
 
     def transform(self, x):
@@ -37,10 +37,10 @@ class Model(nn.Module):
         # return self.net(zeta).view(-1)
 
 
-class NetModel(Model):
+class NeuralModel(Model):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, environment):
+        super().__init__(environment)
 
     
         self.net = nn.Sequential(
@@ -63,67 +63,67 @@ class NetModel(Model):
 
         return dx
 
-class NeuralModel(Model):
+# class NeuralModel(Model):
 
-    def __init__(self):
-        super().__init__()
+#     def __init__(self):
+#         super().__init__()
 
     
-        self.a_net = nn.Sequential(
-            nn.Linear(3, 16),
-            nn.Tanh(),
-            # nn.Linear(16, 16),
-            # nn.Tanh(),
-            nn.Linear(16, 2)
-        )
+#         self.a_net = nn.Sequential(
+#             nn.Linear(3, 16),
+#             nn.Tanh(),
+#             # nn.Linear(16, 16),
+#             # nn.Tanh(),
+#             nn.Linear(16, 2)
+#         )
     
-        # self.B_net = nn.Sequential(
-        #     nn.Linear(3, 2),
-        # )
-        self.B_net = nn.Sequential(
-            nn.Linear(3, 2),
-            nn.Tanh(),
-            nn.Linear(2, 2),
-            nn.Tanh(),
-            nn.Linear(2, 2)
-        )
+#         # self.B_net = nn.Sequential(
+#         #     nn.Linear(3, 2),
+#         # )
+#         self.B_net = nn.Sequential(
+#             nn.Linear(3, 2),
+#             nn.Tanh(),
+#             nn.Linear(2, 2),
+#             nn.Tanh(),
+#             nn.Linear(2, 2)
+#         )
 
-        self.lr = 0.0005
+#         self.lr = 0.0005
 
-    def forward(self, z):
+#     def forward(self, z):
 
-        x = z[:, :d]
-        # x = z[:, :d]
+#         x = z[:, :d]
+#         # x = z[:, :d]
 
-        dx = self.forward_x(x) + self.forward_u(z)
-        # print(f'dx = {dx}')
-        # dx += self.forward_u(z)
-        return dx
+#         dx = self.forward_x(x) + self.forward_u(z)
+#         # print(f'dx = {dx}')
+#         # dx += self.forward_u(z)
+#         return dx
     
 
 
-    def forward_x(self, x):
+#     def forward_x(self, x):
 
-        dx = self.a_net(self.transform(x))
+#         dx = self.a_net(self.transform(x))
 
-        # dx = torch.zeros_like(x)
-        # dx[:, 0] = x[:, 1]
-        # dx[:, 1] = -15*torch.sin(x[:, 0])
+#         # dx = torch.zeros_like(x)
+#         # dx[:, 0] = x[:, 1]
+#         # dx[:, 1] = -15*torch.sin(x[:, 0])
 
-        return dx
+#         return dx
 
-    def forward_u(self, z):
-        x = z[:, :d]
-        u = z[:, d:]
-        # B = torch.tensor(self.get_B(x.detach().numpy().squeeze()), dtype=torch.float)
-        B = self.B_net(self.transform(x)).view(d, m)
-        return (B @ u.T).T
-        # return B@u
+#     def forward_u(self, z):
+#         x = z[:, :d]
+#         u = z[:, d:]
+#         # B = torch.tensor(self.get_B(x.detach().numpy().squeeze()), dtype=torch.float)
+#         B = self.B_net(self.transform(x)).view(d, m)
+#         return (B @ u.T).T
+#         # return B@u
 
-    def get_B(self, x):
-        zeta = self.transform(torch.tensor(x, dtype=torch.float).unsqueeze(0))
-        return self.B_net(zeta).view(d, m).detach().numpy()
-        return np.array([0, 1]).reshape(d, m)
+#     def get_B(self, x):
+#         zeta = self.transform(torch.tensor(x, dtype=torch.float).unsqueeze(0))
+#         return self.B_net(zeta).view(d, m).detach().numpy()
+#         return np.array([0, 1]).reshape(d, m)
 
 class LinearModel(NeuralModel): 
 

@@ -10,7 +10,7 @@ d, m = 2, 1
 
 class Pendulum(Environment):
 
-    def __init__(self, d, m, dt, sigma, gamma, mass, g, l, alpha):
+    def __init__(self, dt, sigma, gamma, mass, g, l, alpha):
         super().__init__(d, m, dt, sigma, gamma)
         self.mass = mass
         self.g = g
@@ -128,26 +128,24 @@ class Pendulum(Environment):
 class DampedPendulum(Pendulum):
 
     def __init__(self, dt):
-        d, m = 2, 1
         sigma = 0.1
         gamma = 0.5
         mass = 1.0
         l = 1.0
         g = 10.0
         alpha = 1.0
-        super().__init__(d, m, dt, sigma, gamma, mass, g, l, alpha)
+        super().__init__(dt, sigma, gamma, mass, g, l, alpha)
 
 class GymPendulum(Pendulum):
 
-    def __init__(self, dt):
-        d, m = 2, 1
+    def __init__(self, dt=80e-4):
         sigma = 0
         gamma = 2
         mass = 1.0
         l = 1.0
         g = 10.0
         alpha = 0.0
-        super().__init__(d, m, dt, sigma, gamma, mass, g, l, alpha)
+        super().__init__(dt, sigma, gamma, mass, g, l, alpha)
 
 def plot_phase(x):
     plt.scatter(x[0], x[1])

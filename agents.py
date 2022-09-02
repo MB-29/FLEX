@@ -62,10 +62,11 @@ class Agent:
             z[:, :self.d] = torch.tensor(self.x)
             z[:, self.d:] = torch.tensor(u_t)
             x = torch.tensor(self.x, dtype=torch.float).unsqueeze(0)
-            zeta = self.model.transform(x)
+            # zeta = self.model.transform(x)
 
             # 08/23/2022 : zeta instead of z
-            J = jacobian(self.model, zeta).detach().numpy()
+            # 09/02/2022 : z instead of zeta
+            J = jacobian(self.model, z).detach().numpy()
             # self.M += J[:, None]@J[None, :]
             self.M += J.T @ J
             self.Mx += self.x[:, None]@self.x[None, :]

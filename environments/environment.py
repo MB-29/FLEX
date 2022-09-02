@@ -3,7 +3,7 @@ import importlib
 
 def get_environment(name):
     environment_name = ''.join(word.title() for word in name.split('_'))
-    environment_path = f'environments.{name}'
+    environment_path = f'environments'
     Environment = getattr(importlib.import_module(environment_path), environment_name)
     return Environment
 
@@ -28,5 +28,5 @@ class Environment:
     def step_cost(self, x, u):
         raise NotImplementedError
 
-    def plot(self):
+    def plot(self, x, u):
         raise NotImplementedError

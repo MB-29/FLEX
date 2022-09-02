@@ -14,7 +14,7 @@ ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'cartpole'
 ENVIRONMENT_NAME = 'pendulum'
 ENVIRONMENT_NAME = 'quadrotor'
-ENVIRONMENT_NAME = 'gym_pendulum'
+# ENVIRONMENT_NAME = 'gym_pendulum'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
 MODEL_PATH = f'models.{ENVIRONMENT_NAME}'
@@ -23,7 +23,6 @@ ORACLE_PATH = f'oracles.{ENVIRONMENT_NAME}'
 Environment = get_environment(ENVIRONMENT_NAME)
 models = importlib.import_module(MODEL_PATH)
 DefaultModel = models.NeuralModel
-DefaultModel = models.NetModel
 # DefaultModel = models.LinearModel
 
 rc('font', size=15)
@@ -31,10 +30,10 @@ rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
 T = 300
-T_random = 50
-dt = 80e-4
+T_random = 10
+dt = 0.1
 
-n_samples = 20
+n_samples = 100
 
 environment = Environment(dt)
 dt = environment.dt
@@ -74,7 +73,7 @@ for name, value in agents.items():
 # for agent_ in [Spacing]:
     test_values = np.zeros((n_samples, T))
     for sample_index in tqdm(range(n_samples)):
-        model = Model()
+        model = Model(environment)
         agent = agent_(
             x0.copy(),
             environment.m,

@@ -207,9 +207,9 @@ class Linearized(Active):
             d2a_dxidtheta = compute_gradient(
                 self.model, da_dx[:, i], retain_graph=True, allow_unused=True)
             D[:, i] = d2a_dxidtheta
-        if False:
+        try:
             B_ = self.dt * self.model.get_B(self.x)
-        else:
+        except AttributeError:
             B_ = np.zeros((self.d, self.m))
             y = self.model(z)
             for i in range(self.d):

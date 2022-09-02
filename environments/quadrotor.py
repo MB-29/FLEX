@@ -111,7 +111,7 @@ class Quadrotor(Environment):
 
 class DefaultQuadrotor(Quadrotor):
 
-    def __init__(self, dt):
+    def __init__(self, dt=0.1):
         mass, I, r = 2.0, 10, 1.0
         g = 0.0
         sigma = 0.0
