@@ -1,48 +1,16 @@
-import numpy as np
 import torch
 import torch.nn as nn
 
-import environments.gym_pendulum as gym_pendulum
+import environments.cartpole as cartpole
 
-d, m = gym_pendulum.d, gym_pendulum.m
+d, m = cartpole.d, cartpole.m
+dt = cartpole.dt
 
 
-class Model(nn.Module):
+class NeuralModel(nn.Module):
 
     def __init__(self, environment):
         super().__init__()
-
-    def transform(self, x):
-        batch_size, _ = x.shape
-        zeta = torch.zeros(batch_size, 3)
-        zeta[:, 0] = torch.cos(x[:, 0])
-        zeta[:, 1] = torch.sin(x[:, 0])
-        zeta[:, 2] = x[:, 1]
-        return zeta
-
-    def forward_x(self, x):
-        raise NotImplementedError
-
-    def forward_u(self, dx, u):
-        raise NotImplementedError
-    
-    def model(self, x, u):
-        z = torch.zeros(1, d+m)
-        z[:, :d] = x
-        z[:, d] = u
-        return self.forward(z).squeeze()
-
-    # def predictor(self, z):
-        # zeta = self.transform(z)
-        # return self.net(zeta).view(-1)
-
-
-class NeuralModel(Model):
-
-    def __init__(self, environment):
-        super().__init__(environment)
-
-    
         self.net = nn.Sequential(
             nn.Linear(4, 16),
             nn.Tanh(),
@@ -50,86 +18,54 @@ class NeuralModel(Model):
             # nn.Tanh(),
             nn.Linear(16, 2)
         )
+        # self.B_net = nn.Sequential(
+        #     nn.Linear(3, 16),
+        #     nn.Tanh(),
+        #     # nn.Linear(16, 16),
+        #     # nn.Tanh(),
+        #     nn.Linear(16, d)
+        # )
+        self.get_B = environment.get_B
+
+    def get_B(self, x):
+        return self.get_B(x.detach().numpy().squeeze())
+        # return self.B_net(self.transform(z)[:, :3]).view(d, m)
+
+
+    def transform(self, z):
+        z_ = z[:, :d].clone()
+        z_[:, 0] = z[:, 1]
+        phi = z[:, 2]
+        z_[:, 1] = torch.cos(phi)
+        z_[:, 2] = torch.sin(phi)
+        return z_
+
+    def acceleration_u(self, z):
+        B = torch.tensor(self.get_B(z), dtype=torch.float)
+        u = z[:, d]
+        return B@u
+    # def acceleration_u(self, z):
+    #     phi = z[:, 2]
+    #     u = z[:, -1]
+    #     c_phi = torch.cos(phi)
+    #     dd_y_u, dd_phi_u = cartpole.acceleration_u(c_phi, u)
+    #     acceleration = torch.zeros_like(z[:, :2])
+    #     acceleration[:, 0] = dd_y_u
+    #     acceleration[:, 1] = dd_phi_u
+    #     return acceleration
+
     def forward(self, z):
-        batch_size, _ = z.shape
-        x = z[:, :d]
-        u = z[:, d:]
-        zeta = self.transform(x)
+        dx = torch.zeros_like(z[:, :d])
+        x = self.transform(z)
+        # x = z[:, :d]
+        # u = z[:, d]
+        acceleration_x = self.net(x)
+        acceleration_u = self.acceleration_u(z)
+        dx[:, 1::2] = acceleration_x
+        dx[:, 0] = z[:, 1]
+        dx[:, 2] = z[:, 3]
+        dx += acceleration_u
 
-        zeta_u = torch.zeros((batch_size, d+1+m))
-        zeta_u[:, :d+1] = zeta
-        zeta_u[:, d+1:] = u
-        dx = self.net(zeta_u)
-
+        # dx = self.forward_x(x)
+        # dx = self.forward_u(dx, u)
         return dx
-
-# class NeuralModel(Model):
-
-#     def __init__(self):
-#         super().__init__()
-
-    
-#         self.a_net = nn.Sequential(
-#             nn.Linear(3, 16),
-#             nn.Tanh(),
-#             # nn.Linear(16, 16),
-#             # nn.Tanh(),
-#             nn.Linear(16, 2)
-#         )
-    
-#         # self.B_net = nn.Sequential(
-#         #     nn.Linear(3, 2),
-#         # )
-#         self.B_net = nn.Sequential(
-#             nn.Linear(3, 2),
-#             nn.Tanh(),
-#             nn.Linear(2, 2),
-#             nn.Tanh(),
-#             nn.Linear(2, 2)
-#         )
-
-#         self.lr = 0.0005
-
-#     def forward(self, z):
-
-#         x = z[:, :d]
-#         # x = z[:, :d]
-
-#         dx = self.forward_x(x) + self.forward_u(z)
-#         # print(f'dx = {dx}')
-#         # dx += self.forward_u(z)
-#         return dx
-    
-
-
-#     def forward_x(self, x):
-
-#         dx = self.a_net(self.transform(x))
-
-#         # dx = torch.zeros_like(x)
-#         # dx[:, 0] = x[:, 1]
-#         # dx[:, 1] = -15*torch.sin(x[:, 0])
-
-#         return dx
-
-#     def forward_u(self, z):
-#         x = z[:, :d]
-#         u = z[:, d:]
-#         # B = torch.tensor(self.get_B(x.detach().numpy().squeeze()), dtype=torch.float)
-#         B = self.B_net(self.transform(x)).view(d, m)
-#         return (B @ u.T).T
-#         # return B@u
-
-#     def get_B(self, x):
-#         zeta = self.transform(torch.tensor(x, dtype=torch.float).unsqueeze(0))
-#         return self.B_net(zeta).view(d, m).detach().numpy()
-#         return np.array([0, 1]).reshape(d, m)
-
-class LinearModel(NeuralModel): 
-
-    def __init__(self):
-        super().__init__()
-        self.a_net = nn.Sequential(
-            nn.Linear(3, 2, bias=False),
-        )
-        self.lr = 0.01

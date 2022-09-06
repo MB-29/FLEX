@@ -146,7 +146,7 @@ class GymPendulum(Pendulum):
         g = 10.0
         alpha = 0.0
         super().__init__(dt, sigma, gamma, mass, g, l, alpha)
-
+    
 def plot_phase(x):
     plt.scatter(x[0], x[1])
     plt.xlim((-phi_max, phi_max))

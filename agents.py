@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from utils import jacobian
+from computations import jacobian
 
 class Agent:
 

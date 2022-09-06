@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from agents import Agent
-from utils import jacobian, compute_gradient, linear_D_optimal
+from computations import jacobian, compute_gradient, linear_D_optimal
 
 class Active(Agent):
 
