@@ -8,7 +8,7 @@ dt = cartpole.dt
 
 class NeuralModel(nn.Module):
 
-    def __init__(self):
+    def __init__(self, environment):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(4, 16),
@@ -17,13 +17,13 @@ class NeuralModel(nn.Module):
             # nn.Tanh(),
             nn.Linear(16, 2)
         )
-        self.B_net = nn.Sequential(
-            nn.Linear(3, 16),
-            nn.Tanh(),
-            # nn.Linear(16, 16),
-            # nn.Tanh(),
-            nn.Linear(16, d)
-        )
+        # self.B_net = nn.Sequential(
+        #     nn.Linear(3, 16),
+        #     nn.Tanh(),
+        #     # nn.Linear(16, 16),
+        #     # nn.Tanh(),
+        #     nn.Linear(16, d)
+        # )
 
     def get_B(self, z):
         return cartpole.get_B(z[:, :d].detach().numpy().squeeze())
