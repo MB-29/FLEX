@@ -44,8 +44,8 @@ agents = {
     # # 'gradientOD': {'agent': GradientDesign, 'color': 'purple'},
     # # 'variation': {'agent': Variation, 'color': 'color'},
 output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma, 'n_gradient': n_gradient}
-name = 'D-optimal'
-# name = 'random'
+# name = 'D-optimal'
+name = 'random'
 Agent = agents[name]
 fig, (ax1, ax2) = plt.subplots(2, 1)
 if __name__ == '__main__':
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 # plt.legend()
 # plt.show()
 
-OUTPUT_PATH = f'output/{ENVIRONMENT_NAME}_{name}_episodic-{task_id}.pkl'
+OUTPUT_PATH = f'output/{ENVIRONMENT_NAME}_{name}_{n_samples}-samples_episodic-{task_id}.pkl'
 with open(OUTPUT_PATH, 'wb') as output_file:
     pickle.dump(output, output_file)
 # plt.legend()
