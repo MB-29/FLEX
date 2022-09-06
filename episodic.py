@@ -13,9 +13,9 @@ from models.gym_pendulum import NeuralModel, LinearModel
 from environments import get_environment
 
 
-ENVIRONMENT_NAME = 'gym_pendulum'
+# ENVIRONMENT_NAME = 'gym_pendulum'
 
-Environment = get_environment(ENVIRONMENT_NAME)
+# Environment = get_environment(ENVIRONMENT_NAME)
 
 dt = 80e-4
 task_dt = 80e-3
