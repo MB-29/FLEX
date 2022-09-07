@@ -13,7 +13,7 @@ from models.gym_pendulum import NeuralModel, LinearModel
 from environments import get_environment
 
 
-# ENVIRONMENT_NAME = 'gym_pendulum'
+ENVIRONMENT_NAME = 'gym_pendulum'
 
 # Environment = get_environment(ENVIRONMENT_NAME)
 
