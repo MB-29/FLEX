@@ -44,11 +44,11 @@ class NeuralModel(Model):
 
     
         self.net = nn.Sequential(
-            nn.Linear(4, 16),
+            nn.Linear(4, 5),
             nn.Tanh(),
-            # nn.Linear(16, 16),
+            # nn.Linear(5, 5),
             # nn.Tanh(),
-            nn.Linear(16, 2)
+            nn.Linear(5, 2)
         )
     def forward(self, z):
         batch_size, _ = z.shape
