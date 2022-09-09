@@ -13,6 +13,7 @@ from models.gym_pendulum import NeuralModel, LinearModel
 from environments import get_environment
 
 
+# ENVIRONMENT_NAME = 'gym_cartpole'
 ENVIRONMENT_NAME = 'gym_pendulum'
 
 # Environment = get_environment(ENVIRONMENT_NAME)
@@ -44,8 +45,8 @@ agents = {
     # # 'gradientOD': {'agent': GradientDesign, 'color': 'purple'},
     # # 'variation': {'agent': Variation, 'color': 'color'},
 output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma, 'n_gradient': n_gradient}
-# name = 'D-optimal'
-name = 'random'
+name = 'D-optimal'
+# name = 'random'
 Agent = agents[name]
 fig, (ax1, ax2) = plt.subplots(2, 1)
 if __name__ == '__main__':
