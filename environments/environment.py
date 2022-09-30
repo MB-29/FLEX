@@ -3,7 +3,7 @@ import importlib
 def get_environment(name):
     environment_name = ''.join(word.title() for word in name.split('_'))
     file_name = name.split('_')[-1]
-    environment_path = f'environments.{file_name}'
+    environment_path = f'environments'
     print(f'file name {file_name}')
     Environment = getattr(importlib.import_module(environment_path), environment_name)
     return Environment

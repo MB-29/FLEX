@@ -5,17 +5,16 @@ import torch.nn as nn
 import environments.pendulum as pendulum
 
 d, m = pendulum.d, pendulum.m
-dt = pendulum.dt
 
 
 class Model(nn.Module):
 
-    def __init__(self):
+    def __init__(self, environment):
         super().__init__()
 
     def get_B(self, x):
         B = np.zeros((d, m))
-        B[1, 0] = dt
+        B[1, 0] = 1
         return B
 
     def transform(self, z):
@@ -71,4 +70,38 @@ class LinearModel(Model):
         dx[:, 0] = x[:, 1]
         dx[:, 1] = self.theta[0] * torch.sin(x[:, 0]) + self.theta[1]*x[:, 1]
         return dx
-        
+
+
+class GymNeural(Model):
+
+    def __init__(self, environment):
+        super().__init__(environment)
+
+        self.net = nn.Sequential(
+            nn.Linear(4, 5),
+            nn.Tanh(),
+            # nn.Linear(5, 5),
+            # nn.Tanh(),
+            nn.Linear(5, 2)
+        )
+
+    def transform(self, x):
+        batch_size, _ = x.shape
+        zeta = torch.zeros(batch_size, 3)
+        zeta[:, 0] = torch.cos(x[:, 0])
+        zeta[:, 1] = torch.sin(x[:, 0])
+        zeta[:, 2] = x[:, 1]
+        return zeta
+
+    def forward(self, z):
+        batch_size, _ = z.shape
+        x = z[:, :d]
+        u = z[:, d:]
+        zeta = self.transform(x)
+
+        zeta_u = torch.zeros((batch_size, d+1+m))
+        zeta_u[:, :d+1] = zeta
+        zeta_u[:, d+1:] = u
+        dx = self.net(zeta_u)
+
+        return dx

@@ -4,7 +4,6 @@ import torch.nn as nn
 import environments.cartpole as cartpole
 
 d, m = cartpole.d, cartpole.m
-dt = cartpole.dt
 
 
 class NeuralModel(nn.Module):

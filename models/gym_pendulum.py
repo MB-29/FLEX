@@ -2,9 +2,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import environments.gym_pendulum as gym_pendulum
+import environments.pendulum as pendulum
 
-d, m = gym_pendulum.d, gym_pendulum.m
+d, m = pendulum.d, pendulum.m
 
 
 class Model(nn.Module):

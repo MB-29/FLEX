@@ -6,9 +6,9 @@ from tqdm import tqdm
 import pickle
 
 from agents import Random
-from active_agents import Linearized
+from active_agents import D_optimal
 from exploitation import exploitation
-from environments.gym_pendulum import GymPendulum as Environment
+from environments.pendulum import GymPendulum as Environment
 from models.gym_pendulum import NeuralModel, LinearModel
 from environments import get_environment
 
@@ -38,7 +38,7 @@ x0 = environment.x0
 # for Agent in [Random, Active]:
 agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
-    'D-optimal': Linearized,
+    'D-optimal': D_optimal,
     'random': Random}
     # 'random': {'agent': Random, 'color': 'red'},
     # 'uniform': {'agent': Spacing, 'color': 'green'},

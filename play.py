@@ -4,42 +4,48 @@ import matplotlib.pyplot as plt
 from matplotlib import rc, rcParams
 
 from agents import Random, Passive
-from active_agents import GradientDesign, Spacing, Variation, Linearized
+from active_agents import GradientDesign, Spacing, Variation, D_optimal
 
 from environments import get_environment
 
 ENVIRONMENT_NAME = 'aircraft'
 ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'pendulum'
-ENVIRONMENT_NAME = 'gym_pendulum'
-# ENVIRONMENT_NAME = 'quadrotor'
 ENVIRONMENT_NAME = 'gym_cartpole'
 ENVIRONMENT_NAME = 'damped_cartpole'
+ENVIRONMENT_NAME = 'gym_pendulum'
+ENVIRONMENT_NAME = 'quadrotor'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
+# TODO : get_model
 MODEL_PATH = f"models.{ENVIRONMENT_NAME.split('_')[-1]}"
 ORACLE_PATH = f'oracles.{ENVIRONMENT_NAME}'
 Environment = get_environment(ENVIRONMENT_NAME)
-environment = Environment()
 # Environment = importlib.import_module(ENVIRONMENT_PATH).GymPendulum
 models = importlib.import_module(MODEL_PATH)
-model = models.NeuralModel(environment)
 
 plot = False    
 plot = True
 
-T = 300
+T = 200
 T_random = 10
+dt = 8e-3
+environment = Environment(dt)
+
+model = models.NeuralModel(environment)
+# model = models.GymNeural(environment)
+# model = models.Partial(environment)
+
 gamma = environment.gamma
 sigma = environment.sigma
 
 # x0 = np.array([np.pi/2, 0.0])
 x0 = environment.x0.copy()
 
-from oracles.gym_pendulum import PeriodicOracle
+# from oracles.cartpole import PeriodicOracle
 Agent = Passive
 Agent = Random
-Agent = Linearized
+Agent = D_optimal
 # Agent = PeriodicOracle
 # Agent = Spacing
 # Agent = oracles.LinearOracle

@@ -1,11 +1,11 @@
 
 import environments.aircraft as aircraft
 from agents import Random
-from active_agents import Linearized
+from active_agents import D_optimal
 from models.aircraft import LinearModel
 
 
-class LinearDOptimal(Linearized):
+class LinearDOptimal(D_optimal):
     Model = LinearModel
 class LinearRandom(Random):
     Model = LinearModel

@@ -180,7 +180,7 @@ class Spacing(Gradient):
         return distance
 
 
-class Linearized(Active):
+class D_optimal(Active):
 
     def choose_control(self, t):
         if t < self.T_random:

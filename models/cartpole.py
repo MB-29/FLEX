@@ -5,7 +5,7 @@ import environments.cartpole as cartpole
 
 d, m = cartpole.d, cartpole.m
 
-class NeuralModel(nn.Module):
+class Partial(nn.Module):
 
     def __init__(self, environment):
         super().__init__()
@@ -31,26 +31,12 @@ class NeuralModel(nn.Module):
         # return self.B_net(self.transform(z)[:, :3]).view(d, m)
 
     def transform(self, z):
-        z_ = z[:, :d].clone()
-        z_[:, 0] = z[:, 1]
+        zeta = z[:, :d].clone()
+        zeta[:, 0] = z[:, 1]
         phi = z[:, 2]
-        z_[:, 1] = torch.cos(phi)
-        z_[:, 2] = torch.sin(phi)
-        return z_
-
-    # def acceleration_u(self, z):
-    #     B = torch.tensor(self.get_B(z), dtype=torch.float)
-    #     u = z[:, d]
-    #     return B@u
-    # def acceleration_u(self, z):
-    #     phi = z[:, 2]
-    #     u = z[:, -1]
-    #     c_phi = torch.cos(phi)
-    #     dd_y_u, dd_phi_u = cartpole.acceleration_u(c_phi, u)
-    #     acceleration = torch.zeros_like(z[:, :2])
-    #     acceleration[:, 0] = dd_y_u
-    #     acceleration[:, 1] = dd_phi_u
-    #     return acceleration
+        zeta[:, 1] = torch.cos(phi)
+        zeta[:, 2] = torch.sin(phi)
+        return zeta
 
     def forward(self, z):
         dx = torch.zeros_like(z[:, :d])
@@ -69,4 +55,39 @@ class NeuralModel(nn.Module):
 
         # dx = self.forward_x(x)
         # dx = self.forward_u(dx, u)
+        return dx
+        
+class NeuralModel(nn.Module):
+
+    def __init__(self, environment):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(5, 4),
+            nn.Tanh(),
+            # nn.Linear(4, 4),
+            # nn.Tanh(),
+            nn.Linear(4, 4)
+        )
+        self.period = environment.period
+
+    def transform(self, z):
+        zeta = z[:, :d].clone()
+        zeta[:, 0] = z[:, 1]
+        phi = z[:, 2]
+        zeta[:, 1] = torch.cos(phi)
+        zeta[:, 2] = torch.sin(phi)
+        return zeta
+
+    def forward(self, z):
+
+        batch_size, _ = z.shape
+        x = z[:, :d]
+        u = z[:, d:]
+        zeta = self.transform(x)
+
+        zeta_u = torch.zeros((batch_size, d+m))
+        zeta_u[:, :d] = zeta
+        zeta_u[:, d:] = u
+        dx = self.net(zeta_u)
+
         return dx

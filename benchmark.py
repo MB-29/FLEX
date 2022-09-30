@@ -6,7 +6,7 @@ from tqdm import tqdm
 import pickle
 
 from agents import Random, Passive
-from active_agents import GradientDesign, Spacing, Variation, Linearized
+from active_agents import GradientDesign, Spacing, Variation, D_optimal
 from environments import get_environment
 
 # ENVIRONMENT_NAME = 'aircraft'
@@ -15,25 +15,27 @@ ENVIRONMENT_NAME = 'cartpole'
 ENVIRONMENT_NAME = 'pendulum'
 ENVIRONMENT_NAME = 'quadrotor'
 # ENVIRONMENT_NAME = 'gym_pendulum'
+ENVIRONMENT_NAME = 'gym_cartpole'
+# ENVIRONMENT_NAME = 'damped_cartpole'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
-MODEL_PATH = f'models.{ENVIRONMENT_NAME}'
+MODEL_PATH = f"models.{ENVIRONMENT_NAME.split('_')[-1]}"
 ORACLE_PATH = f'oracles.{ENVIRONMENT_NAME}'
 
 Environment = get_environment(ENVIRONMENT_NAME)
+# Environment = importlib.import_module(ENVIRONMENT_PATH).GymPendulum
 models = importlib.import_module(MODEL_PATH)
 DefaultModel = models.NeuralModel
-# DefaultModel = models.LinearModel
 
 rc('font', size=15)
 rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
-T = 300
+T = 200
 T_random = 10
-dt = 0.1
+dt = 0.02
 
-n_samples = 100
+n_samples = 50
 
 environment = Environment(dt)
 dt = environment.dt
@@ -42,11 +44,13 @@ sigma = environment.sigma
 
 x0 = environment.x0
 
+from oracles.cartpole import PeriodicOracle
+
 # for agent_ in [Random, Active]:
 agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
     # 'periodic': {'agent': PeriodicOracle, 'color': 'blue'},
-    'D-optimal': {'agent': Linearized, 'color': 'blue'},
+    'D-optimal': {'agent': D_optimal, 'color': 'blue'},
     'random': {'agent': Random, 'color': 'red'},
     # 'uniform': {'agent': Spacing, 'color': 'green'},
     # # 'gradientOD': {'agent': GradientDesign, 'color': 'purple'},
