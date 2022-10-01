@@ -30,11 +30,11 @@ class Pendulum(Environment):
         interval_phi = torch.linspace(-self.phi_max, self.phi_max, n_points)
         interval_dphi = torch.linspace(-self.dphi_max, self.dphi_max, n_points)
         interval_u = torch.linspace(-self.gamma, self.gamma, n_points)
-        grid_phi, grid_dphi, grid_u = torch.meshgrid(interval_phi, interval_dphi, interval_u)
+        self.grid_phi, self.grid_dphi, grid_u = torch.meshgrid(interval_phi, interval_dphi, interval_u)
         self.grid = torch.cat([
-            torch.cos(grid_phi.reshape(-1, 1)),
-            torch.sin(grid_phi.reshape(-1, 1)),
-            grid_dphi.reshape(-1, 1),
+            torch.cos(self.grid_phi.reshape(-1, 1)),
+            torch.sin(self.grid_phi.reshape(-1, 1)),
+            self.grid_dphi.reshape(-1, 1),
             grid_u.reshape(-1, 1)
         ], 1)
 
@@ -135,6 +135,18 @@ class DampedPendulum(Pendulum):
         g = 10.0
         alpha = 1.0
         super().__init__(dt, sigma, gamma, mass, g, l, alpha)
+
+        self.grid = torch.cat([
+            self.grid_phi.reshape(-1, 1),
+            self.grid_dphi.reshape(-1, 1)
+        ], 1)
+
+    def f_star(self, x):
+        dx = torch.zeros_like(x)
+        dx[:, 0] = x[:, 1]
+        dx[:, 1] = -self.omega_2 * torch.sin(x[:, 0]) - self.alpha*x[:, 1]
+        return dx
+
 
 class GymPendulum(Pendulum):
 

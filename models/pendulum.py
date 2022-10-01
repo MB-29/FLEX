@@ -42,8 +42,8 @@ class Model(nn.Module):
 
 class NeuralModel(Model):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, environment):
+        super().__init__(environment)
         self.net = nn.Sequential(
             nn.Linear(2, 16),
             nn.Tanh(),

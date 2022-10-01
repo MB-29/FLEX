@@ -13,9 +13,10 @@ from environments import get_environment
 ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'cartpole'
 ENVIRONMENT_NAME = 'pendulum'
-ENVIRONMENT_NAME = 'quadrotor'
-# ENVIRONMENT_NAME = 'gym_pendulum'
 ENVIRONMENT_NAME = 'gym_cartpole'
+ENVIRONMENT_NAME = 'damped_pendulum'
+ENVIRONMENT_NAME = 'gym_pendulum'
+ENVIRONMENT_NAME = 'quadrotor'
 # ENVIRONMENT_NAME = 'damped_cartpole'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
@@ -26,6 +27,7 @@ Environment = get_environment(ENVIRONMENT_NAME)
 # Environment = importlib.import_module(ENVIRONMENT_PATH).GymPendulum
 models = importlib.import_module(MODEL_PATH)
 DefaultModel = models.NeuralModel
+# DefaultModel = models.GymNeural
 
 rc('font', size=15)
 rc('text', usetex=True)

@@ -11,10 +11,11 @@ from environments import get_environment
 ENVIRONMENT_NAME = 'aircraft'
 ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'pendulum'
-ENVIRONMENT_NAME = 'gym_cartpole'
 ENVIRONMENT_NAME = 'damped_cartpole'
-ENVIRONMENT_NAME = 'gym_pendulum'
-ENVIRONMENT_NAME = 'quadrotor'
+# ENVIRONMENT_NAME = 'gym_pendulum'
+ENVIRONMENT_NAME = 'damped_pendulum'
+ENVIRONMENT_NAME = 'gym_cartpole'
+# ENVIRONMENT_NAME = 'quadrotor'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
 # TODO : get_model
