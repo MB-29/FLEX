@@ -1,6 +1,6 @@
 # Greedy online identification of linear dynamic systems
 
-Implementation of ourD-optimal  exploration algorithm along with baselines. Pre-defined environments and models are available in directories `environments` and `models`.
+Implementation of our D-optimal  exploration algorithm along with baselines. Pre-defined environments and models are available in directories `environments` and `models`.
 
 ## Example
 
