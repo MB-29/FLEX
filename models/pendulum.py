@@ -59,17 +59,17 @@ class NeuralModel(Model):
         dx[:, 1] = self.net(x).view(-1)
         return dx
 
-class LinearModel(Model):
-    def __init__(self):
-        super().__init__()
-        self.theta = nn.parameter.Parameter(torch.zeros(2, dtype=torch.float))
-        self.lr = 0.01
+# class LinearModel(Model):
+#     def __init__(self, environment):
+#         super().__init__(environment)
+#         self.theta = nn.parameter.Parameter(torch.zeros(2, dtype=torch.float))
+#         self.lr = 0.01
     
-    def forward_x(self, x):
-        dx = torch.zeros_like(x)
-        dx[:, 0] = x[:, 1]
-        dx[:, 1] = self.theta[0] * torch.sin(x[:, 0]) + self.theta[1]*x[:, 1]
-        return dx
+#     def forward_x(self, x):
+#         dx = torch.zeros_like(x)
+#         dx[:, 0] = x[:, 1]
+#         dx[:, 1] = self.theta[0] * torch.sin(x[:, 0]) + self.theta[1]*x[:, 1]
+#         return dx
 
 
 class GymNeural(Model):
@@ -104,4 +104,21 @@ class GymNeural(Model):
         zeta_u[:, d+1:] = u
         dx = self.net(zeta_u)
 
+        return dx
+
+
+class LinearModel(NeuralModel):
+
+    def __init__(self, environment):
+        super().__init__(environment)
+        self.net = nn.Sequential(
+            nn.Linear(2, 2, bias=False),
+        )
+        self.lr = 0.01
+        self.B_star = torch.tensor(environment.B_star)
+
+    def forward(self, z):
+        x = z[:, :d]
+        u = z[:, d:]
+        dx = self.net(x) + (self.B_star @ u.T).T
         return dx
