@@ -145,7 +145,7 @@ class Cartpole(Environment):
         # print(x)
         return loss
 
-    def plot(self, x, u):
+    def plot(self, x, u, t):
         y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
         push = 0.7*np.sign(np.mean(u))
         c_phi, s_phi = np.cos(phi), np.sin(phi)
@@ -261,7 +261,7 @@ class DampedCartpole(Cartpole):
 
         mass, Mass, l = 1.0, 2.0, 1.0
         g = 9.8
-        alpha, beta = 0.2, 1.0
+        alpha, beta = 0.2, 0.5
         self.period = 2*np.pi / np.sqrt(g/l)
         dt = 1e-2 * self.period
         sigma = 0.01

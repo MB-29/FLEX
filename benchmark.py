@@ -15,8 +15,8 @@ ENVIRONMENT_NAME = 'cartpole'
 ENVIRONMENT_NAME = 'pendulum'
 ENVIRONMENT_NAME = 'gym_cartpole'
 ENVIRONMENT_NAME = 'damped_pendulum'
-ENVIRONMENT_NAME = 'gym_pendulum'
 ENVIRONMENT_NAME = 'quadrotor'
+ENVIRONMENT_NAME = 'gym_pendulum'
 # ENVIRONMENT_NAME = 'damped_cartpole'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
@@ -27,7 +27,7 @@ Environment = get_environment(ENVIRONMENT_NAME)
 # Environment = importlib.import_module(ENVIRONMENT_PATH).GymPendulum
 models = importlib.import_module(MODEL_PATH)
 DefaultModel = models.NeuralModel
-# DefaultModel = models.GymNeural
+DefaultModel = models.GymNeural
 
 rc('font', size=15)
 rc('text', usetex=True)
@@ -35,9 +35,9 @@ rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
 T = 200
 T_random = 10
-dt = 0.02
+dt = 8e-3
 
-n_samples = 50
+n_samples = 100
 
 environment = Environment(dt)
 dt = environment.dt

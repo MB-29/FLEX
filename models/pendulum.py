@@ -11,6 +11,7 @@ class Model(nn.Module):
 
     def __init__(self, environment):
         super().__init__()
+        self.period = environment.period
 
     def get_B(self, x):
         B = np.zeros((d, m))
@@ -51,12 +52,15 @@ class NeuralModel(Model):
             # nn.Tanh(),
             nn.Linear(16, 1)
         )
-    
+        self.lr = 0.005
+
     def forward_x(self, x):
         dx = torch.zeros_like(x)
         dx[:, 0] = x[:, 1]
+        zeta = x.clone()
+        zeta[:, 0] = torch.sin(x[:, 0])
         # x[:, 1] = torch.sin(x[:, 1])
-        dx[:, 1] = self.net(x).view(-1)
+        dx[:, 1] = self.net(zeta).view(-1)
         return dx
 
 # class LinearModel(Model):
