@@ -30,8 +30,9 @@ plot = False
 plot = True
 
 T = 100
-T_random = 10
+T_random = 0
 dt = 2e-2
+dt = 80e-3
 environment = Environment(dt)
 
 model = models.NeuralModel(environment)
@@ -48,7 +49,7 @@ x0 = environment.x0.copy()
 # from oracles.cartpole import PeriodicOracle
 Agent = Passive
 Agent = Random
-# Agent = D_optimal
+Agent = D_optimal
 # Agent = PeriodicOracle
 # Agent = Spacing
 # Agent = oracles.LinearOracle

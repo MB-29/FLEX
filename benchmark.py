@@ -33,11 +33,11 @@ rc('font', size=15)
 rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
-T = 200
+T = 400
 T_random = 10
-dt = 8e-3
+dt = 80e-3
 
-n_samples = 100
+n_samples = 50
 
 environment = Environment(dt)
 dt = environment.dt

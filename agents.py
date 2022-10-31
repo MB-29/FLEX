@@ -47,7 +47,9 @@ class Agent:
 
             self.learning_step(self.x, x_dot, u_t)
 
-            self.x += self.dt*x_dot
+            dx = self.dt*x_dot
+            dx[0] = self.dt*np.clip(dx[0], -8., 8.)
+            self.x += dx
 
             self.u_values[t] = u_t.copy()
             self.x_values[t] = self.x.copy()

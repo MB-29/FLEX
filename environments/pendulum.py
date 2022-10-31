@@ -5,27 +5,42 @@ import matplotlib.pyplot as plt
 
 from environments.environment import Environment
 
-d, m = 2, 1
-
 
 class Pendulum(Environment):
 
+    d, m = 2, 1
+
+    @staticmethod
+    def observe(x):
+        phi, d_phi = torch.unbind(x, dim=1)
+        cphi, sphi = torch.cos(phi), torch.sin(phi)
+        obs = torch.stack((cphi, sphi, d_phi), dim=1)
+        return obs
+
+    @staticmethod
+    def get_state(obs):
+        cphi, sphi, d_phi = torch.unbind(obs, dim=1)
+        phi = torch.atan2(sphi, cphi)
+        x = torch.stack((phi, d_phi), dim=1)
+        return x
+
     def __init__(self, dt, sigma, gamma, mass, g, l, alpha):
-        super().__init__(d, m, dt, sigma, gamma)
+        super().__init__(self.d, self.m, dt, sigma, gamma)
         self.mass = mass
         self.g = g
         self.l = l
         self.inertia = (1/3)*mass*l**2
-        self.omega_2 = g/(2*l*self.inertia)
+        self.omega_2 = g/(2*l)
         self.alpha = alpha
         self.period = 2*np.pi / np.sqrt(self.omega_2)
 
-        self.x0 = np.array([0.0, 0.0])
+        self.x0 = np.array([1e-3, 0.0])
 
         self.n_points = 10
 
         self.phi_max = np.pi
         self.dphi_max = np.sqrt(-2*self.omega_2*np.cos(self.phi_max))
+        self.dphi_max = 8.0
         self.interval_phi = torch.linspace(-self.phi_max,
                                       self.phi_max, self.n_points)
         self.interval_dphi = torch.linspace(-self.dphi_max,
@@ -43,21 +58,28 @@ class Pendulum(Environment):
         self.B_star = torch.tensor([[0.0], [(1/self.inertia)]])
         self.A_star = torch.tensor([
             [0, 0, 1],
-            [0, -(3/2)*self.omega_2, 0]
+            [0, -self.omega_2/self.inertia, 0]
         ])
+
+        self.goal_weights = torch.Tensor((1., 1., 0.1))
+        # self.goal_weights = torch.Tensor((100, .1, 0.1))
+        self.goal_state = torch.Tensor((-1., 0., 0.))
+        self.R = 0.001
+
 
     def dynamics(self, x, u):
         dx = np.zeros_like(x)
         dx[0] = x[1]
+        # dx[0] = np.clip(x[1], -8.0, 8.0)
         dx[1] = (1/self.inertia)*(-(1/2)*self.m *
                                   self.g*self.l * np.sin(x[0]) + u)
         # dx += np.array([[0.0], [1/self.inertia]]) @ u
         # dx[1] = d_phi
         # dx[1] = np.clip(d_phi, -10, 10)
-        noise = self.sigma * np.random.randn(d)
+        noise = self.sigma * np.random.randn(self.d)
         dx += noise
         return dx
-
+    
     def a(self, x):
         dx = np.zeros_like(x)
         dx[0] = x[1]
@@ -70,29 +92,26 @@ class Pendulum(Environment):
     #     dx = self.a(x) + self.b(x, u)
     #     return dx
 
-    def d_dynamics(self, x, u):
-        dx = torch.zeros_like(x)
+    def d_dynamics(self, z):
         # dx[0] = torch.clip(x[1], -8, 8)
-        dx[0] = x[1]
-        dx[1] = (1/self.inertia) * (-(1/2)*self.m *
-                                    self.g*self.l * torch.sin(x[0]) + u)
+        phi, d_phi, u = z[:, 0], z[:, 1], z[:, 2]
+        # print(f'u = {u.shape}')
+        # print(f'phi = {phi.shape}')
+        sphi = torch.sin(phi)
+        dd_phi = (1/self.inertia) * (-(1/2)*self.m *
+                                    self.g*self.l * sphi + u.squeeze())
+        dx = torch.stack((d_phi, dd_phi), dim=1)
         return dx
-
+    
+    
     def f_star(self, zeta_u):
-        dx = torch.zeros_like(zeta_u[:, :d])
+        dx = torch.zeros_like(zeta_u[:, :self.d])
         u = zeta_u[:, -1]
         # print(zeta_u[:, 1].shape)
         dx[:, 0] = zeta_u[:, 2]
         dx[:, 1] = (1/self.inertia)*(-(1/2)*self.m *
                                      self.g*self.l*zeta_u[:, 1] + u)
         return dx
-
-    def step_cost(self, x, u):
-        c_phi, s_phi = torch.cos(x[0]), torch.sin(x[0])
-        d_phi = x[1]
-        c = 100*(c_phi + 1)**2 + 0.1*s_phi**2 + 0.1*d_phi**2 + 0.001*u**2
-        # print(f'x = {x}, u={u}, c={c}')
-        return c
 
     def test_error(self, model, x, u, plot, t=0):
         loss_function = nn.MSELoss()
@@ -105,14 +124,14 @@ class Pendulum(Environment):
         # batch_size, _ = predictions.shape
         # truth = self.B_star.view(1, 2).expand(batch_size,  -1)
 
-        predictions = model.net(self.grid.clone())
+        predictions = model.predict(self.grid.clone())
         batch_size, _ = predictions.shape
         truth = self.f_star(self.grid.clone())
         # print(predictions)
 
         loss = loss_function(predictions, truth)
-        # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
-        if plot and t % 5 == 0:
+        # loss = torch.linalg.norm(self.A_star-model.net[0].weight)
+        if plot and t % 1 == 0:
             self.plot_pendulum(x, u, t)
             # plot_portrait(model.forward_x)
             plt.pause(0.1)
@@ -217,7 +236,7 @@ class GymPendulum(Pendulum):
 
     def __init__(self, dt=80e-4):
         sigma = 0
-        gamma = 2
+        gamma = 2.0
         mass = 1.0
         l = 1.0
         g = 10.0
@@ -256,7 +275,7 @@ class LinearizedPendulum(Pendulum):
         # dx += np.array([[0.0], [1/self.inertia]]) @ u
         # dx[1] = d_phi
         # dx[1] = np.clip(d_phi, -10, 10)
-        noise = self.sigma * np.random.randn(d)
+        noise = self.sigma * np.random.randn(self.d)
         dx += noise
         return dx
 
