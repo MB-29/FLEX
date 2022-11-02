@@ -79,20 +79,23 @@ class NeuralModel(Model):
 
 class GymNeural(Model):
 
+
     def __init__(self, environment):
         super().__init__(environment)
 
         self.net = nn.Sequential(
-            nn.Linear(3, 2),
+            nn.Linear(4, 8),
             nn.Tanh(),
-            # nn.Linear(4, 16),
+            nn.Linear(8, 2),
             # nn.Tanh(),
             # nn.Linear(16, 16),
             # nn.Tanh(),
-            nn.Linear(2, 1)
+            # nn.Linear(2, 2)
         )
-        self.lr = 0.02
-
+        self.lr = 0.01
+    # Maintenir un lr assez grand pour que les points de forts angles prennent de l'importance
+    # evaluer l'erreur d'apprentissage dans la region ou le pendule est oriente vers le haut
+    # modifier la regle d'apprentissage pour mieux tenir compte de cette region plus interessante ?
     def transform(self, x):
         batch_size, _ = x.shape
         zeta = torch.zeros(batch_size, 3)
@@ -120,11 +123,11 @@ class GymNeural(Model):
     def predict(self, zeta_u):
         zeta = zeta_u[:, :-1]
         u = zeta_u[:, -1:]
-        dx = torch.zeros_like(zeta_u[:, :2])
-        dx[:, 0] = zeta_u[:, 2]
+        # dx = torch.zeros_like(zeta_u[:, :2])
+        # dx[:, 0] = zeta_u[:, 2]
         # print(self.net(zeta).shape)
-        dx[:, 1] = self.net(zeta).squeeze() + ((self.B_star @ u.T).T)[:, 1]
-        # dx = self.net(zeta_u)
+        # dx[:, 1] = self.net(zeta).squeeze() + ((self.B_star @ u.T).T)[:, 1]
+        dx = self.net(zeta_u)
         return dx 
 
 

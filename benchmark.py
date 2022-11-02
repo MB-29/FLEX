@@ -33,11 +33,11 @@ rc('font', size=15)
 rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
-T = 400
-T_random = 10
+T = 200
+T_random = 0
 dt = 80e-3
 
-n_samples = 50
+n_samples = 10
 
 environment = Environment(dt)
 dt = environment.dt
@@ -78,7 +78,7 @@ for name, value in agents.items():
     # print(f'Model = {Model}')
 # for agent_ in [Spacing]:
     test_values = np.zeros((n_samples, T))
-    for sample_index in tqdm(range(n_samples)):
+    for sample_index in tqdm(range(n_samples)): 
         model = Model(environment)
         agent = agent_(
             x0.copy(),

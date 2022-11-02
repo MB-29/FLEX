@@ -131,7 +131,7 @@ class Pendulum(Environment):
 
         loss = loss_function(predictions, truth)
         # loss = torch.linalg.norm(self.A_star-model.net[0].weight)
-        if plot and t % 1 == 0:
+        if plot and t % 2 == 0:
             self.plot_pendulum(x, u, t)
             # plot_portrait(model.forward_x)
             plt.pause(0.1)

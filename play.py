@@ -29,9 +29,8 @@ models = importlib.import_module(MODEL_PATH)
 plot = False    
 plot = True
 
-T = 100
+T = 200
 T_random = 0
-dt = 2e-2
 dt = 80e-3
 environment = Environment(dt)
 

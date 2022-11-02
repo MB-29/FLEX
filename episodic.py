@@ -9,27 +9,22 @@ from agents import Random
 from active_agents import D_optimal
 from exploitation import exploitation
 from environments.pendulum import GymPendulum as Environment
-from models.gym_pendulum import NeuralModel, LinearModel
+from models.pendulum import GymNeural, LinearModel
 from environments import get_environment
-
+from exploit_pendulum import exploit
 
 # ENVIRONMENT_NAME = 'gym_cartpole'
 ENVIRONMENT_NAME = 'gym_pendulum'
 
-# Environment = get_environment(ENVIRONMENT_NAME)
 
-dt = 80e-4
-task_dt = 80e-3
+dt = 80e-3
 
 T = 100
-T_task = 100
-n_samples = 30
-T_random = 0
-n_episodes = 20
-n_gradient = 400
+H = 20
+n_samples = 10
+n_episodes = 10
 
 environment = Environment(dt=dt)
-exploitation_environment = Environment(dt=task_dt)
 gamma = environment.gamma
 sigma = environment.sigma
 
@@ -43,10 +38,10 @@ agents = {
     # 'random': {'agent': Random, 'color': 'red'},
     # 'uniform': {'agent': Spacing, 'color': 'green'},
     # # 'gradientOD': {'agent': GradientDesign, 'color': 'purple'},
-    # # 'variation': {'agent': Variation, 'color': 'color'},
-output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma, 'n_gradient': n_gradient}
+    # # 'variation': {'agent': Variation, 'color': 'color'},d
+output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma}
 name = 'D-optimal'
-# name = 'random'
+name = 'random'
 Agent = agents[name]
 fig, (ax1, ax2) = plt.subplots(2, 1)
 if __name__ == '__main__':
@@ -58,10 +53,20 @@ if __name__ == '__main__':
     for sample_index in tqdm(range(n_samples)):
         # print(f'Model = {Model}')
     # for Agent in [Spacing]:
-        model = NeuralModel(environment)
+        model = GymNeural(environment)
         # print('exploration')
         for episode in range(n_episodes):
             print(f'episode {episode}')
+            
+            model_dynamics = model.forward
+            cost_values = exploit(
+                environment,
+                model_dynamics,
+                dt,
+                T,
+                H,
+                plot=False)
+
             agent = Agent(
                 x0.copy(),
                 environment.m,
@@ -70,13 +75,6 @@ if __name__ == '__main__':
                 gamma,
                 dt
             )
-
-            cost, loss_values = exploitation(
-                exploitation_environment,
-                model.model,
-                T_task,
-                n_gradient=n_gradient
-                )
             estimation_error = agent.identify(
                 T,
                 test_function=environment.test_error,
@@ -86,26 +84,26 @@ if __name__ == '__main__':
             estimation_values[sample_index, episode*T:(episode+1)*T] = estimation_error
 
             # print('exploitation')
-            exploitation_values[sample_index, episode] = cost
+            exploitation_values[sample_index, episode] = cost_values.sum()
     output[name]['estimation'] = estimation_values
     output[name]['exploitation'] = exploitation_values
     exploitation_mean = exploitation_values.mean(axis=0)
     exploitation_std = np.sqrt(exploitation_values.var(axis=0)/n_samples)
 
-    # ax1.plot(exploitation_mean, label=name)
-    # ax1.fill_between(
-    #     np.arange(n_episodes),
-    #     exploitation_mean-exploitation_std,
-    #     exploitation_mean+exploitation_std,
-    #     alpha=0.5)
-    # estimation_mean = estimation_values.mean(axis=0)
-    # estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
-    # ax2.plot(estimation_mean, label=name)
-    # ax2.fill_between(
-    #     np.arange(n_episodes*T),
-    #     estimation_mean-estimation_std,
-    #     estimation_mean+estimation_std,
-    #     alpha=0.5)
+#     ax1.plot(exploitation_mean, label=name)
+#     ax1.fill_between(
+#         np.arange(n_episodes),
+#         exploitation_mean-exploitation_std,
+#         exploitation_mean+exploitation_std,
+#         alpha=0.5)
+#     estimation_mean = estimation_values.mean(axis=0)
+#     estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
+#     ax2.plot(estimation_mean, label=name)
+#     ax2.fill_between(
+#         np.arange(n_episodes*T),
+#         estimation_mean-estimation_std,
+#         estimation_mean+estimation_std,
+#         alpha=0.5)
 # plt.legend()
 # plt.show()
 
