@@ -20,8 +20,8 @@ ENVIRONMENT_NAME = 'gym_pendulum'
 dt = 80e-3
 
 T = 100
-H = 20
-n_samples = 10
+H = 30
+n_samples = 20
 n_episodes = 10
 
 environment = Environment(dt=dt)
@@ -53,7 +53,8 @@ if __name__ == '__main__':
     for sample_index in tqdm(range(n_samples)):
         # print(f'Model = {Model}')
     # for Agent in [Spacing]:
-        model = GymNeural(environment)
+        # model = GymNeural(environment)
+        model = LinearModel(environment)
         # print('exploration')
         for episode in range(n_episodes):
             print(f'episode {episode}')

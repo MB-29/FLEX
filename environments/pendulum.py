@@ -234,13 +234,24 @@ class DampedPendulum(Pendulum):
 
 class GymPendulum(Pendulum):
 
-    def __init__(self, dt=80e-4):
+    def __init__(self, dt=80e-3):
         sigma = 0
         gamma = 2.0
         mass = 1.0
         l = 1.0
         g = 10.0
         alpha = 0.0
+        super().__init__(dt, sigma, gamma, mass, g, l, alpha)
+
+class DmPendulum(Pendulum):
+
+    def __init__(self, dt=80e-3):
+        sigma = 0
+        gamma = 1.0
+        mass = 1.0
+        l = 0.5
+        g = 10.0
+        alpha = 0.1
         super().__init__(dt, sigma, gamma, mass, g, l, alpha)
 
 

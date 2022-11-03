@@ -84,15 +84,15 @@ class GymNeural(Model):
         super().__init__(environment)
 
         self.net = nn.Sequential(
-            nn.Linear(4, 8),
+            nn.Linear(4, 4),
             nn.Tanh(),
-            nn.Linear(8, 2),
+            nn.Linear(4, 2),
             # nn.Tanh(),
             # nn.Linear(16, 16),
             # nn.Tanh(),
             # nn.Linear(2, 2)
         )
-        self.lr = 0.01
+        self.lr = 0.02
     # Maintenir un lr assez grand pour que les points de forts angles prennent de l'importance
     # evaluer l'erreur d'apprentissage dans la region ou le pendule est oriente vers le haut
     # modifier la regle d'apprentissage pour mieux tenir compte de cette region plus interessante ?
