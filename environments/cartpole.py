@@ -6,13 +6,26 @@ import matplotlib.pyplot as plt
 
 from environments.environment import Environment
 
-d, m = 4, 1
-
 
 class Cartpole(Environment):
 
-    def __init__(self, d, m, dt, sigma, gamma, g, mass, Mass, l, alpha, beta):
-        super().__init__(d, m, dt, sigma, gamma)
+    d, m = 4, 1
+
+    @staticmethod
+    def observe(x):
+        y, d_y, phi, d_phi = torch.unbind(x, dim=1)
+        cphi, sphi = torch.cos(phi), torch.sin(phi)
+        obs = torch.stack((y, d_y, cphi, sphi, d_phi), dim=1)
+        return obs
+
+    @staticmethod
+    def get_state(obs):
+        cphi, sphi, d_phi = torch.unbind(obs, dim=1)
+        phi = torch.atan2(sphi, cphi)
+        x = torch.stack((phi, d_phi), dim=1)
+
+    def __init__(self, dt, sigma, gamma, g, mass, Mass, l, alpha, beta):
+        super().__init__(self.d, self.m, dt, sigma, gamma)
 
         self.g = g
         self.l = l
@@ -137,7 +150,7 @@ class Cartpole(Environment):
         loss = loss_function(predictions, truth)
         # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
         if plot and t % 5 == 0:
-            self.plot(x, u)
+            self.plot(x, u, t)
             # plot_portrait(model.forward_x)
             plt.pause(0.1)
             plt.close()
@@ -156,19 +169,15 @@ class Cartpole(Environment):
         plt.ylim((-2*self.l, 2*self.l))
         plt.gca().set_aspect('equal', adjustable='box')
 
-class GymCartpole(Cartpole):
-
-    def __init__(self, dt=0.02):
-        sigma = 0
+class RlCartpole(Cartpole):
+    
+    def __init__(self, dt, sigma, alpha, beta):
         gamma = 10.0
         g = 9.8
         mass = 0.1
         Mass = 1.0
         l = 1.0
-        alpha = 0.0
-        beta = 0.0
-
-        super().__init__(d, m, dt, sigma, gamma, g, mass, Mass, l, alpha, beta)
+        super().__init__(dt, sigma, gamma, g, mass, Mass, l, alpha, beta)
 
         interval_dy = torch.linspace(-self.dy_max, self.dy_max, self.n_points)
         interval_phi = torch.linspace(-np.pi, np.pi, self.n_points)
@@ -185,32 +194,97 @@ class GymCartpole(Cartpole):
             torch.cos(grid_phi.reshape(-1, 1)),
             torch.sin(grid_phi.reshape(-1, 1)),
             grid_dphi.reshape(-1, 1),
-            grid_u.reshape(-1, 1),
+            # grid_u.reshape(-1, 1),
         ], 1)
 
-    def acc(self, c_phi, s_phi, d_phi, u):
-        length = self.l /   2
+    def acc(self, d_y, c_phi, s_phi, d_phi, u):
+        length = self.l / 2
+        friction_phi = - self.alpha * d_phi
+        friction_y = - self.beta * d_y
         polemass_length = self.mass * length
         temp = (
-            u + polemass_length * d_phi**2 * s_phi
+            u + polemass_length * d_phi**2 * s_phi + friction_y
         ) / self.total_mass
-        phiacc = (self.g * s_phi - c_phi * temp) / (
+        phiacc = (self.g * s_phi - c_phi * temp - friction_phi/polemass_length) / (
             length * (4.0 / 3.0 - self.mass *
-                           c_phi**2 / self.total_mass)
+                      c_phi**2 / self.total_mass)
         )
         yacc = temp - polemass_length * phiacc * c_phi / self.total_mass
         return yacc, phiacc
-        
+
     def dynamics(self, x, u):
         y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
         c_phi, s_phi = np.cos(phi), np.sin(phi)
         x_dot = np.zeros_like(x)
-        yacc, phiacc = self.acc(c_phi, s_phi, d_phi, u)
+        yacc, phiacc = self.acc(d_y, c_phi, s_phi, d_phi, u)
         x_dot[0] = d_y
         x_dot[1] = yacc
         x_dot[2] = d_phi
         x_dot[3] = phiacc
         return x_dot
+
+    def f_star(self, zeta):
+        d_y, c_phi, s_phi, d_phi = zeta[:,
+                                        0], zeta[:, 1], zeta[:, 2], zeta[:, 3]
+        u = torch.zeros_like(c_phi)
+        yacc, phiacc = self.acc(d_y, c_phi, s_phi, d_phi, u)
+        acc = torch.stack((yacc, phiacc), dim=1)
+        return acc
+
+    def test_error(self, model, x, u, plot, t=0):
+        truth = self.f_star(self.grid)
+        loss_function = nn.MSELoss()
+        predictions = model.net(self.grid.clone()).squeeze()
+        # print(f'prediction {predictions.shape} target {truth.shape} ')
+        loss = loss_function(predictions, truth)
+        # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
+        if plot:
+            self.plot(x, u, t)
+            # plot_portrait(model.forward_x)
+            plt.pause(0.1)
+            plt.close()
+        # print(f'loss = {loss}')
+        # print(x)
+        return loss
+
+
+class GymCartpole(RlCartpole):
+
+    def __init__(self, dt=0.02):
+        sigma = 0
+        alpha = 0.0
+        beta = 0.0
+
+        super().__init__(dt, sigma, alpha, beta)
+
+class DmCartpole(RlCartpole):
+
+    def __init__(self, dt=0.02):
+        sigma = 0
+        alpha = 2e-6
+        beta = 5e-4
+
+        super().__init__(dt, sigma, alpha, beta)
+
+        # interval_dy = torch.linspace(-self.dy_max, self.dy_max, self.n_points)
+        # interval_phi = torch.linspace(-np.pi, np.pi, self.n_points)
+        # interval_dphi = torch.linspace(-self.dphi_max, self.dphi_max, self.n_points)
+        # interval_u = torch.linspace(-self.gamma, self.gamma, self.n_points)
+        # grid_dy, grid_phi, grid_dphi, grid_u = torch.meshgrid(
+        #     interval_dy,
+        #     interval_phi,
+        #     interval_dphi,
+        #     interval_u
+        # )
+        # self.grid = torch.cat([
+        #     grid_dy.reshape(-1, 1),
+        #     torch.cos(grid_phi.reshape(-1, 1)),
+        #     torch.sin(grid_phi.reshape(-1, 1)),
+        #     grid_dphi.reshape(-1, 1),
+        #     # grid_u.reshape(-1, 1),
+        # ], 1)
+
+
 
     # def get_B(self, x):
     #     y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
@@ -226,33 +300,7 @@ class GymCartpole(Cartpole):
     #     ])
     #     return B
 
-    def f_star(self, zeta_u):
-        dx = torch.zeros_like(zeta_u[:, :d])
-        c_phi, s_phi, d_phi = zeta_u[:, 1], zeta_u[:, 2], zeta_u[:, 3]
-        u = zeta_u[:, -1]
-        yacc, phiacc = self.acc(c_phi, s_phi, d_phi, u)
-        # print(zeta_u[:, 1].shape)
-        dx[:, 0] = zeta_u[:, 0]
-        dx[:, 2] = zeta_u[:, 3]
-        dx[:, 1] = yacc
-        dx[:, 3] = phiacc
-        return dx
-    
-    def test_error(self, model, x, u, plot, t=0):
-        truth = self.f_star(self.grid)
-        loss_function = nn.MSELoss()
-        predictions = model.net(self.grid.clone()).squeeze()
-        # # print(f'prediction {predictions.shape} target {truth.shape} ')
-        loss = loss_function(predictions, truth)
-        # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
-        if plot and t % 5 == 0:
-            self.plot(x, u)
-            # plot_portrait(model.forward_x)
-            plt.pause(0.1)
-            plt.close()
-        # print(f'loss = {loss}')
-        # print(x)
-        return loss
+
 
         
 class DampedCartpole(Cartpole):
@@ -267,9 +315,7 @@ class DampedCartpole(Cartpole):
         sigma = 0.01
         gamma = 2
 
-        super().__init__(d, m, dt, sigma, gamma, g, mass, Mass, l, alpha, beta)
-
-
+        super().__init__(dt, sigma, gamma, g, mass, Mass, l, alpha, beta)
 
 
 

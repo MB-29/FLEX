@@ -11,11 +11,13 @@ from environments import get_environment
 ENVIRONMENT_NAME = 'aircraft'
 ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'pendulum'
-ENVIRONMENT_NAME = 'damped_cartpole'
-ENVIRONMENT_NAME = 'gym_cartpole'
 ENVIRONMENT_NAME = 'damped_pendulum'
 ENVIRONMENT_NAME = 'linearized_pendulum'
 ENVIRONMENT_NAME = 'gym_pendulum'
+ENVIRONMENT_NAME = 'dm_pendulum'
+ENVIRONMENT_NAME = 'dm_cartpole'
+ENVIRONMENT_NAME = 'gym_cartpole'
+# ENVIRONMENT_NAME = 'damped_cartpole'
 # ENVIRONMENT_NAME = 'quadrotor'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
@@ -27,16 +29,15 @@ Environment = get_environment(ENVIRONMENT_NAME)
 models = importlib.import_module(MODEL_PATH)
 
 plot = False    
-plot = True
+# plot = True
 
-T = 200
+T = 100
 T_random = 0
-dt = 80e-3
-environment = Environment(dt)
+environment = Environment()
 
 model = models.NeuralModel(environment)
-# model = models.LinearModel(environment)
 model = models.GymNeural(environment)
+# model = models.LinearModel(environment)
 # model = models.Partial(environment)
 
 gamma = environment.gamma
