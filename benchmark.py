@@ -8,6 +8,7 @@ import pickle
 from agents import Random, Passive
 from active_agents import GradientDesign, Spacing, Variation, D_optimal
 from environments import get_environment
+from evaluation.cartpole import XGrid as Evaluation
 
 # ENVIRONMENT_NAME = 'aircraft'
 ENVIRONMENT_NAME = 'arm'
@@ -17,6 +18,7 @@ ENVIRONMENT_NAME = 'gym_cartpole'
 ENVIRONMENT_NAME = 'damped_pendulum'
 ENVIRONMENT_NAME = 'quadrotor'
 ENVIRONMENT_NAME = 'gym_pendulum'
+ENVIRONMENT_NAME = 'dm_cartpole'
 # ENVIRONMENT_NAME = 'damped_cartpole'
 
 ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
@@ -27,7 +29,8 @@ Environment = get_environment(ENVIRONMENT_NAME)
 # Environment = importlib.import_module(ENVIRONMENT_PATH).GymPendulum
 models = importlib.import_module(MODEL_PATH)
 DefaultModel = models.NeuralModel
-DefaultModel = models.GymNeural
+DefaultModel = models.FullNeural
+DefaultModel = models.Partial
 
 rc('font', size=15)
 rc('text', usetex=True)
@@ -35,16 +38,17 @@ rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
 T = 200
 T_random = 0
-dt = 80e-3
 
 n_samples = 10
 
-environment = Environment(dt)
+environment = Environment()
 dt = environment.dt
 gamma = environment.gamma
 sigma = environment.sigma
 
 x0 = environment.x0
+
+evaluation = Evaluation(environment)
 
 from oracles.cartpole import PeriodicOracle
 
@@ -91,7 +95,7 @@ for name, value in agents.items():
 
         test_values[sample_index, :] = agent.identify(
             T,
-            test_function=environment.test_error,
+            test_function=evaluation.test_error,
             T_random=T_random
             )
     output[name] = test_values

@@ -20,9 +20,10 @@ class Cartpole(Environment):
 
     @staticmethod
     def get_state(obs):
-        cphi, sphi, d_phi = torch.unbind(obs, dim=1)
+        y, d_y, cphi, sphi, d_phi = torch.unbind(obs, dim=1)
         phi = torch.atan2(sphi, cphi)
-        x = torch.stack((phi, d_phi), dim=1)
+        x = torch.stack((y, d_y, phi, d_phi), dim=1)
+        return x
 
     def __init__(self, dt, sigma, gamma, g, mass, Mass, l, alpha, beta):
         super().__init__(self.d, self.m, dt, sigma, gamma)
@@ -37,61 +38,71 @@ class Cartpole(Environment):
 
         self.omega_2 = g/l
         self.period = 2*np.pi * np.sqrt(l / g)
-        self.x0 = np.array([0.0, 0.0, np.pi, 0.0])
+        self.x0 = np.array([0.0, 0.0, np.pi+1e-1, 0.0])
 
         self.n_points = 20
 
 
-        self.dphi_max = np.sqrt(2*g/l)
-        self.dy_max = 2*np.sqrt(2*mass*g*l/Mass)
+        self.dphi_max = 8.0
+        self.dy_max = 8.0
+        self.velocity_bounds = np.array([
+            [-self.dphi_max, self.dphi_max],
+            [-np.inf, np.inf],
+            [-self.dy_max, self.dy_max],
+            [-np.inf, np.inf],
+            ])
+        # interval_dy = torch.linspace(-self.dy_max, self.dy_max, self.n_points)
+        # interval_phi = torch.linspace(-np.pi, np.pi, self.n_points)
+        # interval_dphi = torch.linspace(-self.dphi_max, self.dphi_max, self.n_points)
+        # # interval_u = torch.linspace(-10, 10, n_points)
+        # grid_dy, grid_phi, grid_dphi = torch.meshgrid(
+        #     interval_dy,
+        #     interval_phi,
+        #     interval_dphi
+        # )
+        # self.grid = torch.cat([
+        #     grid_dy.reshape(-1, 1),
+        #     torch.cos(grid_phi.reshape(-1, 1)),
+        #     torch.sin(grid_phi.reshape(-1, 1)),
+        #     grid_dphi.reshape(-1, 1)
+        #     # grid_u.reshape(-1, 1),
+        # ], 1)
 
-        interval_dy = torch.linspace(-self.dy_max, self.dy_max, self.n_points)
-        interval_phi = torch.linspace(-np.pi, np.pi, self.n_points)
-        interval_dphi = torch.linspace(-self.dphi_max, self.dphi_max, self.n_points)
-        # interval_u = torch.linspace(-10, 10, n_points)
-        grid_dy, grid_phi, grid_dphi = torch.meshgrid(
-            interval_dy,
-            interval_phi,
-            interval_dphi
-        )
-        self.grid = torch.cat([
-            grid_dy.reshape(-1, 1),
-            torch.cos(grid_phi.reshape(-1, 1)),
-            torch.sin(grid_phi.reshape(-1, 1)),
-            grid_dphi.reshape(-1, 1)
-            # grid_u.reshape(-1, 1),
-        ], 1)
+        self.goal_weights = torch.Tensor([10, 0.1,  10., 10., 0.1])
+        # self.goal_weights = torch.Tensor((100, .1, 0.1))
+        self.goal_state = torch.Tensor([.0, .0, 1., 0., 0.])
+        self.R = 0.001
 
-    def acceleration_x(self, d_y, c_phi, s_phi, d_phi, tensor=False):
+    def acceleration_x(self, d_y, cphi, s_phi, d_phi, tensor=False):
 
         friction_phi = - self.alpha * d_phi
         friction_y = - self.beta * d_y
 
-        dd_phi = self.Mass*self.g*s_phi - c_phi * \
+        dd_phi = self.Mass*self.g*s_phi - cphi * \
             (self.mass*self.l*d_phi**2*s_phi + friction_y) + \
             self.Mass*friction_phi/(self.mass*self.l)
-        dd_phi /= self.Mass*self.l - self.mass*self.l*c_phi**2
+        dd_phi /= self.Mass*self.l - self.mass*self.l*cphi**2
 
         dd_y = self.mass*self.l*s_phi*d_phi**2 + friction_y + \
-            friction_phi*c_phi/self.l - self.mass*self.g*s_phi*c_phi
-        dd_y /= self.Mass - self.mass * c_phi**2
+            friction_phi*cphi/self.l - self.mass*self.g*s_phi*cphi
+        dd_y /= self.Mass - self.mass * cphi**2
 
         return dd_y, dd_phi
 
-    def acceleration_u(self, c_phi, u):
-        dd_y = u / (self.Mass - self.mass * c_phi**2)
-        dd_phi = - c_phi*u / (self.Mass*self.l - self.mass*self.l*c_phi**2)
+    def acceleration_u(self, cphi, u):
+        dd_y = u / (self.Mass - self.mass * cphi**2)
+        dd_phi = - cphi*u / (self.Mass*self.l - self.mass*self.l*cphi**2)
 
         return dd_y, dd_phi
     
     def get_B(self, x):
         y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
-        c_phi, s_phi = np.cos(phi), np.sin(phi)
+        cphi, s_phi = np.cos(phi), np.sin(phi)
         B = np.array([
             [0],
-            [1/(self.Mass - self.mass * c_phi**2)],
+            [1/(self.Mass - self.mass * cphi**2)],
             [0],
-            [- c_phi / (self.Mass*self.l - self.mass*self.l*c_phi**2)]
+            [- cphi / (self.Mass*self.l - self.mass*self.l*cphi**2)]
         ])
         return B
 
@@ -99,75 +110,73 @@ class Cartpole(Environment):
     def dynamics(self, x, u):
         y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
         dx = np.zeros_like(x)
-        c_phi, s_phi = np.cos(phi), np.sin(phi)
-        dd_y, dd_phi = self.acceleration_x(d_y, c_phi, s_phi, d_phi)
-        dd_y_u, dd_phi_u = self.acceleration_u(c_phi, u)
+        cphi, s_phi = np.cos(phi), np.sin(phi)
+        dd_y, dd_phi = self.acceleration_x(d_y, cphi, s_phi, d_phi)
+        dd_y_u, dd_phi_u = self.acceleration_u(cphi, u)
         dd_y += dd_y_u
         dd_phi += dd_phi_u
         dx[0] = d_y
         dx[1] = dd_y
         dx[2] = d_phi
         dx[3] = dd_phi
-        return dx
+        dx_bounded = np.clip(dx, self.velocity_bounds[:, 0], self.velocity_bounds[:, 1])
+        return dx, dx_bounded
     
-    def d_dynamics(self, x, u):
-        y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
-        c_phi, s_phi = torch.cos(phi), torch.sin(phi)
-        dx = torch.zeros_like(x)
-        dd_y, dd_phi = self.acceleration_x(d_y, c_phi, s_phi, d_phi)
-        dd_y_u, dd_phi_u = self.acceleration_u(c_phi, u.squeeze())
+    def d_dynamics(self, z):
+        y, d_y, phi, d_phi, u = z.unbind(dim=1)
+        cphi, s_phi = torch.cos(phi), torch.sin(phi)
+        dd_y, dd_phi = self.acceleration_x(d_y, cphi, s_phi, d_phi)
+        dd_y_u, dd_phi_u = self.acceleration_u(cphi, u.squeeze())
         dd_y += dd_y_u
         dd_phi += dd_phi_u
-        dx[0] = d_y
-        dx[1] = dd_y
-        dx[2] = d_phi
-        dx[3] = dd_phi
+        dx = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
         return dx
 
 
-    def f_star(self, zeta):
-        d_y, c_phi, s_phi, d_phi = zeta[:, 0], zeta[:, 1], zeta[:, 2], zeta[:, 3]
-        dd_y, dd_phi = self.acceleration_x(d_y, c_phi, s_phi, d_phi, tensor=True)
-        dd = torch.zeros_like(zeta[:, :2])
-        # dx[:, 0] = z[:, 1]
-        # dx[:, 2] = z[:, 1]
-        dd[:, 0] = dd_y
-        dd[:, 1] = dd_phi
-        return dd
+    # def f_star(self, zeta):
+    #     d_y, cphi, s_phi, d_phi = zeta[:, 0], zeta[:, 1], zeta[:, 2], zeta[:, 3]
+    #     dd_y, dd_phi = self.acceleration_x(d_y, cphi, s_phi, d_phi, tensor=True)
+    #     dd = torch.zeros_like(zeta[:, :2])
+    #     # dx[:, 0] = z[:, 1]
+    #     # dx[:, 2] = z[:, 1]
+    #     dd[:, 0] = dd_y
+    #     dd[:, 1] = dd_phi
+    #     return dd
 
-    def step_cost(self, x, u):
-        y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
-        c_phi, s_phi = torch.cos(phi), torch.sin(phi)
-        c = 100*y**2+100*(1-c_phi)**2 + 0.1*s_phi**2 + 0.1*d_y**2 + 0.1*d_phi**2 + 0.1*u**2
-        # print(f'x = {x}, u={u}, c={c}')
-        return c
+    # def step_cost(self, x, u):
+    #     y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
+    #     cphi, s_phi = torch.cos(phi), torch.sin(phi)
+    #     c = 100*y**2+100*(1-cphi)**2 + 0.1*s_phi**2 + 0.1*d_y**2 + 0.1*d_phi**2 + 0.1*u**2
+    #     # print(f'x = {x}, u={u}, c={c}')
+    #     return c
 
-    def test_error(self, model, x, u, plot, t=0):
-        truth = self.f_star(self.grid)
-        loss_function = nn.MSELoss()
-        predictions = model.net(self.grid.clone()).squeeze()
-        # # print(f'prediction {predictions.shape} target {truth.shape} ')
-        loss = loss_function(predictions, truth)
-        # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
-        if plot and t % 5 == 0:
-            self.plot(x, u, t)
-            # plot_portrait(model.forward_x)
-            plt.pause(0.1)
-            plt.close()
-        # print(f'loss = {loss}')
-        # print(x)
-        return loss
+    # def test_error(self, model, x, u, plot, t=0):
+    #     truth = self.f_star(self.grid)
+    #     loss_function = nn.MSELoss()
+    #     predictions = model.net(self.grid.clone()).squeeze()
+    #     # # print(f'prediction {predictions.shape} target {truth.shape} ')
+    #     loss = loss_function(predictions, truth)
+    #     # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
+    #     if plot and t % 5 == 0:
+    #         self.plot_system(x, u, t)
+    #         # plot_portrait(model.forward_x)
+    #         plt.pause(0.1)
+    #         plt.close()
+    #     # print(f'loss = {loss}')
+    #     # print(x)
+        # return loss
 
-    def plot(self, x, u, t):
+    def plot_system(self, x, u, t):
         y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
         push = 0.7*np.sign(np.mean(u))
-        c_phi, s_phi = np.cos(phi), np.sin(phi)
+        cphi, s_phi = np.cos(phi), np.sin(phi)
         plt.arrow(y, 0, push, 0, color='red', head_width=0.1, alpha=0.5)
         plt.plot([y-self.l/2, y+self.l/2], [0, 0], color='black')
-        plt.plot([y, y+self.l*s_phi], [0, self.l*c_phi], color='blue')
+        plt.plot([y, y+self.l*s_phi], [0, self.l*cphi], color='blue')
         plt.xlim((y-2*self.l, y+2*self.l))
         plt.ylim((-2*self.l, 2*self.l))
         plt.gca().set_aspect('equal', adjustable='box')
+        plt.title(f't = {t}')
 
 class RlCartpole(Cartpole):
     
@@ -197,55 +206,69 @@ class RlCartpole(Cartpole):
             # grid_u.reshape(-1, 1),
         ], 1)
 
-    def acc(self, d_y, c_phi, s_phi, d_phi, u):
+
+
+    def acc(self, d_y, cphi, s_phi, d_phi, u, tensor=False):
+        sign = np.sign(d_y) if not tensor else torch.sign(d_y)
         length = self.l / 2
         friction_phi = - self.alpha * d_phi
-        friction_y = - self.beta * d_y
+        friction_y = - self.beta * sign
         polemass_length = self.mass * length
         temp = (
             u + polemass_length * d_phi**2 * s_phi + friction_y
         ) / self.total_mass
-        phiacc = (self.g * s_phi - c_phi * temp - friction_phi/polemass_length) / (
+        phiacc = (self.g * s_phi - cphi * temp + friction_phi/polemass_length) / (
             length * (4.0 / 3.0 - self.mass *
-                      c_phi**2 / self.total_mass)
+                      cphi**2 / self.total_mass)
         )
-        yacc = temp - polemass_length * phiacc * c_phi / self.total_mass
+        yacc = temp - polemass_length * phiacc * cphi / self.total_mass
         return yacc, phiacc
+
+    def acc_u(self, d_y, cphi, s_phi, d_phi, u, tensor=False):
+        u0 = torch.zeros_like(u)
+        yacc, phiacc = self.acc(d_y, cphi, s_phi, d_phi, u, tensor)
+        yacc0, phiacc0 = self.acc(d_y, cphi, s_phi, d_phi, u0, tensor)
+        return yacc-yacc0, phiacc-phiacc0
 
     def dynamics(self, x, u):
         y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
-        c_phi, s_phi = np.cos(phi), np.sin(phi)
-        x_dot = np.zeros_like(x)
-        yacc, phiacc = self.acc(d_y, c_phi, s_phi, d_phi, u)
-        x_dot[0] = d_y
-        x_dot[1] = yacc
-        x_dot[2] = d_phi
-        x_dot[3] = phiacc
-        return x_dot
+        cphi, s_phi = np.cos(phi), np.sin(phi)
+        dd_y, dd_phi = self.acc(d_y, cphi, s_phi, d_phi, u)
+        x_dot = np.array([d_y, dd_y, d_phi, dd_phi], dtype=float)
+        x_dot_bounded = np.clip(
+            x_dot, self.velocity_bounds[:, 0], self.velocity_bounds[:, 1])
+        return x_dot, x_dot_bounded
+    
+    def d_dynamics(self, z):
+        y, d_y, phi, d_phi, u = z.unbind(dim=1)
+        cphi, s_phi = torch.cos(phi), torch.sin(phi)
+        dd_y, dd_phi = self.acc(d_y, cphi, s_phi, d_phi, u, tensor=True)
+        dx = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
+        return dx
 
-    def f_star(self, zeta):
-        d_y, c_phi, s_phi, d_phi = zeta[:,
-                                        0], zeta[:, 1], zeta[:, 2], zeta[:, 3]
-        u = torch.zeros_like(c_phi)
-        yacc, phiacc = self.acc(d_y, c_phi, s_phi, d_phi, u)
-        acc = torch.stack((yacc, phiacc), dim=1)
-        return acc
+    # def f_star(self, zeta):
+    #     d_y, cphi, s_phi, d_phi = zeta[:,
+    #                                     0], zeta[:, 1], zeta[:, 2], zeta[:, 3]
+    #     u = torch.zeros_like(cphi)
+    #     yacc, phiacc = self.acc(d_y, cphi, s_phi, d_phi, u)
+    #     acc = torch.stack((yacc, phiacc), dim=1)
+    #     return acc
 
-    def test_error(self, model, x, u, plot, t=0):
-        truth = self.f_star(self.grid)
-        loss_function = nn.MSELoss()
-        predictions = model.net(self.grid.clone()).squeeze()
-        # print(f'prediction {predictions.shape} target {truth.shape} ')
-        loss = loss_function(predictions, truth)
-        # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
-        if plot:
-            self.plot(x, u, t)
-            # plot_portrait(model.forward_x)
-            plt.pause(0.1)
-            plt.close()
-        # print(f'loss = {loss}')
-        # print(x)
-        return loss
+    # def test_error(self, model, x, u, plot, t=0):
+    #     truth = self.f_star(self.grid)
+    #     loss_function = nn.MSELoss()
+    #     predictions = model.net(self.grid.clone()).squeeze()
+    #     # print(f'prediction {predictions.shape} target {truth.shape} ')
+    #     loss = loss_function(predictions, truth)
+    #     # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
+    #     if plot:
+    #         self.plot_system(x, u, t)
+    #         # plot_portrait(model.forward_x)
+    #         plt.pause(0.1)
+    #         plt.close()
+    #     # print(f'loss = {loss}')
+    #     # print(x)
+    #     return loss
 
 
 class GymCartpole(RlCartpole):
@@ -288,13 +311,13 @@ class DmCartpole(RlCartpole):
 
     # def get_B(self, x):
     #     y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
-    #     c_phi, s_phi = np.cos(phi), np.sin(phi)
-    #     B_phi = -c_phi / \
-    #         (self.l*((4/3)*self.total_mass - self.mass*c_phi**2))
+    #     cphi, s_phi = np.cos(phi), np.sin(phi)
+    #     B_phi = -cphi / \
+    #         (self.l*((4/3)*self.total_mass - self.mass*cphi**2))
 
     #     B = np.array([
     #         [0],
-    #         [(1-B_phi*c_phi*self.mass*self.l)/self.total_mass ],
+    #         [(1-B_phi*cphi*self.mass*self.l)/self.total_mass ],
     #         [0],
     #         [B_phi],
     #     ])
@@ -313,7 +336,7 @@ class DampedCartpole(Cartpole):
         self.period = 2*np.pi / np.sqrt(g/l)
         dt = 1e-2 * self.period
         sigma = 0.01
-        gamma = 2
+        gamma = 4
 
         super().__init__(dt, sigma, gamma, g, mass, Mass, l, alpha, beta)
 
@@ -321,107 +344,107 @@ class DampedCartpole(Cartpole):
 
 
 
-def sign(x, tensor=False):
-    if tensor:
-        return torch.sign(x)
-    return np.sign(x)
+# def sign(x, tensor=False):
+#     if tensor:
+#         return torch.sign(x)
+#     return np.sign(x)
 
 
-def acceleration_x(d_y, c_phi, s_phi, d_phi, tensor=False):
-    friction_phi = - alpha * d_phi
-    # friction_y = -beta * Mass * g * sign(d_y, tensor=tensor)
-    friction_y = -beta * d_y
+# def acceleration_x(d_y, cphi, s_phi, d_phi, tensor=False):
+#     friction_phi = - alpha * d_phi
+#     # friction_y = -beta * Mass * g * sign(d_y, tensor=tensor)
+#     friction_y = -beta * d_y
 
-    dd_phi = Mass*g*s_phi - c_phi * \
-        (mass*l*d_phi**2*s_phi + friction_y) + Mass*friction_phi/(mass*l)
-    dd_phi /= Mass*l - mass*l*c_phi**2
+#     dd_phi = Mass*g*s_phi - cphi * \
+#         (mass*l*d_phi**2*s_phi + friction_y) + Mass*friction_phi/(mass*l)
+#     dd_phi /= Mass*l - mass*l*cphi**2
 
-    vertical = mass*l*(dd_phi*s_phi+d_phi**2*c_phi) - Mass*g
-    # friction_y = -beta * sign(d_y, tensor=tensor) * vertical * sign(vertical, tensor=tensor)
-    dd_y = mass*l*s_phi*d_phi**2 + friction_y + \
-        friction_phi*c_phi/l - mass*g*s_phi*c_phi
-    dd_y /= Mass - mass * c_phi**2
+#     vertical = mass*l*(dd_phi*s_phi+d_phi**2*cphi) - Mass*g
+#     # friction_y = -beta * sign(d_y, tensor=tensor) * vertical * sign(vertical, tensor=tensor)
+#     dd_y = mass*l*s_phi*d_phi**2 + friction_y + \
+#         friction_phi*cphi/l - mass*g*s_phi*cphi
+#     dd_y /= Mass - mass * cphi**2
 
-    return dd_y, dd_phi
-
-
-def acceleration_u(c_phi, u):
-    dd_y = u / (Mass - mass * c_phi**2)
-    dd_phi = - c_phi*u / (Mass*l - mass*l*c_phi**2)
-
-    return dd_y, dd_phi
+#     return dd_y, dd_phi
 
 
-def dynamics(x, u):
-    y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
-    x_dot = np.zeros_like(x)
-    c_phi, s_phi = np.cos(phi), np.sin(phi)
-    dd_y, dd_phi = acceleration_x(d_y, c_phi, s_phi, d_phi)
-    dd_y_u, dd_phi_u = acceleration_u(c_phi, u)
-    dd_y += dd_y_u
-    dd_phi += dd_phi_u
-    # noise = sigma * np.random.randn(d)
-    x_dot[0] = d_y
-    x_dot[1] = dd_y
-    x_dot[2] = d_phi
-    x_dot[3] = dd_phi
-    return x_dot
+# def acceleration_u(cphi, u):
+#     dd_y = u / (Mass - mass * cphi**2)
+#     dd_phi = - cphi*u / (Mass*l - mass*l*cphi**2)
+
+#     return dd_y, dd_phi
 
 
-def f_star(z):
-    d_y, c_phi, s_phi, d_phi = z[:, 0], z[:, 1], z[:, 2], z[:, 3]
-    dd_y, dd_phi = acceleration_x(d_y, c_phi, s_phi, d_phi, tensor=True)
-    dd = torch.zeros_like(z[:, :2])
-    # dx[:, 0] = z[:, 1]
-    # dx[:, 2] = z[:, 1]
-    dd[:, 0] = dd_y
-    dd[:, 1] = dd_phi
-    return dd
+# def dynamics(x, u):
+#     y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
+#     x_dot = np.zeros_like(x)
+#     cphi, s_phi = np.cos(phi), np.sin(phi)
+#     dd_y, dd_phi = acceleration_x(d_y, cphi, s_phi, d_phi)
+#     dd_y_u, dd_phi_u = acceleration_u(cphi, u)
+#     dd_y += dd_y_u
+#     dd_phi += dd_phi_u
+#     # noise = sigma * np.random.randn(d)
+#     x_dot[0] = d_y
+#     x_dot[1] = dd_y
+#     x_dot[2] = d_phi
+#     x_dot[3] = dd_phi
+#     return x_dot
+
+
+# def f_star(z):
+#     d_y, cphi, s_phi, d_phi = z[:, 0], z[:, 1], z[:, 2], z[:, 3]
+#     dd_y, dd_phi = acceleration_x(d_y, cphi, s_phi, d_phi, tensor=True)
+#     dd = torch.zeros_like(z[:, :2])
+#     # dx[:, 0] = z[:, 1]
+#     # dx[:, 2] = z[:, 1]
+#     dd[:, 0] = dd_y
+#     dd[:, 1] = dd_phi
+#     return dd
 
 
 
 
-def test_error(model, x, u, plot, t=0):
-    truth = f_star(grid)
-    loss_function = nn.MSELoss()
-    predictions = model.net(grid.clone()).squeeze()
-    # # # print(f'prediction {predictions.shape} target {truth.shape} ')
-    loss = loss_function(predictions, truth)
-    if plot and t % 10 == 0:
-        plot_cartpole(x, u)
-        # plot_portrait(model.net)
-        plt.pause(0.1)
-        plt.close()
-    # print(f'loss = {loss}')
-    return loss
+# def test_error(model, x, u, plot, t=0):
+#     truth = f_star(grid)
+#     loss_function = nn.MSELoss()
+#     predictions = model.net(grid.clone()).squeeze()
+#     # # # print(f'prediction {predictions.shape} target {truth.shape} ')
+#     loss = loss_function(predictions, truth)
+#     if plot and t % 10 == 0:
+#         plot_system(x, u)
+#         # plot_portrait(model.net)
+#         plt.pause(0.1)
+#         plt.close()
+#     # print(f'loss = {loss}')
+#     return loss
 
 
-def plot_cartpole(x, u):
-    y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
-    push = 0.7*np.sign(np.mean(u))
-    c_phi, s_phi = np.cos(phi), np.sin(phi)
-    plt.arrow(y, 0, push, 0, color='red', head_width=0.1, alpha=0.5)
-    plt.plot([y-l/2, y+l/2], [0, 0], color='black')
-    plt.plot([y, y+l*s_phi], [0, l*c_phi], color='blue')
-    plt.xlim((y-2*l, y+2*l))
-    plt.ylim((-2*l, 2*l))
-    plt.gca().set_aspect('equal', adjustable='box')
+# def plot_system(x, u):
+#     y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
+#     push = 0.7*np.sign(np.mean(u))
+#     cphi, s_phi = np.cos(phi), np.sin(phi)
+#     plt.arrow(y, 0, push, 0, color='red', head_width=0.1, alpha=0.5)
+#     plt.plot([y-l/2, y+l/2], [0, 0], color='black')
+#     plt.plot([y, y+l*s_phi], [0, l*cphi], color='blue')
+#     plt.xlim((y-2*l, y+2*l))
+#     plt.ylim((-2*l, 2*l))
+#     plt.gca().set_aspect('equal', adjustable='box')
 
 
-def plot_portrait(f):
-    predictions = f(grid)
+# def plot_portrait(f):
+#     predictions = f(grid)
 
-    # plt.xlim((-phi_max, phi_max))
-    # plt.ylim((-dphi_max, dphi_max))
-    # vectors = predictions.shape(n_points, n_points, n_points, n_points, 2)
-    vector_x = predictions[:, 0].reshape(n_points, n_points).detach().numpy()
-    vector_y = predictions[:, 1].reshape(n_points, n_points).detach().numpy()
-    magnitude = np.sqrt(vector_x.T**2 + vector_y.T**2)
-    linewidth = magnitude / magnitude.max()
-    plt.streamplot(
-        grid_dy.numpy().T,
-        grid_dphi.numpy().T,
-        vector_x.T,
-        vector_y.T,
-        color='black',
-        linewidth=linewidth)
+#     # plt.xlim((-phi_max, phi_max))
+#     # plt.ylim((-dphi_max, dphi_max))
+#     # vectors = predictions.shape(n_points, n_points, n_points, n_points, 2)
+#     vector_x = predictions[:, 0].reshape(n_points, n_points).detach().numpy()
+#     vector_y = predictions[:, 1].reshape(n_points, n_points).detach().numpy()
+#     magnitude = np.sqrt(vector_x.T**2 + vector_y.T**2)
+#     linewidth = magnitude / magnitude.max()
+#     plt.streamplot(
+#         grid_dy.numpy().T,
+#         grid_dphi.numpy().T,
+#         vector_x.T,
+#         vector_y.T,
+#         color='black',
+#         linewidth=linewidth)

@@ -14,10 +14,6 @@ class Model(nn.Module):
         self.B_star = torch.tensor(environment.B_star, dtype=torch.float)
         self.d, self.m = environment.d, environment.m
 
-    def get_B(self, x):
-        B = np.zeros((self.d, self.m))
-        B[1, 0] = 1
-        return B
 
     def transform(self, z):
         return z[:, :self.d]
@@ -26,7 +22,7 @@ class Model(nn.Module):
         raise NotImplementedError
 
     def forward_u(self, dx, u):
-        dx[:, 1] += u.view(-1)
+        dx += self.B_star @ u
         return dx
 
     def predictor(self, z):
@@ -42,6 +38,15 @@ class Model(nn.Module):
         dx = self.forward_u(dx, u)
         return dx
 
+    def forward_x(self, x):
+        dx = torch.zeros_like(x)
+        dx[:, 0] = x[:, 1]
+        zeta = x.clone()
+        zeta[:, 0] = torch.sin(x[:, 0])
+        # x[:, 1] = torch.sin(x[:, 1])
+        dx[:, 1] = self.net(zeta).view(-1)
+        return dx
+
 class NeuralModel(Model):
 
     def __init__(self, environment):
@@ -55,16 +60,16 @@ class NeuralModel(Model):
         )
         self.lr = 0.005
 
-    def forward_x(self, x):
-        dx = torch.zeros_like(x)
-        dx[:, 0] = x[:, 1]
-        zeta = x.clone()
-        zeta[:, 0] = torch.sin(x[:, 0])
-        # x[:, 1] = torch.sin(x[:, 1])
-        dx[:, 1] = self.net(zeta).view(-1)
-        return dx
 
-# class LinearModel(Model):
+class LinearNeural(NeuralModel):
+
+    def __init__(self, environment):
+        super().__init__(environment)
+        self.net = nn.Sequential(
+            nn.Linear(2, 1, bias=False),
+        )
+        self.lr = 0.05
+# class FullLinear(Model):
 #     def __init__(self, environment):
 #         super().__init__(environment)
 #         self.theta = nn.parameter.Parameter(torch.zeros(2, dtype=torch.float))
@@ -77,7 +82,7 @@ class NeuralModel(Model):
 #         return dx
 
 
-class GymNeural(Model):
+class FullNeural(Model):
 
 
     def __init__(self, environment):
@@ -132,7 +137,7 @@ class GymNeural(Model):
 
 
 
-class LinearModel(GymNeural):
+class FullLinear(FullNeural):
 
     def __init__(self, environment):
         super().__init__(environment)

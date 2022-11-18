@@ -5,18 +5,18 @@ from matplotlib import rc, rcParams
 
 from agents import Random, Passive
 from active_agents import GradientDesign, Spacing, Variation, D_optimal
-
+from evaluation.cartpole import ZGrid as Evaluation
 from environments import get_environment
 
 ENVIRONMENT_NAME = 'aircraft'
 ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'pendulum'
 ENVIRONMENT_NAME = 'damped_pendulum'
-ENVIRONMENT_NAME = 'linearized_pendulum'
-ENVIRONMENT_NAME = 'gym_pendulum'
 ENVIRONMENT_NAME = 'dm_pendulum'
-ENVIRONMENT_NAME = 'dm_cartpole'
+ENVIRONMENT_NAME = 'linearized_pendulum'
 ENVIRONMENT_NAME = 'gym_cartpole'
+ENVIRONMENT_NAME = 'gym_pendulum'
+ENVIRONMENT_NAME = 'dm_cartpole'
 # ENVIRONMENT_NAME = 'damped_cartpole'
 # ENVIRONMENT_NAME = 'quadrotor'
 
@@ -31,13 +31,12 @@ models = importlib.import_module(MODEL_PATH)
 plot = False    
 # plot = True
 
-T = 100
+T = 400
 T_random = 0
 environment = Environment()
 
 model = models.NeuralModel(environment)
-model = models.GymNeural(environment)
-# model = models.LinearModel(environment)
+model = models.FullNeural(environment)
 # model = models.Partial(environment)
 
 gamma = environment.gamma
@@ -46,17 +45,17 @@ sigma = environment.sigma
 # x0 = np.array([np.pi/2, 0.0])
 x0 = environment.x0.copy()
 
-# from oracles.cartpole import PeriodicOracle
+from oracles.cartpole import PeriodicOracle
 Agent = Passive
 Agent = Random
 Agent = D_optimal
-# Agent = PeriodicOracle
+Agent = PeriodicOracle
 # Agent = Spacing
 # Agent = oracles.LinearOracle
 
 # model = models.Model()
 
-# model = models.LinearModel()
+# model = models.FullLinear()
 
 agent = Agent(
     x0.copy(),
@@ -64,12 +63,15 @@ agent = Agent(
     environment.dynamics,
     model,
     gamma,
-    environment.dt
+    environment.dt,
+    period=environment.period
     )
+
+evaluation = Evaluation(environment)
 
 test_values = agent.identify(
     T,
-    test_function=environment.test_error,
+    test_function=evaluation.test_error,
     plot=plot,
     T_random=T_random
     )

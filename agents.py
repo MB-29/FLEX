@@ -8,7 +8,8 @@ class Agent:
 
     def __init__(self, x0, m, dynamics, model, gamma, dt):
 
-        self.x = x0
+        self.x0 = x0
+        self.x = x0.copy()
         self.d = x0.shape[0]
         self.m = m
 
@@ -43,13 +44,18 @@ class Agent:
 
             u_t = self.choose_control(t)
             self.u = u_t
-            x_dot = self.dynamics(self.x, u_t.copy())
+            x_dot, x_dot_bounded = self.dynamics(self.x, u_t.copy())
 
             self.learning_step(self.x, x_dot, u_t)
 
-            dx = self.dt*x_dot
-            dx[0] = self.dt*np.clip(dx[0], -8., 8.)
+            dx = self.dt*x_dot_bounded
+            # dx[0] = self.dt*np.clip(dx[0], -8., 8.)
+            # if np.abs(self.x[1::2]).max() > 4:
+            #     self.x = self.x0.copy()
+            # else:
             self.x += dx
+            x_lim = np.array([[-np.inf, np.inf], [-8.0, 8.0], [-np.inf, np.inf], [-8.0, 8.0]])
+            self.x = np.clip(self.x, x_lim[:, 0], x_lim[:, 1])  
 
             self.u_values[t] = u_t.copy()
             self.x_values[t] = self.x.copy()
@@ -84,7 +90,7 @@ class Agent:
         # print(f'z {z}')
 
         x_dot = torch.tensor(x_dot, dtype=torch.float, requires_grad=False)
-        prediction = self.model.forward(z)
+        prediction = self.model(z)
         # print(f'prediction {prediction}')
         
         # x_dot_ = np.array([[0.0], [3.0]]) @ u

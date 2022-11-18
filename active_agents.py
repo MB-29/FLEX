@@ -193,19 +193,19 @@ class D_optimal(Active):
         z[:, :self.d] = x
         z[:, self.d:] = u
 
-        j = 1
+        j = np.random.choice([1, 3])
 
         y = self.model(z)
-        da_dtheta = compute_gradient(self.model, y[:, j])
+        df_dtheta = compute_gradient(self.model, y[:, j])
 
         D = np.zeros((self.q, self.d))
         y = self.model(z)
-        da_dx = torch.autograd.grad(y[:, j], x, create_graph=True)[
+        df_dx = torch.autograd.grad(y[:, j], x, create_graph=True)[
             0].unsqueeze(0)
 
         for i in range(self.d):
             d2a_dxidtheta = compute_gradient(
-                self.model, da_dx[:, i], retain_graph=True, allow_unused=True)
+                self.model, df_dx[:, i], retain_graph=True, allow_unused=True)
             D[:, i] = d2a_dxidtheta
         try:
             B_ = self.dt * self.model.get_B(self.x)
@@ -217,7 +217,7 @@ class D_optimal(Active):
                 B_[i, :] = dfi_du
         B = D @ B_
 
-        v = da_dtheta.detach().numpy()
+        v = df_dtheta.detach().numpy()
         u = linear_D_optimal(self.M, B, v, self.gamma)
         u *= self.gamma / np.linalg.norm(u)
 
