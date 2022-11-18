@@ -25,7 +25,7 @@ ENVIRONMENT_NAME = 'dm_cartpole'
 
 T = 100
 H = 50
-n_samples = 10
+n_samples = 2
 n_episodes = 7
 
 environment = Environment()
