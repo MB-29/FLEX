@@ -25,7 +25,7 @@ ENVIRONMENT_NAME = 'dm_cartpole'
 
 T = 100
 H = 50
-n_samples = 2
+n_samples = 1
 n_episodes = 7
 
 environment = Environment()
@@ -46,8 +46,8 @@ agents = {
     # # 'gradientOD': {'agent': GradientDesign, 'color': 'purple'},
     # # 'variation': {'agent': Variation, 'color': 'color'},d
 output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma}
-name = 'D-optimal'
-# name = 'random'
+# name = 'D-optimal'
+name = 'random'
 Agent = agents[name]
 
 if __name__ == '__main__':
