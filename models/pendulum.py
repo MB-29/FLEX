@@ -2,9 +2,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import environments.pendulum as pendulum
-
-
 
 class Model(nn.Module):
 

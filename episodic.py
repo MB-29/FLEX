@@ -23,10 +23,11 @@ ENVIRONMENT_NAME = 'dm_cartpole'
 
 
 
-T = 100
+T = 200
+T_task = 100
 H = 50
 n_samples = 1
-n_episodes = 7
+n_episodes = 4
 
 environment = Environment()
 gamma = environment.gamma
@@ -71,7 +72,7 @@ if __name__ == '__main__':
                 environment,
                 model_dynamics,
                 dt,
-                T,
+                T_task,
                 H,
                 plot=False)
 

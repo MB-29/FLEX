@@ -19,7 +19,7 @@ class Partial(nn.Module):
         self.get_B = environment.get_B
         self.acceleration_u = environment.acceleration_u
         self.acc_u = environment.acc_u
-        self.lr = 0.01
+        self.lr = 0.005
 
 
     def transform(self, x):
@@ -64,11 +64,11 @@ class FullNeural(nn.Module):
         self.d, self.m = environment.d, environment.m
 
         self.net = nn.Sequential(
-            nn.Linear(5, 8),
+            nn.Linear(4, 8),
             nn.Tanh(),
             # nn.Linear(8, 8),
             # nn.Tanh(),
-            nn.Linear(8, 2)
+            nn.Linear(8, 4)
         )
         # self.B_net = nn.Sequential(
         #     nn.Linear(3, 16),
@@ -101,14 +101,19 @@ class FullNeural(nn.Module):
     #     acceleration[:, 1] = dd_phi_u
     #     return acceleration
     def predict(self, zeta_u):
-        return self.net(zeta_u)
+        zeta = zeta_u[:, :4]
+        u = zeta_u[:, -1:]
+        vectors = self.net(zeta)
+        # print(vectors.shape)
+        # print(u.shape)
+        return vectors[:, :2] + u*vectors[:, 2:]
 
     def forward(self, z):
         y, d_y, phi, d_phi, u = torch.unbind(z, dim=1)
         cphi, sphi = torch.cos(phi), torch.sin(phi)
         zeta = torch.stack((d_y, cphi, sphi, d_phi), dim=1)
         zeta_u = torch.cat((zeta, u.unsqueeze(0)), dim=1)
-        # print(zeta)
+        # print(zeta_u)
         prediction = self.predict(zeta_u)
         dd_y, dd_phi = torch.unbind(prediction, dim=1)
         # x = z[:, :self.d]

@@ -48,7 +48,7 @@ class Agent:
 
             self.learning_step(self.x, x_dot, u_t)
 
-            dx = self.dt*x_dot_bounded
+            dx = self.dt*x_dot
             # dx[0] = self.dt*np.clip(dx[0], -8., 8.)
             # if np.abs(self.x[1::2]).max() > 4:
             #     self.x = self.x0.copy()
