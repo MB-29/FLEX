@@ -20,7 +20,7 @@ class Grid:
         self.interval_phi = torch.linspace(-np.pi, np.pi, self.n_points)
         self.interval_dphi = torch.linspace(-self.dphi_max,
                                        self.dphi_max, self.n_points)
-        self.interval_u = torch.linspace(-environment.gamma, environment.gamma, self.n_points)
+        self.interval_u = torch.linspace(-self.environment.gamma, self.environment.gamma, 5)
         # self.interval_u = torch.linspace(-environment.gamma, environment.gamma, 2)
         
   
@@ -32,7 +32,7 @@ class Grid:
         # # print(f'prediction {predictions.shape} target {truth.shape} ')
         loss = loss_function(predictions, truth)
         # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
-        if plot and t%5 ==0:
+        if plot and t%2 ==0:
             self.plot_system(x, u, t)
             # plot_portrait(model.forward_x)
             plt.pause(0.1)
@@ -53,7 +53,7 @@ class XGrid(Grid):
         self.grid = torch.cat([
             grid_dy.reshape(-1, 1),
             torch.cos(grid_phi.reshape(-1, 1)),
-            torch.sin(grid_phi.reshape(-1, 1)),
+            torch.sin(grid_phi.reshape(-1, 1)), 
             grid_dphi.reshape(-1, 1)
             # grid_u.reshape(-1, 1),
         ], 1)
@@ -68,6 +68,8 @@ class XGrid(Grid):
         # dd[:, 0] = dd_y
         # dd[:, 1] = dd_phi
         return dd
+
+        
 class ZGrid(Grid):
     def __init__(self, environment):
         super().__init__(environment)
@@ -87,7 +89,7 @@ class ZGrid(Grid):
     def f_star(self, zeta_u):
         d_y, c_phi, s_phi, d_phi, u = torch.unbind(zeta_u, dim=1)
         dd_y, dd_phi = self.environment.acc(
-            d_y, c_phi, s_phi, d_phi, u, tensor=True)
+            d_y, c_phi, s_phi, d_phi, u)
         # dx[:, 0] = z[:, 1]
         # dx[:, 2] = z[:, 1]
         dd = torch.stack((dd_y, dd_phi), dim=1)
