@@ -64,7 +64,7 @@ class FullNeural(nn.Module):
         self.d, self.m = environment.d, environment.m
 
         self.net = nn.Sequential(
-            nn.Linear(4, 8),
+            nn.Linear(5, 8),
             nn.Tanh(),
             # nn.Linear(8, 8),
             # nn.Tanh(),
@@ -103,10 +103,11 @@ class FullNeural(nn.Module):
     def predict(self, zeta_u):
         zeta = zeta_u[:, :4]
         u = zeta_u[:, -1:]
-        vectors = self.net(zeta)
+        vectors = self.net(zeta_u)
         # print(vectors.shape)
         # print(u.shape)
-        return vectors[:, :2] + u*vectors[:, 2:]
+        # return vectors[:, :2] + u*vectors[:, 2:]
+        return vectors
 
     def forward(self, z):
         y, d_y, phi, d_phi, u = torch.unbind(z, dim=1)
@@ -115,8 +116,9 @@ class FullNeural(nn.Module):
         zeta_u = torch.cat((zeta, u.unsqueeze(0)), dim=1)
         # print(zeta_u)
         prediction = self.predict(zeta_u)
-        dd_y, dd_phi = torch.unbind(prediction, dim=1)
+        # dd_y, dd_phi = torch.unbind(prediction, dim=1)
         # x = z[:, :self.d]
         # u = z[:, self.d]
-        x_dot = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
+        # x_dot = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
+        x_dot = prediction
         return x_dot

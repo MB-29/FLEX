@@ -24,6 +24,10 @@ class Agent:
         self.dt = dt
         self.dynamics = dynamics
 
+        self.lr = getattr(self.model, 'lr', 0.001)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
+        
+
     def identify(self, T, T_random=0, test_function=None, plot=False):
 
         self.T_random =  T_random
@@ -35,8 +39,7 @@ class Agent:
         # self.lr_b = getattr(self.model, 'lr', 0.001)
         # self.optimizer_a = torch.optim.Adam(self.model.parameters(), lr=self.lr_a)
         # self.optimizer_b = torch.optim.Adam(self.model.B_net.parameters(), lr=self.lr_b)
-        self.lr = getattr(self.model, 'lr', 0.001)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
+        
         test_values = np.zeros(T)
 
         for t in range(T):
