@@ -47,8 +47,8 @@ agents = {
     # # 'gradientOD': {'agent': GradientDesign, 'color': 'purple'},
     # # 'variation': {'agent': Variation, 'color': 'color'},d
 output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma}
-# name = 'D-optimal'
-name = 'random'
+name = 'D-optimal'
+# name = 'random'
 Agent = agents[name]
 
 if __name__ == '__main__':
@@ -74,6 +74,8 @@ if __name__ == '__main__':
         )
         for episode in range(n_episodes):
             print(f'episode {episode}')
+
+            agent.x = x0.copy()
             
             model_dynamics = model.forward
             cost_values = exploit(
