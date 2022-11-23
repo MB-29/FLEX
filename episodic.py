@@ -48,7 +48,7 @@ agents = {
     # # 'variation': {'agent': Variation, 'color': 'color'},d
 output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma}
 name = 'D-optimal'
-# name = 'random'
+name = 'random'
 Agent = agents[name]
 
 if __name__ == '__main__':
