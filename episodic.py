@@ -75,7 +75,7 @@ if __name__ == '__main__':
         for episode in range(n_episodes):
             print(f'episode {episode}')
 
-            agent.x = x0.copy()
+            # agent.x = x0.copy()
             
             model_dynamics = model.forward
             cost_values = exploit(
