@@ -57,7 +57,7 @@ class Agent:
             #     self.x = self.x0.copy()
             # else:
             self.x += dx
-            x_lim = np.array([[-np.inf, np.inf], [-8.0, 8.0], [-np.inf, np.inf], [-8.0, 8.0]])
+            x_lim = np.array([[-1.84, 1.84], [-8.0, 8.0], [-np.inf, np.inf], [-8.0, 8.0]])
             self.x = np.clip(self.x, x_lim[:, 0], x_lim[:, 1])  
 
             self.u_values[t] = u_t.copy()
