@@ -73,7 +73,7 @@ class Gradient(Active):
         u = u.squeeze().detach().numpy()
         return u
 
-    def choose_control(self, t):
+    def policy(self, x, t):
         if t < self.T_random:
             # or t%100 == 0:
             return self.draw_random_control(t)
@@ -182,18 +182,17 @@ class Spacing(Gradient):
 
 class D_optimal(Active):
 
-    def choose_control(self, t):
-        if t < self.T_random:
-            return self.draw_random_control(t)
+    def policy(self, x, t):
 
         z = torch.zeros(1, self.d + self.m)
-        x = torch.tensor(self.x, dtype=torch.float, requires_grad=True)
+        x = torch.tensor(x, dtype=torch.float, requires_grad=True)
         # u = torch.tensor(self.u, dtype=torch.float)
         u = torch.zeros(self.m, requires_grad=True)
         z[:, :self.d] = x
         z[:, self.d:] = u
 
         j = np.random.choice([1, 3])
+        j = 1
 
         y = self.model(z)
         df_dtheta = compute_gradient(self.model, y[:, j])
@@ -208,7 +207,7 @@ class D_optimal(Active):
                 self.model, df_dx[:, i], retain_graph=True, allow_unused=True)
             D[:, i] = d2a_dxidtheta
         try:
-            B_ = self.dt * self.model.get_B(self.x)
+            B_ = self.dt * self.model.get_B(x)
         except AttributeError:
             B_ = np.zeros((self.d, self.m))
             y = self.model(z)

@@ -115,25 +115,21 @@ class FullNeural(Model):
         x = z[:, :self.d]
         # dx = torch.zeros_like(x)
         u = z[:, self.d:]
-        zeta = self.transform(x)
-
-        zeta_u = torch.zeros((batch_size, self.d+1+self.m))
-        zeta_u[:, :self.d+1] = zeta
-        zeta_u[:, self.d+1:] = u
-        # dx[:, 0] = x[:, 1]
-        dx = self.predict(zeta_u)
-        # dx[:, 1] = torch.clip(dx[:, 1].clone(), -8.0, 8.0)
-        return dx
+        phi, d_phi, u = torch.unbind(z, dim=1)
+        cphi, sphi = torch.cos(phi), torch.sin(phi)
+        zeta = torch.stack((cphi, sphi, d_phi), dim=1)
+        zeta_u = torch.cat((zeta, u.unsqueeze(0)), dim=1)
+        x_dot = self.predict(zeta_u)
+        return x_dot
 
     def predict(self, zeta_u):
-        zeta = zeta_u[:, :-1]
-        u = zeta_u[:, -1:]
-        # dx = torch.zeros_like(zeta_u[:, :2])
-        # dx[:, 0] = zeta_u[:, 2]
+        cphi, sphi, d_phi, u = torch.unbind(zeta_u, dim=1)
+        # x_dot = torch.zeros_like(zeta_u[:, :2])
+        # x_dot[:, 0] = zeta_u[:, 2]
         # print(self.net(zeta).shape)
-        # dx[:, 1] = self.net(zeta).squeeze() + ((self.B_star @ u.T).T)[:, 1]
-        dx = self.net(zeta_u)
-        return dx 
+        # x_dot[:, 1] = self.net(zeta).squeeze() + ((self.B_star @ u.T).T)[:, 1]
+        x_dot = self.net(zeta_u)
+        return x_dot 
 
 
 class FullLinear(FullNeural):
@@ -150,6 +146,6 @@ class FullLinear(FullNeural):
     def predict(self, zeta_u):
         zeta = zeta_u[:, :-1]
         u = zeta_u[:, -1:]
-        dx = self.net(zeta) + (self.B_star @ u.T).T
-        # dx[:, 1] = torch.clip(dx[:, 1].clone(), -8.0, 8.0)
-        return dx
+        x_dot = self.net(zeta) + (self.B_star @ u.T).T
+        # x_dot[:, 1] = torch.clip(x_dot[:, 1].clone(), -8.0, 8.0)
+        return x_dot

@@ -26,7 +26,8 @@ class Cartpole(Environment):
         return x
 
     def __init__(self, dt, sigma, gamma, g, mass, Mass, l, alpha, beta):
-        super().__init__(self.d, self.m, dt, sigma, gamma)
+        self.x0 = np.array([0.0, 0.0, np.pi, 0.0])
+        super().__init__(self.x0, self.d, self.m, dt, sigma, gamma)
 
         self.g = g
         self.l = l
@@ -38,35 +39,16 @@ class Cartpole(Environment):
 
         self.omega_2 = g/l
         self.period = 2*np.pi * np.sqrt(l / g)
-        self.x0 = np.array([0.0, 0.0, np.pi+1e-1, 0.0])
 
         self.n_points = 20
 
 
         self.dphi_max = 6.0
         self.dy_max = 4.0
-        self.velocity_bounds = np.array([
-            [-self.dphi_max, self.dphi_max],
-            [-np.inf, np.inf],
-            [-self.dy_max, self.dy_max],
-            [-np.inf, np.inf],
-            ])
-        # interval_dy = torch.linspace(-self.dy_max, self.dy_max, self.n_points)
-        # interval_phi = torch.linspace(-np.pi, np.pi, self.n_points)
-        # interval_dphi = torch.linspace(-self.dphi_max, self.dphi_max, self.n_points)
-        # # interval_u = torch.linspace(-10, 10, n_points)
-        # grid_dy, grid_phi, grid_dphi = torch.meshgrid(
-        #     interval_dy,
-        #     interval_phi,
-        #     interval_dphi
-        # )
-        # self.grid = torch.cat([
-        #     grid_dy.reshape(-1, 1),
-        #     torch.cos(grid_phi.reshape(-1, 1)),
-        #     torch.sin(grid_phi.reshape(-1, 1)),
-        #     grid_dphi.reshape(-1, 1)
-        #     # grid_u.reshape(-1, 1),
-        # ], 1)
+        self.x_lim = np.array(
+            [[-np.inf, np.inf], [-self.dphi_max, self.dphi_max]])
+        self.x_min = np.array([-np.inf, -self.dy_max, -np.inf, -self.dphi_max])
+        self.x_max = np.array([+np.inf, +self.dy_max, +np.inf, +self.dphi_max])
 
         self.goal_weights = torch.Tensor([10, 0.1,  10., 10., 0.1])
         # self.goal_weights = torch.Tensor((100, .1, 0.1))
@@ -119,8 +101,8 @@ class Cartpole(Environment):
         dx[1] = dd_y
         dx[2] = d_phi
         dx[3] = dd_phi
-        dx_bounded = np.clip(dx, self.velocity_bounds[:, 0], self.velocity_bounds[:, 1])
-        return dx, dx_bounded
+        # dx_bounded = np.clip(dx, self.velocity_bounds[:, 0], self.velocity_bounds[:, 1])
+        return dx
     
     def d_dynamics(self, z):
         y, d_y, phi, d_phi, u = z.unbind(dim=1)
@@ -235,9 +217,9 @@ class RlCartpole(Cartpole):
         cphi, s_phi = np.cos(phi), np.sin(phi)
         dd_y, dd_phi = self.acc(d_y, cphi, s_phi, d_phi, u)
         x_dot = np.array([d_y, dd_y, d_phi, dd_phi], dtype=float)
-        x_dot_bounded = np.clip(
-            x_dot, self.velocity_bounds[:, 0], self.velocity_bounds[:, 1])
-        return x_dot, x_dot_bounded
+        # x_dot_bounded = np.clip(
+        #     x_dot, self.velocity_bounds[:, 0], self.velocity_bounds[:, 1])
+        return x_dot
     
     def d_dynamics(self, z):
         y, d_y, phi, d_phi, u = z.unbind(dim=1)

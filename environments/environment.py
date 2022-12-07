@@ -1,4 +1,5 @@
 import importlib
+import numpy as np
 
 def get_environment(name):
     environment_name = ''.join(word.title() for word in name.split('_'))
@@ -10,24 +11,27 @@ def get_environment(name):
 
 class Environment:
 
-    def __init__(self, d, m, dt, sigma, gamma):
+    def __init__(self, x0, d, m, dt, sigma, gamma):
         self.d = d
         self.m = m
         self.dt = dt
         self.sigma = sigma
         self.gamma = gamma
+
+        self.x = x0
     
     def dynamics(self, x, u):
         raise NotImplementedError
+
+    def step(self, u):
+        x_dot = self.dynamics(self.x, u)
+        dx = x_dot * self.dt
+        self.x += dx
+        self.x = np.clip(self.x, self.x_min, self.x_max)
+        return x_dot
     
     def d_dynamics(self, x, u):
         raise NotImplementedError
     
-    def test_error(self, model, x, u, plot=False):
-        raise NotImplementedError
-
-    def step_cost(self, x, u):
-        raise NotImplementedError
-
-    def plot(self, x, u):
+    def plot_system(self, x, u):
         raise NotImplementedError
