@@ -2,15 +2,17 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from evaluation.pendulum import XGrid, ZGrid, MatrixNorm
+
 
 class Model(nn.Module):
 
-    def __init__(self, environment):
+    def __init__(self, environment, evaluation):
         super().__init__()
         self.period = environment.period
         self.B_star = torch.tensor(environment.B_star, dtype=torch.float)
         self.d, self.m = environment.d, environment.m
-
+        self.evaluation = evaluation
 
     def transform(self, z):
         return z[:, :self.d]
@@ -82,8 +84,9 @@ class LinearNeural(NeuralModel):
 class FullNeural(Model):
 
 
-    def __init__(self, environment):
-        super().__init__(environment)
+    def __init__(self, environment, evaluation = None):
+        evaluation = ZGrid(environment) if evaluation is None else evaluation
+        super().__init__(environment, evaluation)
 
         self.net = nn.Sequential(
             nn.Linear(4, 4),
@@ -133,15 +136,15 @@ class FullNeural(Model):
         return dx 
 
 
-
 class FullLinear(FullNeural):
 
-    def __init__(self, environment):
-        super().__init__(environment)
+    def __init__(self, environment, evaluation=None):
+        evaluation = MatrixNorm(environment) if evaluation is None else evaluation
+        super().__init__(environment, evaluation)
         self.net = nn.Sequential(
             nn.Linear(3, 2, bias=False),
         )
-        self.lr = 0.05
+        self.lr = 0.1
         # self.B_star = torch.tensor(environment.B_star)
 
     def predict(self, zeta_u):

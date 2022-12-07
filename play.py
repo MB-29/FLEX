@@ -5,17 +5,17 @@ from matplotlib import rc, rcParams
 
 from agents import Random, Passive
 from active_agents import GradientDesign, Spacing, Variation, D_optimal
-from evaluation.cartpole import ZGrid as Evaluation
+# from evaluation.cartpole import XGrid as Evaluation
 from environments import get_environment
 
 ENVIRONMENT_NAME = 'aircraft'
 ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'pendulum'
 ENVIRONMENT_NAME = 'damped_pendulum'
-ENVIRONMENT_NAME = 'dm_pendulum'
 ENVIRONMENT_NAME = 'linearized_pendulum'
 ENVIRONMENT_NAME = 'gym_cartpole'
 ENVIRONMENT_NAME = 'gym_pendulum'
+ENVIRONMENT_NAME = 'dm_pendulum'
 ENVIRONMENT_NAME = 'dm_cartpole'
 # ENVIRONMENT_NAME = 'damped_cartpole'
 # ENVIRONMENT_NAME = 'quadrotor'
@@ -29,14 +29,14 @@ Environment = get_environment(ENVIRONMENT_NAME)
 models = importlib.import_module(MODEL_PATH)
 
 plot = False    
-# plot = True
+plot = True
 
-T = 400
+T = 500
 T_random = 0
 environment = Environment()
 
-model = models.NeuralModel(environment)
 model = models.FullNeural(environment)
+# model = models.FullLinear(environment)
 # model = models.Partial(environment)
 
 gamma = environment.gamma
@@ -47,7 +47,7 @@ x0 = environment.x0.copy()
 
 from oracles.cartpole import PeriodicOracle
 Agent = Passive
-Agent = Random
+# Agent = Random
 Agent = D_optimal
 Agent = PeriodicOracle
 # Agent = Spacing
@@ -67,13 +67,13 @@ agent = Agent(
     period=environment.period
     )
 
-evaluation = Evaluation(environment)
+evaluation = model.evaluation
 
 test_values = agent.identify(
     T,
     test_function=evaluation.test_error,
     plot=plot,
-    T_random=T_random
+    # T_random=T_random
     )
 
 plt.plot(test_values, alpha=0.7)

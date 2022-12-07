@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+# from active_agents import D_optimal, Spacing
 from computations import jacobian
 
 class Agent:
@@ -58,8 +59,8 @@ class Agent:
             # else:
             self.x += dx
             x_lim = np.array([[-1.84, 1.84], [-8.0, 8.0], [-np.inf, np.inf], [-8.0, 8.0]])
-            x_lim = np.array([[-np.inf, np.inf], [-8.0, 8.0], [-np.inf, np.inf], [-8.0, 8.0]])
-            self.x = np.clip(self.x, x_lim[:, 0], x_lim[:, 1])  
+            x_lim = np.array([[-np.inf, np.inf], [-4.0, 4.0], [-np.inf, np.inf], [-6.0, 6.0]])
+            # self.x = np.clip(self.x, x_lim[:, 0], x_lim[:, 1])  
 
             self.u_values[t] = u_t.copy()
             self.x_values[t] = self.x.copy()

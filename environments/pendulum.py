@@ -58,7 +58,7 @@ class Pendulum(Environment):
         self.B_star = torch.tensor([[0.0], [(1/self.inertia)]])
         self.A_star = torch.tensor([
             [0, 0, 1],
-            [0, -self.omega_2, 0]
+            [0, -self.omega_2, -self.alpha]
         ])
 
         self.goal_weights = torch.Tensor((1., 1., 0.1))
@@ -78,7 +78,7 @@ class Pendulum(Environment):
         # dx[1] = np.clip(d_phi, -10, 10)
         noise = self.sigma * np.random.randn(self.d)
         dx += noise
-        return dx
+        return dx, 0
     
     # def a(self, x):
     #     dx = np.zeros_like(x)
@@ -174,8 +174,12 @@ class Pendulum(Environment):
         plt.xlim((-self.phi_max, self.phi_max))
         plt.ylim((-self.dphi_max, self.dphi_max))
 
-    def plot_portrait(self, f):
-        predictions = f(self.grid)
+    def plot_portrait(self, f, grid_phi, grid_dphi):
+        grid = torch.cat([
+            grid_phi.reshape(-1, 1),
+            grid_dphi.reshape(-1, 1),
+        ], 1)
+        predictions = f(grid)
 
         plt.xlim((-self.phi_max, self.phi_max))
         plt.ylim((-self.dphi_max, self.dphi_max))
@@ -184,8 +188,8 @@ class Pendulum(Environment):
         magnitude = np.sqrt(vector_x.T**2 + vector_y.T**2)
         linewidth = magnitude / magnitude.max()
         plt.streamplot(
-            self.grid_phi.numpy().T,
-            self.grid_dphi.numpy().T,
+            grid_phi.numpy().T,
+            grid_dphi.numpy().T,
             vector_x.T,
             vector_y.T,
             color='black',
@@ -219,12 +223,12 @@ class DampedPendulum(Pendulum):
         alpha = 0.1
         super().__init__(dt, sigma, gamma, mass, g, l, alpha)
 
-        self.grid_phi, self.grid_dphi= torch.meshgrid(
-            self.interval_phi, self.interval_dphi)
-        self.grid = torch.cat([
-            self.grid_phi.reshape(-1, 1),
-            self.grid_dphi.reshape(-1, 1)
-        ], 1)
+        # self.grid_phi, self.grid_dphi= torch.meshgrid(
+        #     self.interval_phi, self.interval_dphi)
+        # self.grid = torch.cat([
+        #     self.grid_phi.reshape(-1, 1),
+        #     self.grid_dphi.reshape(-1, 1)
+        # ], 1)
 
     def f_star(self, x):
         dx = torch.zeros_like(x)
@@ -249,11 +253,11 @@ class DmPendulum(Pendulum):
 
     def __init__(self, dt=80e-3):
         sigma = 0
-        gamma = 1.0
         mass = 1.0
         l = 0.5
         g = 10.0
         alpha = 0.1
+        gamma = (1/6)*mass*g*l/2
         super().__init__(dt, sigma, gamma, mass, g, l, alpha)
 
 

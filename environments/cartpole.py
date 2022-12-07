@@ -43,8 +43,8 @@ class Cartpole(Environment):
         self.n_points = 20
 
 
-        self.dphi_max = 8.0
-        self.dy_max = 8.0
+        self.dphi_max = 6.0
+        self.dy_max = 4.0
         self.velocity_bounds = np.array([
             [-self.dphi_max, self.dphi_max],
             [-np.inf, np.inf],

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 import environments.cartpole as cartpole
-
+from evaluation.cartpole import ZGrid
 
 class Partial(nn.Module):
 
@@ -62,12 +62,15 @@ class FullNeural(nn.Module):
     def __init__(self, environment):
         super().__init__()
         self.d, self.m = environment.d, environment.m
+        self.evaluation = ZGrid(environment)
 
         self.net = nn.Sequential(
             nn.Linear(5, 8),
             nn.Tanh(),
-            # nn.Linear(8, 8),
-            # nn.Tanh(),
+            nn.Linear(8, 8),
+            nn.Tanh(),
+            nn.Linear(8, 8),
+            nn.Tanh(),
             nn.Linear(8, 4)
         )
         # self.B_net = nn.Sequential(
@@ -106,8 +109,8 @@ class FullNeural(nn.Module):
         vectors = self.net(zeta_u)
         # print(vectors.shape)
         # print(u.shape)
-        # return vectors[:, :2] + u*vectors[:, 2:]
-        return vectors
+        return vectors[:, :2] + u*vectors[:, 2:]
+        # return vectors
 
     def forward(self, z):
         y, d_y, phi, d_phi, u = torch.unbind(z, dim=1)
@@ -116,9 +119,9 @@ class FullNeural(nn.Module):
         zeta_u = torch.cat((zeta, u.unsqueeze(0)), dim=1)
         # print(zeta_u)
         prediction = self.predict(zeta_u)
-        # dd_y, dd_phi = torch.unbind(prediction, dim=1)
+        dd_y, dd_phi = torch.unbind(prediction, dim=1)
         # x = z[:, :self.d]
         # u = z[:, self.d]
-        # x_dot = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
-        x_dot = prediction
+        x_dot = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
+        # x_dot = prediction
         return x_dot

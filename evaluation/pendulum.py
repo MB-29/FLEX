@@ -9,7 +9,8 @@ class Evaluation:
     def __init__(self, environment):
 
         self.environment = environment
-        
+        self.plot_system = environment.plot_system
+
 
         self.n_points = 10
 
@@ -20,18 +21,40 @@ class Evaluation:
                                         self.phi_max, self.n_points)
         self.interval_dphi = torch.linspace(-self.dphi_max,
                                             self.dphi_max, self.n_points)
-        interval_u = torch.linspace(-environment.gamma, environment.gamma, self.n_points)
+        self.interval_u = torch.linspace(-environment.gamma, environment.gamma, self.n_points)
+
+class XGrid(Evaluation):
+    def __init__(self, environment):
+        super().__init__(environment)
+        self.grid_phi, self.grid_dphi = torch.meshgrid(
+            self.interval_phi, self.interval_dphi)
+        self.grid = torch.cat([
+            torch.cos(self.grid_phi.reshape(-1, 1)),
+            torch.sin(self.grid_phi.reshape(-1, 1)),
+            self.grid_dphi.reshape(-1, 1),
+        ], 1)
+        self.grid_x = torch.cat([
+            self.grid_phi.reshape(-1, 1),
+            self.grid_dphi.reshape(-1, 1),
+        ], 1)
+
+class ZGrid(Evaluation):
+    def __init__(self, environment):
+        super().__init__(environment)
         self.grid_phi, self.grid_dphi, grid_u = torch.meshgrid(
-            self.interval_phi, self.interval_dphi, interval_u)
+            self.interval_phi, self.interval_dphi, self.interval_u)
         self.grid = torch.cat([
             torch.cos(self.grid_phi.reshape(-1, 1)),
             torch.sin(self.grid_phi.reshape(-1, 1)),
             self.grid_dphi.reshape(-1, 1),
             grid_u.reshape(-1, 1)
         ], 1)
+        self.grid_x = torch.cat([
+            self.grid_phi.reshape(-1, 1),
+            self.grid_dphi.reshape(-1, 1),
+        ], 1)
 
 
-        self.plot_system = environment.plot_system
 
     def f_star(self, zeta_u):
         dx = torch.zeros_like(zeta_u[:, :self.environment.d])
@@ -68,3 +91,23 @@ class Evaluation:
         # print(f'loss = {loss}')
         # print(x)
         return loss
+
+class MatrixNorm(Evaluation):
+
+    def __init__(self, environment):
+        super().__init__(environment)
+        self.A_star = environment.A_star
+        
+    def test_error(self, model, x, u, plot, t=0):
+        loss_function = nn.MSELoss()
+
+        loss = torch.linalg.norm(self.A_star-model.net[0].weight)
+        if plot and t % 2 == 0:
+            self.plot_system(x, u, t)
+            # plot_portrait(model.forward_x)
+            plt.pause(0.1)
+            plt.close()
+        # print(f'loss = {loss}')
+        # print(x)
+        return loss
+

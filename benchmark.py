@@ -8,7 +8,7 @@ import pickle
 from agents import Random, Passive
 from active_agents import GradientDesign, Spacing, Variation, D_optimal
 from environments import get_environment
-from evaluation.cartpole import XGrid as Evaluation
+from evaluation.cartpole import ZGrid as Evaluation
 
 # ENVIRONMENT_NAME = 'aircraft'
 ENVIRONMENT_NAME = 'arm'
@@ -28,15 +28,15 @@ ORACLE_PATH = f'oracles.{ENVIRONMENT_NAME}'
 Environment = get_environment(ENVIRONMENT_NAME)
 # Environment = importlib.import_module(ENVIRONMENT_PATH).GymPendulum
 models = importlib.import_module(MODEL_PATH)
-DefaultModel = models.NeuralModel
+# DefaultModel = models.NeuralModel
 DefaultModel = models.FullNeural
-DefaultModel = models.Partial
+# DefaultModel = models.Partial
 
 rc('font', size=15)
 rc('text', usetex=True)
 rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsfonts}'])
 
-T = 200
+T = 300
 T_random = 0
 
 n_samples = 10

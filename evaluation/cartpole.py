@@ -92,8 +92,8 @@ class ZGrid(Grid):
             d_y, c_phi, s_phi, d_phi, u)
         # dx[:, 0] = z[:, 1]
         # dx[:, 2] = z[:, 1]
-        dd = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
-        # dd = torch.stack((dd_y, dd_phi), dim=1)
+        # dd = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
+        dd = torch.stack((dd_y, dd_phi), dim=1)
         return dd
 
 
