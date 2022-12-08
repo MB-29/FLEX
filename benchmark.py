@@ -33,7 +33,7 @@ models = importlib.import_module(MODEL_PATH)
 Model = models.LinearA
 Model = models.LinearTheta
 
-T = 500
+T = 100
 T_random = 0
 
 n_samples = 20
