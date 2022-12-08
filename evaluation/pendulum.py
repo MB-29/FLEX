@@ -84,7 +84,7 @@ class ZGrid(GridEvaluation):
 
 
 
-class MatrixNorm(Evaluation):
+class NormA(Evaluation):
 
     def __init__(self, environment):
         super().__init__(environment)
@@ -92,5 +92,17 @@ class MatrixNorm(Evaluation):
 
     def evaluate(self, model):
 
-        loss = torch.linalg.norm(self.A_star-model.net[0].weight)
+        loss = torch.linalg.norm(self.A_star-model.net[0].weight[:, :3])
+        return loss
+
+
+class NormTheta(Evaluation):
+
+    def __init__(self, environment):
+        super().__init__(environment)
+        self.theta_star = torch.tensor(environment.theta_star, dtype=torch.float)
+
+    def evaluate(self, model):
+
+        loss = torch.linalg.norm(self.theta_star-model.net[0].weight)
         return loss

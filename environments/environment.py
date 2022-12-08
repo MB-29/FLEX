@@ -17,6 +17,7 @@ class Environment:
         self.dt = dt
         self.sigma = sigma
         self.gamma = gamma
+        self.x0 = x0.copy()
 
         self.x = x0
     
@@ -26,9 +27,14 @@ class Environment:
     def step(self, u):
         x_dot = self.dynamics(self.x, u)
         dx = x_dot * self.dt
+        noise = np.sqrt(self.dt) * self.sigma * np.random.randn(self.d)
+        dx += noise
         self.x += dx
         self.x = np.clip(self.x, self.x_min, self.x_max)
-        return x_dot
+        return dx
+
+    def reset(self):
+        self.x = self.x0
     
     def d_dynamics(self, x, u):
         raise NotImplementedError

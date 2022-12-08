@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from evaluation.pendulum import XGrid, ZGrid, MatrixNorm
+from evaluation.pendulum import XGrid, ZGrid, NormA, NormTheta
 
 
 class Model(nn.Module):
@@ -132,10 +132,10 @@ class FullNeural(Model):
         return x_dot 
 
 
-class FullLinear(FullNeural):
+class LinearA(FullNeural):
 
     def __init__(self, environment, evaluation=None):
-        evaluation = MatrixNorm(environment) if evaluation is None else evaluation
+        evaluation = NormA(environment) if evaluation is None else evaluation
         super().__init__(environment, evaluation)
         self.net = nn.Sequential(
             nn.Linear(3, 2, bias=False),
@@ -147,5 +147,22 @@ class FullLinear(FullNeural):
         zeta = zeta_u[:, :-1]
         u = zeta_u[:, -1:]
         x_dot = self.net(zeta) + (self.B_star @ u.T).T
+        # x_dot[:, 1] = torch.clip(x_dot[:, 1].clone(), -8.0, 8.0)
+        return x_dot
+
+class LinearTheta(FullNeural):
+
+    def __init__(self, environment, evaluation=None):
+        evaluation = NormA(environment) if evaluation is None else evaluation
+        super().__init__(environment, evaluation)
+        self.net = nn.Sequential(
+            nn.Linear(4, 2, bias=False),
+        )
+        self.lr = 0.1
+
+    def predict(self, zeta_u):
+        zeta = zeta_u[:, :-1]
+        u = zeta_u[:, -1:]
+        x_dot = self.net(zeta_u)
         # x_dot[:, 1] = torch.clip(x_dot[:, 1].clone(), -8.0, 8.0)
         return x_dot

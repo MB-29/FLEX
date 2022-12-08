@@ -18,8 +18,10 @@ def exploration(
         x = environment.x.copy()
 
         u = agent.policy(x, t) 
-        x_dot = environment.step(u)
-        agent.learning_step(x, x_dot, u)
+        # u = 0*u if t>20 else u
+        dx = environment.step(u)
+        dx_dt = dx/environment.dt
+        agent.learning_step(x, dx_dt, u)
 
         z_values[t:, :d] = x.copy()
         z_values[t:, d:] = u.copy()
@@ -38,25 +40,28 @@ if __name__=='__main__':
     from environments.pendulum import DmPendulum as Environment
     # from environments.cartpole import GymCartpole as Environment
 
-    from models.pendulum import FullLinear as Model
+    from models.pendulum import LinearA as Model
+    # from models.pendulum import LinearTheta as Model
     # from models.cartpole import FullNeural as Model
+    from agents import Passive as Agent
     from agents import Random as Agent
     # from active_agents import D_optimal as Agent
 
     plot = False
-    # plot = True
+    plot = True
 
-    environment = Environment()
+    environment = Environment(dt=2e-2)
     model = Model(environment)
     evaluation = model.evaluation
 
-    agent = Agent(model,
+    agent = Agent(
+    model,
     environment.d,
     environment.m,
     environment.gamma
     )
 
-    T = 300
+    T = 200
 
     z_values, error_values = exploration(environment, agent, evaluation, T, plot=plot)
 

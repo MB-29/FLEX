@@ -50,6 +50,7 @@ class Pendulum(Environment):
             [0, 0, 1],
             [0, -self.omega_2, -self.alpha]
         ])
+        self.theta_star = np.hstack((self.A_star, self.B_star))
 
         self.goal_weights = torch.Tensor((1., 1., 0.1))
         # self.goal_weights = torch.Tensor((100, .1, 0.1))
@@ -63,8 +64,6 @@ class Pendulum(Environment):
         obs = np.array([cphi, sphi, d_phi])
 
         x_dot = self.A_star @ obs + self.B_star @ u
-        noise = self.sigma * np.random.randn(self.d)
-        x_dot += noise
         return x_dot
     
 
@@ -140,12 +139,12 @@ class Pendulum(Environment):
 class DampedPendulum(Pendulum):
 
     def __init__(self, dt=5e-2):
-        sigma = 0.
+        sigma = .1
         gamma = 1.0
         mass = 1.0
         l = 1.0
         g = 10.0
-        alpha = 0.1
+        alpha = 1.
         super().__init__(dt, sigma, gamma, mass, g, l, alpha)
 
 
@@ -153,7 +152,7 @@ class DampedPendulum(Pendulum):
 class GymPendulum(Pendulum):
 
     def __init__(self, dt=80e-3):
-        sigma = 0
+        sigma = 0.
         gamma = 2.0
         mass = 1.0
         l = 1.0
@@ -164,7 +163,7 @@ class GymPendulum(Pendulum):
 class DmPendulum(Pendulum):
 
     def __init__(self, dt=80e-3):
-        sigma = 0
+        sigma = 0.
         mass = 1.0
         l = 0.5
         g = 10.0
@@ -202,16 +201,12 @@ class LinearizedPendulum(Pendulum):
         plt.ylim((-1.2*self.l, .1*self.l))
 
     def dynamics(self, x, u):
-        dx = self.A @ x + self.B@u
-        # dx += np.array([[0.0], [1/self.inertia]]) @ u
-        # dx[1] = d_phi
-        # dx[1] = np.clip(d_phi, -10, 10)
-        noise = self.sigma * np.random.randn(self.d)
-        dx += noise
-        return dx
-
-    def f_star(self, x):
-        return (torch.tensor(self.A, dtype=torch.float)@x.T).T
+        x_dot = self.A @ x + self.B@u
+        # x_dot += np.array([[0.0], [1/self.inertia]]) @ u
+        # x_dot[1] = d_phi
+        # x_dot[1] = np.clip(d_phi, -10, 10)
+        
+        return x_dot
 
 
 

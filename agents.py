@@ -26,16 +26,16 @@ class Agent:
 
 
 
-    def learning_step(self, x, x_dot, u):
+    def learning_step(self, x, dx_dt, u):
         z = torch.zeros(1, self.d + self.m, requires_grad=False)
         x = torch.tensor(x, dtype=torch.float, requires_grad=False).unsqueeze(0)
         u = torch.tensor(u, dtype=torch.float, requires_grad=False).unsqueeze(0)
         z[:, :self.d] = x
         z[:, self.d:] = u
-        x_dot = torch.tensor(x_dot, dtype=torch.float, requires_grad=False)
-
+        dx_dt = torch.tensor(dx_dt, dtype=torch.float, requires_grad=False)
+        # print(z)
         prediction = self.model(z)
-        loss = self.loss_function(prediction.squeeze(), x_dot.squeeze())
+        loss = self.loss_function(prediction.squeeze(), dx_dt.squeeze())
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step() 
