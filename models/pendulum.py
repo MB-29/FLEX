@@ -153,7 +153,8 @@ class LinearA(FullNeural):
 class LinearTheta(FullNeural):
 
     def __init__(self, environment, evaluation=None):
-        evaluation = NormA(environment) if evaluation is None else evaluation
+        evaluation = NormTheta(environment) if evaluation is None else evaluation
+        # evaluation = NormA(environment) if evaluation is None else evaluation
         super().__init__(environment, evaluation)
         self.net = nn.Sequential(
             nn.Linear(4, 2, bias=False),
