@@ -69,12 +69,11 @@ class Pendulum(Environment):
 
     def d_dynamics(self, z):
         # x_dot[0] = torch.clip(x[1], -8, 8)
-        phi, d_phi, u = z[:, 0], z[:, 1], z[:, 2]
+        phi, d_phi, u = torch.unbind(z, dim=1)
         # print(f'u = {u.shape}')
         # print(f'phi = {phi.shape}')
         sphi = torch.sin(phi)
-        dd_phi = (1/self.inertia) * (-(1/2)*self.m *
-                                    self.g*self.l * sphi + u.squeeze())
+        dd_phi = -self.omega_2*sphi -self.alpha*d_phi + (1/self.inertia)*u.squeeze()
         x_dot = torch.stack((d_phi, dd_phi), dim=1)
         return x_dot
     

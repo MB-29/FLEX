@@ -14,6 +14,8 @@ class Model(nn.Module):
         self.d, self.m = environment.d, environment.m
         self.evaluation = evaluation
 
+        self.linear = False
+
     def transform(self, z):
         return z[:, :self.d]
 
@@ -132,6 +134,16 @@ class FullNeural(Model):
         return x_dot 
 
 
+# class Linear(Model):
+
+#     def __init__(self, environment, evaluation=None):
+#         evaluation = NormA(environment) if evaluation is None else evaluation
+#         super().__init__(environment, evaluation)
+#         self.net = nn.Sequential(
+#             nn.Linear(3, 2, bias=False),
+#         )
+#         self.lr = 0.1
+#         self.linear = True
 class LinearA(FullNeural):
 
     def __init__(self, environment, evaluation=None):
@@ -141,6 +153,7 @@ class LinearA(FullNeural):
             nn.Linear(3, 2, bias=False),
         )
         self.lr = 0.1
+        self.linear = True
         # self.B_star = torch.tensor(environment.B_star)
 
     def predict(self, zeta_u):
@@ -160,6 +173,7 @@ class LinearTheta(FullNeural):
             nn.Linear(4, 2, bias=False),
         )
         self.lr = 0.1
+        self.linear=True
 
     def predict(self, zeta_u):
         zeta = zeta_u[:, :-1]

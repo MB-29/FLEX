@@ -19,7 +19,7 @@ class Environment:
         self.gamma = gamma
         self.x0 = x0.copy()
 
-        self.x = x0
+        self.x = x0.copy()
     
     def dynamics(self, x, u):
         raise NotImplementedError
@@ -34,7 +34,8 @@ class Environment:
         return dx
 
     def reset(self):
-        self.x = self.x0
+        self.x = self.x0.copy()
+
     
     def d_dynamics(self, x, u):
         raise NotImplementedError
