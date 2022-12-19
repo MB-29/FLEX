@@ -63,26 +63,22 @@ if __name__ == '__main__':
         for episode in range(n_episodes):
             print(f'episode {episode}')
 
-            # agent.x = x0.copy()
-            
             model_dynamics = model.forward
-            # cost_values = exploit(
-            #     environment,
-            #     model_dynamics,
-            #     dt,
-            #     T,
-            #     H,
-            #     lqr_iter=lqr_iter,
-            #     plot=False)
+            cost_values = exploit(
+                environment,
+                model_dynamics,
+                dt,
+                T,
+                H,
+                lqr_iter=lqr_iter,
+                plot=False)
 
             z_values, estimation_error = exploration(
                 environment, agent, evaluation, T)
 
-            # output[name] = estimation_values
             estimation_values[sample_index, episode*T:(episode+1)*T] = estimation_error
+            exploitation_values[sample_index, episode] = cost_values.sum()
 
-            # print('exploitation')
-            # exploitation_values[sample_index, episode] = cost_values.sum()
     output[name]['estimation'] = estimation_values
     output[name]['exploitation'] = exploitation_values
     exploitation_mean = exploitation_values.mean(axis=0)
@@ -93,7 +89,7 @@ OUTPUT_PATH = f'output/{ENVIRONMENT_NAME}_{name}_{n_samples}-samples_H-{H}_episo
 with open(OUTPUT_PATH, 'wb') as output_file:
     pickle.dump(output, output_file)
 
-fig, (ax1, ax2) = plt.subplots(2, 1)
+# fig, (ax1, ax2) = plt.subplots(2, 1)
 # ax1.plot(exploitation_mean, label=name)
 # ax1.fill_between(
 #     np.arange(n_episodes),
@@ -101,16 +97,16 @@ fig, (ax1, ax2) = plt.subplots(2, 1)
 #     exploitation_mean+exploitation_std,
 #     alpha=0.5)
 
-estimation_mean = estimation_values.mean(axis=0)
-estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
-ax2.plot(estimation_mean, label=name)
-ax2.fill_between(
-    np.arange(n_episodes*T),
-    estimation_mean-estimation_std,
-    estimation_mean+estimation_std,
-    alpha=0.5)
-ax2.set_yscale('log')
-plt.legend()
-plt.show()
+# estimation_mean = estimation_values.mean(axis=0)
+# estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
+# ax2.plot(estimation_mean, label=name)
+# ax2.fill_between(
+#     np.arange(n_episodes*T),
+#     estimation_mean-estimation_std,
+#     estimation_mean+estimation_std,
+#     alpha=0.5)
+# ax2.set_yscale('log')
+# plt.legend()
+# plt.show()
 # plt.title(r'Test loss')
 # plt.savefig(f'output/{ENVIRONMENT_NAME}_benchmark.pdf')
