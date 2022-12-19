@@ -38,6 +38,7 @@ def exploration(
 if __name__=='__main__':
     from environments.pendulum import DampedPendulum as Environment
     from environments.pendulum import DmPendulum as Environment
+    from environments.pendulum import GymPendulum as Environment
     # from environments.cartpole import GymCartpole as Environment
 
     from models.pendulum import LinearA as Model
@@ -48,9 +49,9 @@ if __name__=='__main__':
     # from active_agents import D_optimal as Agent
 
     plot = False
-    plot = True
+    # plot = True
 
-    environment = Environment(dt=2e-2)
+    environment = Environment(dt=80e-3)
     model = Model(environment)
     evaluation = model.evaluation
 
@@ -61,8 +62,8 @@ if __name__=='__main__':
     environment.gamma
     )
 
-    T = 200
+    T = 900
 
     z_values, error_values = exploration(environment, agent, evaluation, T, plot=plot)
 
-    plt.plot(error_values) ; plt.show()
+    plt.plot(error_values) ; plt.yscale('log') ; plt.show()

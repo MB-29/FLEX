@@ -43,6 +43,18 @@ class Agent:
         # self.optimizer.zero_grad() , loss.backward() ; self.optimizer.step()
 
         J = jacobian(self.model, z).detach().numpy()
+        if self.model.linear:
+            theta = parameters_to_vector(self.model.parameters()).detach().numpy()
+            c = prediction.detach().numpy().squeeze() - J@theta
+            observation = dx_dt - c
+            # print(c.shape)
+            for j in range(self.d):
+                # print(f'j={j}, M={self.M}')
+                theta, self.M = lstsq_update(theta, self.M, J[j], observation[j])
+            vector_to_parameters(torch.tensor(
+                theta, dtype=torch.float), self.model.parameters())
+
+            return
         # zeta = self.model.transform(x)
 
         # 08/23/2022 : zeta instead of z
@@ -51,17 +63,7 @@ class Agent:
         # self.M += J.T @ J
         # self.J = J
 
-        theta = parameters_to_vector(self.model.parameters()).detach().numpy()
-        c = prediction.detach().numpy().squeeze() - J@theta
-        observation = dx_dt - c
-        # print(c.shape)
-        for j in range(self.d):
-            print(f'j={j}, M={self.M}')
-            theta, self.M = lstsq_update(theta, self.M, J[j], observation[j])
-        vector_to_parameters(torch.tensor(
-            theta, dtype=torch.float), self.model.parameters())
-
-        print(f'J = {J}')
+        # print(f'J = {J}')
         # self.Mx += self.x[:, None]@self.x[None, :]
 
     def draw_random_control(self, t):
