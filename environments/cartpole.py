@@ -43,7 +43,7 @@ class Cartpole(Environment):
         self.n_points = 20
 
 
-        self.dyp_max = 4.0
+        self.dy_max = 4.0
         self.dphi_max = 4.0
         self.x_min = np.array([-np.inf, -self.dy_max, -np.inf, -self.dphi_max])
         self.x_max = np.array([+np.inf, +self.dy_max, +np.inf, +self.dphi_max])
