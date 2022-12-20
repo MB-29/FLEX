@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
 
-import environments.cartpole as cartpole
-from evaluation.cartpole import ZGrid
+from evaluation.cartpole import XGrid, ZGrid
 
 class Partial(nn.Module):
 
@@ -17,9 +16,12 @@ class Partial(nn.Module):
         )
         self.d, self.m = environment.d, environment.m
         self.get_B = environment.get_B
+        self.t_period = environment.period/environment.dt
         self.acceleration_u = environment.acceleration_u
         self.acc_u = environment.acc_u
-        self.lr = 0.005
+        self.lr = 0.01
+
+        self.evaluation = XGrid(environment)
 
 
     def transform(self, x):
@@ -69,8 +71,8 @@ class FullNeural(nn.Module):
             nn.Tanh(),
             nn.Linear(8, 8),
             nn.Tanh(),
-            nn.Linear(8, 8),
-            nn.Tanh(),
+            # nn.Linear(8, 8),
+            # nn.Tanh(),
             nn.Linear(8, 4)
         )
         # self.B_net = nn.Sequential(
@@ -86,8 +88,6 @@ class FullNeural(nn.Module):
     # def get_B(self, x):
     #     return self.get_B(x.detach().numpy().squeeze())
         # return self.B_net(self.transform(z)[:, :3]).view(d, m)
-
-
 
     # def acceleration_u(self, z):
     #     x = z[:, :self.d]

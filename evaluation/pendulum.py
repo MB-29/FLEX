@@ -28,6 +28,10 @@ class Evaluation:
 
 class GridEvaluation(Evaluation):
 
+    def __init__(self, environment):
+        super().__init__(environment)
+        self.loss_function = nn.MSELoss()
+
     def evaluate(self, model):
         predictions = model.predict(self.grid.clone())
         truth = self.f_star(self.grid.clone())
@@ -52,7 +56,6 @@ class XGrid(GridEvaluation):
             self.grid_dphi.reshape(-1, 1),
         ], 1)
 
-        self.loss_function = nn.MSELoss()
 
 
 class ZGrid(GridEvaluation):
@@ -71,7 +74,6 @@ class ZGrid(GridEvaluation):
             self.grid_dphi.reshape(-1, 1),
         ], 1)
 
-        self.loss_function = nn.MSELoss()
 
     def f_star(self, zeta_u):
         dx = torch.zeros_like(zeta_u[:, :self.environment.d])

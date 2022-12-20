@@ -192,7 +192,7 @@ class D_optimal(Active):
         z[:, self.d:] = u
 
         j = np.random.choice([1, 3])
-        j = 1
+        # j = 1
 
         y = self.model(z)
         df_dtheta = compute_gradient(self.model, y[:, j])

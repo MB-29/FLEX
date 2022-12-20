@@ -38,12 +38,9 @@ class Agent:
         prediction = self.model(z)
         # print(z)
 
-        # dx_dt = torch.tensor(dx_dt, dtype=torch.float, requires_grad=False)
-        # loss = self.loss_function(prediction.squeeze(), dx_dt.squeeze())
-        # self.optimizer.zero_grad() , loss.backward() ; self.optimizer.step()
 
         J = jacobian(self.model, z).detach().numpy()
-        if self.model.linear:
+        if getattr(self.model, 'linear', False):
             theta = parameters_to_vector(self.model.parameters()).detach().numpy()
             c = prediction.detach().numpy().squeeze() - J@theta
             observation = dx_dt - c
@@ -53,14 +50,16 @@ class Agent:
                 theta, self.M = lstsq_update(theta, self.M, J[j], observation[j])
             vector_to_parameters(torch.tensor(
                 theta, dtype=torch.float), self.model.parameters())
-
             return
+        dx_dt = torch.tensor(dx_dt, dtype=torch.float, requires_grad=False)
+        loss = self.loss_function(prediction.squeeze(), dx_dt.squeeze())
+        self.optimizer.zero_grad() , loss.backward() ; self.optimizer.step()
         # zeta = self.model.transform(x)
 
         # 08/23/2022 : zeta instead of z
         # 09/02/2022 : z instead of zeta
         # self.M += J[:, None]@J[None, :]
-        # self.M += J.T @ J
+        self.M += J.T @ J
         # self.J = J
 
         # print(f'J = {J}')

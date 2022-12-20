@@ -38,20 +38,24 @@ def exploration(
 if __name__=='__main__':
     from environments.pendulum import DampedPendulum as Environment
     from environments.pendulum import DmPendulum as Environment
-    from environments.pendulum import GymPendulum as Environment
-    # from environments.cartpole import GymCartpole as Environment
-
+    # from environments.pendulum import GymPendulum as Environment
     from models.pendulum import LinearA as Model
-    # from models.pendulum import LinearTheta as Model
-    # from models.cartpole import FullNeural as Model
+    from models.pendulum import LinearTheta as Model
+
+    from environments.cartpole import GymCartpole as Environment
+    from models.cartpole import FullNeural as Model
+    from models.cartpole import Partial as Model
+
     from agents import Passive as Agent
     from agents import Random as Agent
-    # from active_agents import D_optimal as Agent
+    from active_agents import D_optimal as Agent
+    # from oracles.cartpole import PeriodicOracle as Agent
 
     plot = False
-    # plot = True
+    plot = True
 
-    environment = Environment(dt=80e-3)
+    environment = Environment()
+    # environment = Environment(0.08)
     model = Model(environment)
     evaluation = model.evaluation
 
@@ -62,8 +66,8 @@ if __name__=='__main__':
     environment.gamma
     )
 
-    T = 900
+    T = 100
 
     z_values, error_values = exploration(environment, agent, evaluation, T, plot=plot)
-
-    plt.plot(error_values) ; plt.yscale('log') ; plt.show()
+    
+    plt.plot(error_values) ; plt.show()

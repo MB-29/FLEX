@@ -4,7 +4,7 @@ import torch.nn as nn
 
 import matplotlib.pyplot as plt
 
-class Grid:
+class GridEvaluation:
 
     def __init__(self, environment, n_points=20):
 
@@ -22,27 +22,20 @@ class Grid:
                                        self.dphi_max, self.n_points)
         self.interval_u = torch.linspace(-self.environment.gamma, self.environment.gamma, 5)
         # self.interval_u = torch.linspace(-environment.gamma, environment.gamma, 2)
+
+        self.loss_function = nn.MSELoss()
         
   
+    def evaluate(self, model):
+        predictions = model.predict(self.grid.clone())
+        truth = self.f_star(self.grid.clone())
+        # print(predictions)
 
-    def test_error(self, model, x, u, plot, t=0):
-        truth = self.f_star(self.grid)
-        loss_function = nn.MSELoss()
-        predictions = model.predict(self.grid.clone()).squeeze()
-        # # print(f'prediction {predictions.shape} target {truth.shape} ')
-        loss = loss_function(predictions, truth)
-        # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
-        if plot and t%2 ==0:
-            self.plot_system(x, u, t)
-            # plot_portrait(model.forward_x)
-            plt.pause(0.1)
-            plt.close()
-        # print(f'loss = {loss}')
-        # print(x)
+        loss = self.loss_function(predictions, truth)
         return loss
 
         
-class XGrid(Grid):
+class XGrid(GridEvaluation):
     def __init__(self, environment):
         super().__init__(environment)
         grid_dy, grid_phi, grid_dphi = torch.meshgrid(
@@ -70,7 +63,7 @@ class XGrid(Grid):
         return dd
 
         
-class ZGrid(Grid):
+class ZGrid(GridEvaluation):
     def __init__(self, environment):
         super().__init__(environment)
         grid_dy, grid_phi, grid_dphi, grid_u = torch.meshgrid(
