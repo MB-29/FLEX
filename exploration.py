@@ -44,7 +44,8 @@ if __name__=='__main__':
 
     from environments.cartpole import GymCartpole as Environment
     from models.cartpole import FullNeural as Model
-    from models.cartpole import Partial as Model
+    # from models.cartpole import Partial as Model
+    # from models.cartpole import RFF as Model
 
     from agents import Passive as Agent
     from agents import Random as Agent
@@ -52,7 +53,7 @@ if __name__=='__main__':
     # from oracles.cartpole import PeriodicOracle as Agent
 
     plot = False
-    plot = True
+    # plot = True
 
     environment = Environment()
     # environment = Environment(0.08)
@@ -66,8 +67,12 @@ if __name__=='__main__':
     environment.gamma
     )
 
-    T = 100
+    T = 800    
 
     z_values, error_values = exploration(environment, agent, evaluation, T, plot=plot)
-    
-    plt.plot(error_values) ; plt.show()
+    # plt.subplot(211)
+    plt.plot(error_values)
+    # plt.subplot(212)
+    # plt.plot(z_values[:, 2])
+    # plt.yscale('log')
+    plt.show()

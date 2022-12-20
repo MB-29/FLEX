@@ -183,6 +183,9 @@ class Spacing(Gradient):
 class D_optimal(Active):
 
     def policy(self, x, t):
+        # epsilon = np.random.random()
+        # if epsilon < 0.3:
+        #     return self.draw_random_control(t)
 
         z = torch.zeros(1, self.d + self.m)
         x = torch.tensor(x, dtype=torch.float, requires_grad=True)

@@ -2,10 +2,10 @@ import numpy as np
 from scipy.optimize import brentq
 import torch
 
-def lstsq_update(prior_estimate, prior_gram, z, y):
+def lstsq_update(prior_estimate, prior_gram, z, y, sigma):
 
-    posterior_gram = prior_gram + z[:, None]@z[None, :]
-    combination = prior_gram@prior_estimate + y*z
+    posterior_gram = prior_gram +  z[:, None]@z[None, :] / sigma**2
+    combination = prior_gram@prior_estimate + y*z / sigma**2
     posterior_estimate = np.linalg.solve(posterior_gram, combination)
 
     return posterior_estimate, posterior_gram

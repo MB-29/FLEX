@@ -43,8 +43,8 @@ class Cartpole(Environment):
         self.n_points = 20
 
 
-        self.dy_max = 4.0
-        self.dphi_max = 4.0
+        self.dy_max = 10.0
+        self.dphi_max = 10.0
         self.x_min = np.array([-np.inf, -self.dy_max, -np.inf, -self.dphi_max])
         self.x_max = np.array([+np.inf, +self.dy_max, +np.inf, +self.dphi_max])
 
@@ -112,40 +112,6 @@ class Cartpole(Environment):
         dx = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
         return dx
 
-
-    # def f_star(self, zeta):
-    #     d_y, cphi, s_phi, d_phi = zeta[:, 0], zeta[:, 1], zeta[:, 2], zeta[:, 3]
-    #     dd_y, dd_phi = self.acceleration_x(d_y, cphi, s_phi, d_phi, tensor=True)
-    #     dd = torch.zeros_like(zeta[:, :2])
-    #     # dx[:, 0] = z[:, 1]
-    #     # dx[:, 2] = z[:, 1]
-    #     dd[:, 0] = dd_y
-    #     dd[:, 1] = dd_phi
-    #     return dd
-
-    # def step_cost(self, x, u):
-    #     y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
-    #     cphi, s_phi = torch.cos(phi), torch.sin(phi)
-    #     c = 100*y**2+100*(1-cphi)**2 + 0.1*s_phi**2 + 0.1*d_y**2 + 0.1*d_phi**2 + 0.1*u**2
-    #     # print(f'x = {x}, u={u}, c={c}')
-    #     return c
-
-    # def test_error(self, model, x, u, plot, t=0):
-    #     truth = self.f_star(self.grid)
-    #     loss_function = nn.MSELoss()
-    #     predictions = model.net(self.grid.clone()).squeeze()
-    #     # # print(f'prediction {predictions.shape} target {truth.shape} ')
-    #     loss = loss_function(predictions, truth)
-    #     # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
-    #     if plot and t % 5 == 0:
-    #         self.plot_system(x, u, t)
-    #         # plot_portrait(model.forward_x)
-    #         plt.pause(0.1)
-    #         plt.close()
-    #     # print(f'loss = {loss}')
-    #     # print(x)
-        # return loss
-
     def plot_system(self, x, u, t):
         y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
         push = 0.7*np.sign(np.mean(u))
@@ -167,25 +133,6 @@ class RlCartpole(Cartpole):
         Mass = 1.0
         l = 1.0
         super().__init__(dt, sigma, gamma, g, mass, Mass, l, alpha, beta)
-
-        interval_dy = torch.linspace(-self.dy_max, self.dy_max, self.n_points)
-        interval_phi = torch.linspace(-np.pi, np.pi, self.n_points)
-        interval_dphi = torch.linspace(-self.dphi_max, self.dphi_max, self.n_points)
-        interval_u = torch.linspace(-self.gamma, self.gamma, self.n_points)
-        grid_dy, grid_phi, grid_dphi, grid_u = torch.meshgrid(
-            interval_dy,
-            interval_phi,
-            interval_dphi,
-            interval_u
-        )
-        self.grid = torch.cat([
-            grid_dy.reshape(-1, 1),
-            torch.cos(grid_phi.reshape(-1, 1)),
-            torch.sin(grid_phi.reshape(-1, 1)),
-            grid_dphi.reshape(-1, 1),
-            # grid_u.reshape(-1, 1),
-        ], 1)
-
 
 
     def acc(self, d_y, cphi, s_phi, d_phi, u, tensor=False):
@@ -226,31 +173,6 @@ class RlCartpole(Cartpole):
         dx = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
         return dx
 
-    # def f_star(self, zeta):
-    #     d_y, cphi, s_phi, d_phi = zeta[:,
-    #                                     0], zeta[:, 1], zeta[:, 2], zeta[:, 3]
-    #     u = torch.zeros_like(cphi)
-    #     yacc, phiacc = self.acc(d_y, cphi, s_phi, d_phi, u)
-    #     acc = torch.stack((yacc, phiacc), dim=1)
-    #     return acc
-
-    # def test_error(self, model, x, u, plot, t=0):
-    #     truth = self.f_star(self.grid)
-    #     loss_function = nn.MSELoss()
-    #     predictions = model.net(self.grid.clone()).squeeze()
-    #     # print(f'prediction {predictions.shape} target {truth.shape} ')
-    #     loss = loss_function(predictions, truth)
-    #     # loss = torch.linalg.norm(self.A_star-model.a_net[0].weight)
-    #     if plot:
-    #         self.plot_system(x, u, t)
-    #         # plot_portrait(model.forward_x)
-    #         plt.pause(0.1)
-    #         plt.close()
-    #     # print(f'loss = {loss}')
-    #     # print(x)
-    #     return loss
-
-
 class GymCartpole(RlCartpole):
 
     def __init__(self, dt=0.02):
@@ -268,25 +190,6 @@ class DmCartpole(RlCartpole):
         beta = 5e-4
 
         super().__init__(dt, sigma, alpha, beta)
-
-        # interval_dy = torch.linspace(-self.dy_max, self.dy_max, self.n_points)
-        # interval_phi = torch.linspace(-np.pi, np.pi, self.n_points)
-        # interval_dphi = torch.linspace(-self.dphi_max, self.dphi_max, self.n_points)
-        # interval_u = torch.linspace(-self.gamma, self.gamma, self.n_points)
-        # grid_dy, grid_phi, grid_dphi, grid_u = torch.meshgrid(
-        #     interval_dy,
-        #     interval_phi,
-        #     interval_dphi,
-        #     interval_u
-        # )
-        # self.grid = torch.cat([
-        #     grid_dy.reshape(-1, 1),
-        #     torch.cos(grid_phi.reshape(-1, 1)),
-        #     torch.sin(grid_phi.reshape(-1, 1)),
-        #     grid_dphi.reshape(-1, 1),
-        #     # grid_u.reshape(-1, 1),
-        # ], 1)
-
 
 
     # def get_B(self, x):

@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -35,6 +36,8 @@ class Partial(nn.Module):
         return zeta
     
     def predict(self, zeta):
+        # zeta_ = zeta.clone()
+        # zeta_[:, 3] = zeta[:, 3]**2
         return self.net(zeta)
 
     def forward(self, z):
@@ -65,12 +68,13 @@ class FullNeural(nn.Module):
         super().__init__()
         self.d, self.m = environment.d, environment.m
         self.evaluation = ZGrid(environment)
+        self.t_period = environment.period / environment.dt
 
         self.net = nn.Sequential(
-            nn.Linear(5, 8),
+            nn.Linear(4, 8),
             nn.Tanh(),
-            nn.Linear(8, 8),
-            nn.Tanh(),
+            # nn.Linear(8, 8),
+            # nn.Tanh(),
             # nn.Linear(8, 8),
             # nn.Tanh(),
             nn.Linear(8, 4)
@@ -83,7 +87,7 @@ class FullNeural(nn.Module):
         #     nn.Linear(16, d)
         # )
 
-        self.lr = 0.005
+        self.lr = 0.02
 
     # def get_B(self, x):
     #     return self.get_B(x.detach().numpy().squeeze())
@@ -103,20 +107,22 @@ class FullNeural(nn.Module):
     #     acceleration[:, 0] = dd_y_u
     #     acceleration[:, 1] = dd_phi_u
     #     return acceleration
-    def predict(self, zeta_u):
-        zeta = zeta_u[:, :4]
-        u = zeta_u[:, -1:]
-        vectors = self.net(zeta_u)
+    def predict(self, obs_u):
+        d_y, cphi, sphi, d_phi, u = torch.unbind(obs_u, dim=1)
+        zeta = obs_u[:, :-1]
+        # u = zeta_u[:, -1:]
+        # zeta = torch.stack((cphi, sphi, d_phi**2), dim=1)
+        vectors = self.net(zeta)
         # print(vectors.shape)
         # print(u.shape)
-        return vectors[:, :2] + u*vectors[:, 2:]
+        return vectors[:, :2] + u.unsqueeze(1)*vectors[:, 2:]
         # return vectors
 
     def forward(self, z):
         y, d_y, phi, d_phi, u = torch.unbind(z, dim=1)
         cphi, sphi = torch.cos(phi), torch.sin(phi)
         zeta = torch.stack((d_y, cphi, sphi, d_phi), dim=1)
-        zeta_u = torch.cat((zeta, u.unsqueeze(0)), dim=1)
+        zeta_u = torch.cat((zeta, u.unsqueeze(1)), dim=1)
         # print(zeta_u)
         prediction = self.predict(zeta_u)
         dd_y, dd_phi = torch.unbind(prediction, dim=1)
@@ -124,4 +130,47 @@ class FullNeural(nn.Module):
         # u = z[:, self.d]
         x_dot = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
         # x_dot = prediction
+        return x_dot
+
+class RFF(nn.Module):
+    def __init__(self, environment) -> None:
+        super().__init__()
+        self.linear = True
+        self.evaluation = ZGrid(environment)
+
+        dy_max = environment.dy_max
+        dphi_max = environment.dphi_max
+        self.q = 25
+        self.P = torch.randn(self.q, 5)
+        self.nu = torch.tensor([1., 1., 1., 1., environment.gamma]).unsqueeze(0)
+        self.phases = 2*np.pi*(torch.rand(1, self.q) -0.5)
+        self.net = nn.Sequential(
+            nn.Linear(self.q, 2, bias=False),
+        )
+
+    def feature(self, z):
+        y, d_y, phi, d_phi, u = torch.unbind(z, dim=1)
+        cphi, sphi = torch.cos(phi), torch.sin(phi)
+        zeta = torch.stack((d_y, cphi, sphi, d_phi), dim=1)
+        # print(f'zeta = {zeta}')
+        obs_u = torch.cat((zeta, u.unsqueeze(0)), dim=1)
+        return self.fourier(obs_u)
+
+    def fourier(self, obs_u):
+        # print(f'obs_u = {obs_u}')
+        zeta_u = obs_u / self.nu
+        # print(f'zeta_u = {zeta_u}')
+        xi = torch.sin((self.P@zeta_u.T).T + self.phases)
+        return xi
+    def predict(self, obs_u):
+        xi = self.fourier(obs_u)
+        return self.net(xi)
+        
+    
+    def forward(self, z):
+        y, d_y, phi, d_phi, u = torch.unbind(z, dim=1)
+        xi = self.feature(z)
+        prediction = self.net(xi)
+        dd_y, dd_phi = torch.unbind(prediction, dim=1)
+        x_dot = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
         return x_dot

@@ -8,7 +8,6 @@ import pickle
 from agents import Random, Passive
 from active_agents import GradientDesign, Spacing, Variation, D_optimal
 from environments import get_environment
-from evaluation.cartpole import ZGrid as Evaluation
 from exploration import exploration
 
 # ENVIRONMENT_NAME = 'aircraft'
@@ -19,7 +18,7 @@ ENVIRONMENT_NAME = 'gym_cartpole'
 ENVIRONMENT_NAME = 'damped_pendulum'
 ENVIRONMENT_NAME = 'quadrotor'
 ENVIRONMENT_NAME = 'dm_pendulum'
-ENVIRONMENT_NAME = 'damped_pendulum'
+# ENVIRONMENT_NAME = 'damped_pendulum'
 # ENVIRONMENT_NAME = 'dm_cartpole'
 # ENVIRONMENT_NAME = 'damped_cartpole'
 
@@ -33,10 +32,10 @@ models = importlib.import_module(MODEL_PATH)
 Model = models.LinearA
 Model = models.LinearTheta
 
-T = 100
+T = 500
 T_random = 0
 
-n_samples = 20
+n_samples = 50
 
 environment = Environment(dt=2e-2)
 dt = environment.dt
@@ -52,9 +51,8 @@ agents = {
     # 'periodic': {'agent': PeriodicOracle, 'color': 'blue'},
     'D-optimal': {'agent': D_optimal, 'color': 'blue'},
     'random': {'agent': Random, 'color': 'red'},
-    'passive': {'agent': Passive, 'color': 'black'},
+    # 'passive': {'agent': Passive, 'color': 'black'},
     # 'uniform': {'agent': Spacing, 'color': 'green'},
-    # # 'gradientOD': {'agent': GradientDesign, 'color': 'purple'},
     # # 'variation': {'agent': Variation, 'color': 'color'},
     }
 output = {}
@@ -85,6 +83,7 @@ for name, value in agents.items():
     test_mean = np.mean(error_values, axis=0)
     test_yerr = 2 * np.sqrt(np.var(error_values, axis=0) / n_samples)
     plt.plot(test_mean, alpha=0.7, label=name)
+    plt.yscale('log')
     plt.fill_between(np.arange(T), test_mean-test_yerr,
                      test_mean+test_yerr, alpha=0.5)
 
