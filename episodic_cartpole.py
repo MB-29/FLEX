@@ -11,6 +11,7 @@ from exploitation import exploitation
 from environments.cartpole import DmCartpole as Environment
 # from environments.pendulum import GymPendulum as Environment
 from models.cartpole import Partial as Model
+from models.cartpole import FullNeural as Model
 # from models.pendulum import LinearA as Model
 from exploration import exploration
 from exploit_cartpole import exploit
