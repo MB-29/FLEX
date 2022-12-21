@@ -51,7 +51,7 @@ if __name__ == '__main__':
         evaluation = model.evaluation
         # print(f'Model = {Model}')
     # for Agent in [Spacing]:
-        # model = Partial(environment)
+        # model = NeuralA(environment)
         # model = FullLinear(environment)
         # print('exploration')
         agent = Agent(

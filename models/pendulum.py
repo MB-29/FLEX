@@ -83,7 +83,7 @@ class LinearNeural(NeuralModel):
 #         return dx
 
 
-class FullNeural(Model):
+class NeuralAB(Model):
 
 
     def __init__(self, environment, evaluation = None):
@@ -99,7 +99,7 @@ class FullNeural(Model):
             # nn.Tanh(),
             # nn.Linear(2, 2)
         )
-        self.lr = 0.02
+        # self.lr = 0.02
     # Maintenir un lr assez grand pour que les points de forts angles prennent de l'importance
     # evaluer l'erreur d'apprentissage dans la region ou le pendule est oriente vers le haut
     # modifier la regle d'apprentissage pour mieux tenir compte de cette region plus interessante ?
@@ -120,7 +120,7 @@ class FullNeural(Model):
         phi, d_phi, u = torch.unbind(z, dim=1)
         cphi, sphi = torch.cos(phi), torch.sin(phi)
         zeta = torch.stack((cphi, sphi, d_phi), dim=1)
-        zeta_u = torch.cat((zeta, u.unsqueeze(0)), dim=1)
+        zeta_u = torch.cat((zeta, u.unsqueeze(1)), dim=1)
         x_dot = self.predict(zeta_u)
         return x_dot
 
@@ -144,7 +144,7 @@ class FullNeural(Model):
 #         )
 #         self.lr = 0.1
 #         self.linear = True
-class LinearA(FullNeural):
+class LinearA(NeuralAB):
 
     def __init__(self, environment, evaluation=None):
         evaluation = NormA(environment) if evaluation is None else evaluation
@@ -152,8 +152,7 @@ class LinearA(FullNeural):
         self.net = nn.Sequential(
             nn.Linear(3, 2, bias=False),
         )
-        self.lr = 0.1
-        self.linear = True
+        # self.linear = True
         # self.B_star = torch.tensor(environment.B_star)
 
     def predict(self, zeta_u):
@@ -163,7 +162,7 @@ class LinearA(FullNeural):
         # x_dot[:, 1] = torch.clip(x_dot[:, 1].clone(), -8.0, 8.0)
         return x_dot
 
-class LinearTheta(FullNeural):
+class LinearTheta(NeuralAB):
 
     def __init__(self, environment, evaluation=None):
         evaluation = NormTheta(environment) if evaluation is None else evaluation
@@ -172,8 +171,7 @@ class LinearTheta(FullNeural):
         self.net = nn.Sequential(
             nn.Linear(4, 2, bias=False),
         )
-        self.lr = 0.1
-        self.linear=True
+        # self.linear=True
 
     def predict(self, zeta_u):
         zeta = zeta_u[:, :-1]

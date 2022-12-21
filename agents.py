@@ -9,7 +9,7 @@ from computations import jacobian, lstsq_update
 
 class Agent:
 
-    def __init__(self, model, d, m, gamma, sigma=1e-2, batch_size=48):
+    def __init__(self, model, d, m, gamma, sigma=1e-2, batch_size=100):
 
         self.d = d
         self.m = m
@@ -23,10 +23,11 @@ class Agent:
         self.gamma = gamma
         self.sigma = sigma
 
+        self.batch_size = batch_size
         self.z_values = torch.zeros(batch_size, d+m)
         self.target_values = torch.zeros(batch_size, d)
-        self.lr = getattr(self.model, 'lr', 0.001)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
+        self.lr = getattr(self.model, 'lr', None)
+        self.optimizer = 'OLS' if self.lr is None else torch.optim.Adam(self.model.parameters(), lr=self.lr)
         self.loss_function = nn.MSELoss()
 
     def learning_step(self, x, dx_dt, u):
@@ -43,7 +44,7 @@ class Agent:
 
         J = jacobian(self.model, z).detach().numpy()
 
-        if getattr(self.model, 'linear', False):
+        if self.optimizer == 'OLS':
             prediction = self.model(z)
             theta = parameters_to_vector(self.model.parameters()).detach().numpy()
             c = prediction.detach().numpy().squeeze() - J@theta
@@ -76,19 +77,28 @@ class Agent:
         # print(f'J = {J}')
         # self.Mx += self.x[:, None]@self.x[None, :]
 
-    def draw_random_control(self, t):
+    def draw_random_control_max(self):
         u = np.random.randn(self.m)
         u *= self.gamma / np.linalg.norm(u)
+        return u
+    def draw_random_control(self):
+        u = 2*np.random.rand(self.m)-1
+        u *= self.gamma / np.sqrt(self.m)
         return u
 
     def policy(self, x, t):
         raise NotImplementedError
 
-
 class Random(Agent):
 
     def policy(self, x, t):
-        u = self.draw_random_control(t)
+        u = self.draw_random_control()
+        return u
+
+class MaxRandom(Agent):
+
+    def policy(self, x, t):
+        u = self.draw_random_control_max()
         return u
 
 

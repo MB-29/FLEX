@@ -4,7 +4,7 @@ import torch.nn as nn
 
 from evaluation.cartpole import XGrid, ZGrid
 
-class Partial(nn.Module):
+class NeuralA(nn.Module):
 
     def __init__(self, environment):
         super().__init__()
@@ -16,7 +16,7 @@ class Partial(nn.Module):
             nn.Linear(8, 2)
         )
         self.d, self.m = environment.d, environment.m
-        self.get_B = environment.get_B
+        # self.get_B = environment.get_B
         self.t_period = environment.period/environment.dt
         self.acceleration_u = environment.acceleration_u
         self.acc_u = environment.acc_u
@@ -62,7 +62,7 @@ class Partial(nn.Module):
         return dx
         
 
-class FullNeural(nn.Module):
+class NeuralAB(nn.Module):
 
     def __init__(self, environment):
         super().__init__()
@@ -89,24 +89,6 @@ class FullNeural(nn.Module):
 
         self.lr = 0.02
 
-    # def get_B(self, x):
-    #     return self.get_B(x.detach().numpy().squeeze())
-        # return self.B_net(self.transform(z)[:, :3]).view(d, m)
-
-    # def acceleration_u(self, z):
-    #     x = z[:, :self.d]
-    #     B = torch.tensor(self.get_B(x.squeeze().detach().numpy()), dtype=torch.float)
-    #     u = z[:, self.d:]
-    #     return (B@u.T).T
-    # def acceleration_u(self, z):
-    #     phi = z[:, 2]
-    #     u = z[:, -1]
-    #     c_phi = torch.cos(phi)
-    #     dd_y_u, dd_phi_u = cartpole.acceleration_u(c_phi, u)
-    #     acceleration = torch.zeros_like(z[:, :2])
-    #     acceleration[:, 0] = dd_y_u
-    #     acceleration[:, 1] = dd_phi_u
-    #     return acceleration
     def predict(self, obs_u):
         d_y, cphi, sphi, d_phi, u = torch.unbind(obs_u, dim=1)
         zeta = obs_u[:, :-1]
@@ -125,6 +107,47 @@ class FullNeural(nn.Module):
         zeta_u = torch.cat((zeta, u.unsqueeze(1)), dim=1)
         # print(zeta_u)
         prediction = self.predict(zeta_u)
+        dd_y, dd_phi = torch.unbind(prediction, dim=1)
+        # x = z[:, :self.d]
+        # u = z[:, self.d]
+        x_dot = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
+        # x_dot = prediction
+        return x_dot
+
+class Neural(nn.Module):
+
+    def __init__(self, environment):
+        super().__init__()
+        self.d, self.m = environment.d, environment.m
+        self.evaluation = ZGrid(environment)
+        self.t_period = environment.period / environment.dt
+
+        self.net = nn.Sequential(
+            nn.Linear(5, 8),
+            nn.Tanh(),
+            # nn.Linear(8, 8),
+            # nn.Tanh(),
+            # nn.Linear(8, 8),
+            # nn.Tanh(),
+            nn.Linear(8, 2)
+        )
+
+        self.lr = 0.005
+
+    def predict(self, obs_u):
+        d_y, cphi, sphi, d_phi, u = torch.unbind(obs_u, dim=1)
+        zeta = obs_u[:, :-1]
+        # u = zeta_u[:, -1:]
+        # zeta = torch.stack((cphi, sphi, d_phi**2), dim=1)
+        return self.net(obs_u)
+
+    def forward(self, z):
+        y, d_y, phi, d_phi, u = torch.unbind(z, dim=1)
+        cphi, sphi = torch.cos(phi), torch.sin(phi)
+        obs = torch.stack((d_y, cphi, sphi, d_phi), dim=1)
+        obs_u = torch.cat((obs, u.unsqueeze(1)), dim=1)
+        # print(obs_u)
+        prediction = self.predict(obs_u)
         dd_y, dd_phi = torch.unbind(prediction, dim=1)
         # x = z[:, :self.d]
         # u = z[:, self.d]
@@ -174,3 +197,4 @@ class RFF(nn.Module):
         dd_y, dd_phi = torch.unbind(prediction, dim=1)
         x_dot = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
         return x_dot
+

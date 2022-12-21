@@ -17,7 +17,7 @@ def exploration(
         # print(f't = {t}')
         x = environment.x.copy()
 
-        u = agent.policy(x, t) 
+        u = agent.policy(x, t) if t>T_random else agent.draw_random_control()
         # u = 0*u if t>20 else u
         dx = environment.step(u)
         dx_dt = dx/environment.dt
@@ -43,17 +43,19 @@ if __name__=='__main__':
     from models.pendulum import LinearTheta as Model
 
     from environments.cartpole import GymCartpole as Environment
-    from models.cartpole import FullNeural as Model
-    # from models.cartpole import Partial as Model
     # from models.cartpole import RFF as Model
+    from models.cartpole import NeuralA as Model
+    from models.cartpole import NeuralAB as Model
+    # from models.cartpole import Neural as Model
 
     from agents import Passive as Agent
     from agents import Random as Agent
-    from active_agents import D_optimal as Agent
-    # from oracles.cartpole import PeriodicOracle as Agent
+    from agents import MaxRandom as Agent
+    # from active_agents import D_optimal as Agent
+    from oracles.cartpole import PeriodicOracle as Agent
 
     plot = False
-    # plot = True
+    plot = True
 
     environment = Environment()
     # environment = Environment(0.08)
@@ -67,7 +69,7 @@ if __name__=='__main__':
     environment.gamma
     )
 
-    T = 800    
+    T = 800
 
     z_values, error_values = exploration(environment, agent, evaluation, T, plot=plot)
     # plt.subplot(211)

@@ -10,8 +10,8 @@ from active_agents import D_optimal
 from exploitation import exploitation
 from environments.cartpole import DmCartpole as Environment
 # from environments.pendulum import GymPendulum as Environment
-from models.cartpole import Partial as Model
-from models.cartpole import FullNeural as Model
+from models.cartpole import NeuralA as Model
+from models.cartpole import NeuralAB as Model
 # from models.pendulum import LinearA as Model
 from exploration import exploration
 from exploit_cartpole import exploit
@@ -52,7 +52,7 @@ if __name__ == '__main__':
         evaluation = model.evaluation
         # print(f'Model = {Model}')
     # for Agent in [Spacing]:
-        # model = Partial(environment)
+        # model = NeuralA(environment)
         # model = FullLinear(environment)
         # print('exploration')
         agent = Agent(

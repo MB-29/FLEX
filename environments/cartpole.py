@@ -49,7 +49,7 @@ class Cartpole(Environment):
         self.x_max = np.array([+np.inf, +self.dy_max, +np.inf, +self.dphi_max])
 
         self.goal_weights = torch.Tensor([10, 0.1,  10., 10., 0.1])
-        # self.goal_weights = torch.Tensor((100, .1, 0.1))
+        # self.goal_weights = torch.Tensor([20., 0.1,  20., 20., 0.1])
         self.goal_state = torch.Tensor([.0, .0, 1., 0., 0.])
         self.R = 0.001
 

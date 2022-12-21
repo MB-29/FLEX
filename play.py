@@ -35,9 +35,9 @@ T = 500
 T_random = 0
 environment = Environment()
 
-model = models.FullNeural(environment)
+model = models.NeuralAB(environment)
 # model = models.FullLinear(environment)
-# model = models.Partial(environment)
+# model = models.NeuralA(environment)
 
 gamma = environment.gamma
 sigma = environment.sigma
