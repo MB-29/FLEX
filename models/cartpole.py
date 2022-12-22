@@ -73,8 +73,8 @@ class NeuralAB(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(4, 8),
             nn.Tanh(),
-            # nn.Linear(8, 8),
-            # nn.Tanh(),
+            nn.Linear(8, 8),
+            nn.Tanh(),
             # nn.Linear(8, 8),
             # nn.Tanh(),
             nn.Linear(8, 4)

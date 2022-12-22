@@ -116,9 +116,10 @@ class Cartpole(Environment):
 
     def plot_system(self, x, u, t):
         y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
-        push = 0.7*np.sign(np.mean(u))
+        push = 0.06*u[0]
+        side = np.sign(push)
         cphi, s_phi = np.cos(phi), np.sin(phi)
-        plt.arrow(y, 0, push, 0, color='red', head_width=0.1, alpha=0.5)
+        plt.arrow(y+side*self.l/2, 0, push, 0, color='red', head_width=0.1, alpha=0.5)
         plt.plot([y-self.l/2, y+self.l/2], [0, 0], color='black')
         plt.plot([y, y+self.l*s_phi], [0, self.l*cphi], color='blue')
         plt.xlim((y-2*self.l, y+2*self.l))

@@ -35,7 +35,7 @@ agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
     'D-optimal': D_optimal,
     'random': Random}
-# name = 'D-optimal'
+name = 'D-optimal'
 name = 'random'
 Agent = agents[name]
 output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma}
@@ -82,6 +82,7 @@ if __name__ == '__main__':
 
     output[name]['estimation'] = estimation_values
     output[name]['exploitation'] = exploitation_values
+    output[name]['z'] = z_values
     exploitation_mean = exploitation_values.mean(axis=0)
     exploitation_std = np.sqrt(exploitation_values.var(axis=0)/n_samples)
     
