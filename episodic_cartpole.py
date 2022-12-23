@@ -19,7 +19,7 @@ from exploit_cartpole import exploit
 ENVIRONMENT_NAME = 'dm_cartpole'
 
 T = 100
-H, lqr_iter = 50, 30
+H, lqr_iter = 50, 10
 n_samples = 1
 n_episodes = 8
 
