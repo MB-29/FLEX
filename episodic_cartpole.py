@@ -19,7 +19,7 @@ from exploit_cartpole import exploit
 ENVIRONMENT_NAME = 'dm_cartpole'
 
 T = 100
-H, lqr_iter = 50, 10
+H, lqr_iter = 70, 20
 n_samples = 1
 n_episodes = 8
 
@@ -38,7 +38,7 @@ agents = {
 name = 'D-optimal'
 name = 'random'
 Agent = agents[name]
-output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma}
+output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma, 'H': H, 'lqr_iter': lqr_iter}
 
 if __name__ == '__main__':
     task_id = int(sys.argv[1])
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     exploitation_std = np.sqrt(exploitation_values.var(axis=0)/n_samples)
     
 
-OUTPUT_PATH = f'output/{ENVIRONMENT_NAME}_{name}_{n_samples}-samples_H-{H}_lqr-{lqr_iter}_episodic-{task_id}.pkl'
+OUTPUT_PATH = f'output/{ENVIRONMENT_NAME}_{name}_{n_samples}-samples_episodic-{task_id}.pkl'
 with open(OUTPUT_PATH, 'wb') as output_file:
     pickle.dump(output, output_file)
 
