@@ -42,8 +42,8 @@ def get_quadcost(goal_weights, goal_state, R, H, m):
 
 def planning(obs, u_init, transition_model, goal_weights, goal_state, R, gamma, lqr_iter):
     H, _, m = u_init.shape
-    print(f"H = {H}, lqr iter = {lqr_iter}, R ={R}")
-    print(f"u_init = {u_init.shape}")
+    # print(f"H = {H}, lqr iter = {lqr_iter}, R ={R}")
+    # print(f"u_init = {u_init.shape}")
     quadcost = get_quadcost(goal_weights, goal_state, R, H, m)
     nominal_states, nominal_actions, nominal_objs = mpc.MPC(
         5, 1, H,
@@ -140,9 +140,9 @@ if __name__ == '__main__':
     ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
     Environment = get_environment(ENVIRONMENT_NAME)
 
-    T, mpc_H = 100, 50
-    T, mpc_H = 100, None
-    lqr_iter = 10
+    T, mpc_H = 100, 100
+    # T, mpc_H = 100, None
+    lqr_iter = 5
 
     environment = Environment()
     dt = environment.dt

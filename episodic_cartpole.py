@@ -14,14 +14,15 @@ from models.cartpole import NeuralA as Model
 from models.cartpole import NeuralAB as Model
 # from models.pendulum import LinearA as Model
 from exploration import exploration
-from exploit_cartpole import exploit
+# from exploit_cartpole import exploit
+from planning_cartpole import exploit
 
 ENVIRONMENT_NAME = 'dm_cartpole'
 
 T = 100
-H, lqr_iter = 70, 20
-n_samples = 1
-n_episodes = 8
+H, lqr_iter = 100, 20
+n_samples = 10
+n_episodes = 5
 
 environment = Environment()
 gamma = environment.gamma
@@ -92,16 +93,16 @@ with open(OUTPUT_PATH, 'wb') as output_file:
     pickle.dump(output, output_file)
 
 # fig, (ax1, ax2) = plt.subplots(2, 1)
-# ax1.plot(exploitation_mean, label=name)
-# ax1.fill_between(
-#     np.arange(n_episodes),
-#     exploitation_mean-exploitation_std,
-#     exploitation_mean+exploitation_std,
-#     alpha=0.5)
+# ax1.plot(exploitation_values[1], label=name)
+# # ax1.fill_between(
+# #     np.arange(n_episodes),
+# #     exploitation_mean-exploitation_std,
+# #     exploitation_mean+exploitation_std,
+# #     alpha=0.5)
 
 # estimation_mean = estimation_values.mean(axis=0)
 # estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
-# ax2.plot(estimation_mean, label=name)
+# ax2.plot(estimation_values[1], label=name)
 # ax2.fill_between(
 #     np.arange(n_episodes*T),
 #     estimation_mean-estimation_std,
@@ -109,6 +110,6 @@ with open(OUTPUT_PATH, 'wb') as output_file:
 #     alpha=0.5)
 # ax2.set_yscale('log')
 # plt.legend()
-# plt.show()
 # plt.title(r'Test loss')
-# plt.savefig(f'output/{ENVIRONMENT_NAME}_benchmark.pdf')
+# plt.show()
+# # plt.savefig(f'output/{ENVIRONMENT_NAME}_benchmark.pdf')
