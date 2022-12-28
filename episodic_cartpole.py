@@ -21,7 +21,7 @@ ENVIRONMENT_NAME = 'dm_cartpole'
 
 T = 100
 H, lqr_iter = 100, 20
-n_samples = 10
+n_samples = 1
 n_episodes = 5
 
 environment = Environment()
@@ -36,8 +36,8 @@ agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
     'D-optimal': D_optimal,
     'random': Random}
-name = 'D-optimal'
 name = 'random'
+name = 'D-optimal'
 Agent = agents[name]
 output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma, 'H': H, 'lqr_iter': lqr_iter}
 
