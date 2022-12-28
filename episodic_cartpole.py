@@ -21,8 +21,8 @@ ENVIRONMENT_NAME = 'dm_cartpole'
 
 T = 100
 H, lqr_iter = 100, 20
-n_samples = 1
-n_episodes = 5
+n_samples = 4
+n_episodes = 8
 
 environment = Environment()
 gamma = environment.gamma
