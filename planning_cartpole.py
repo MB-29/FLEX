@@ -84,7 +84,7 @@ def exploit(environment, model_dynamics, dt, T, mpc_H, lqr_iter, plot=False):
                              * dt/(0.3*period))).view(T, 1, 1)
 
     first_guess = planning(obs, u_periodic, transition_model,
-                      goal_weights, goal_state, R, gamma, lqr_iter=50)
+                      goal_weights, goal_state, R, gamma, lqr_iter=100)
     u_init = first_guess.clone()
 
     cost_values = np.zeros(T)
@@ -158,7 +158,7 @@ if __name__ == '__main__':
 
     plt.subplot(211)
     plt.plot(cost_values.cumsum())
-    plt.subplot(212)
+    plt.subplot(212)    
     plt.plot(cost_values)
     plt.show()
     print(f'total cost {cost_values.sum()}')
