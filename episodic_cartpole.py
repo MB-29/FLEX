@@ -7,7 +7,6 @@ import pickle
 
 from agents import Random
 from active_agents import D_optimal
-from exploitation import exploitation
 from environments.cartpole import DmCartpole as Environment
 # from environments.pendulum import GymPendulum as Environment
 from models.cartpole import NeuralA as Model
