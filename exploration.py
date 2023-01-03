@@ -4,16 +4,18 @@ import matplotlib.pyplot as plt
 def exploration(
     environment,
     agent,
-    evaluation,
+    evaluation, 
     T,
     T_random=0,
     plot=False):
 
     d, m = environment.d, environment.m
     z_values = np.zeros((T, d+m))
-    error_values = np.zeros(T)
+    error_values = np.zeros(T)  
 
     for t in range(T):
+        # if t%100 == 0:
+        #     environment.reset()
         # print(f't = {t}')
         x = environment.x.copy()
 
@@ -51,11 +53,11 @@ if __name__=='__main__':
     from agents import Passive as Agent
     from agents import Random as Agent
     from agents import MaxRandom as Agent
-    # from active_agents import D_optimal as Agent
-    from oracles.cartpole import PeriodicOracle as Agent
+    from active_agents import D_optimal as Agent
+    # from oracles.cartpole import PeriodicOracle as Agent
 
     plot = False
-    plot = True
+    # plot = Tru<e
 
     environment = Environment()
     # environment = Environment(0.08)

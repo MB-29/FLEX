@@ -73,8 +73,8 @@ class NeuralAB(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(4, 8),
             nn.Tanh(),
-            nn.Linear(8, 8),
-            nn.Tanh(),
+            # nn.Linear(8, 8),
+            # nn.Tanh(),
             # nn.Linear(8, 8),
             # nn.Tanh(),
             nn.Linear(8, 4)
@@ -87,7 +87,7 @@ class NeuralAB(nn.Module):
         #     nn.Linear(16, d)
         # )
 
-        self.lr = 0.02
+        self.lr = 0.1
 
     def predict(self, obs_u):
         d_y, cphi, sphi, d_phi, u = torch.unbind(obs_u, dim=1)

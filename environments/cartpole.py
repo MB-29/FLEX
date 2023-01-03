@@ -50,8 +50,10 @@ class Cartpole(Environment):
 
         self.goal_weights = torch.Tensor([10, 0.1,  10., 10., 0.1])
         self.goal_weights = torch.Tensor([4., 0.1,  10., 6, 0.1])
-        self.goal_weights = torch.Tensor([100., 0.1,  100., 0.1, 0.1])
-        # self.goal_weights = torch.Tensor([20., 0.1,  20., 20., 0.1])
+        self.goal_weights = torch.Tensor([100., 0.1,  100., 100., 0.1])
+        self.goal_weights = torch.Tensor([1., 0.1,  10., 5.0, 0.1])
+        # self.goal_weights = torch.Tensor([1., 0.1,  20., 20., 0.1])
+        self.goal_weights_relaxed = torch.Tensor([10., 0.1,  20., 10., 0.1])
         self.goal_state = torch.Tensor([.0, .0, 1., 0., 0.])
         self.R = 0.001
 

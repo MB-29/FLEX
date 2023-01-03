@@ -56,6 +56,7 @@ def planning(obs, u_init, transition_model, goal_weights, goal_state, R, gamma, 
         # linesearch_decay=transition_model.linesearch_decay,
         # max_linesearch_iter=transition_model.max_linesearch_iter,
         grad_method=GradMethods.AUTO_DIFF,
+        backprop=False,
         # eps=1e-2,
     )(obs, quadcost, transition_model)
     return nominal_actions
@@ -72,6 +73,7 @@ def exploit(environment, model_dynamics, dt, T, mpc_H, lqr_iter, plot=False):
     transition = TransitionModel(dynamics, environment, dt)
 
     goal_weights, goal_state = environment.goal_weights, environment.goal_state
+    goal_weights_relaxed = environment.goal_weights_relaxed
     R = environment.R
     
     # u_init = gamma* torch.randn(H, 1, 1)
@@ -84,15 +86,16 @@ def exploit(environment, model_dynamics, dt, T, mpc_H, lqr_iter, plot=False):
                              * dt/(0.3*period))).view(T, 1, 1)
 
     first_guess = planning(obs, u_periodic, transition_model,
-                      goal_weights, goal_state, R, gamma, lqr_iter=100)
+                      goal_weights_relaxed, goal_state, R, gamma, lqr_iter=100)
     u_init = first_guess.clone()
 
     cost_values = np.zeros(T)
     for t in range(T):
         next_action = first_guess[t]       
         if mpc_H is not None:
+            goal_weights_t = (t/T) * goal_weights + (1-t/T)*goal_weights_relaxed
             nominal_actions = planning(
-                obs, u_init[:mpc_H], transition_model, goal_weights, goal_state, R, gamma, lqr_iter)
+                obs, u_init[:mpc_H], transition_model, goal_weights_t, goal_state, R, gamma, lqr_iter)
             next_action = nominal_actions[0]
             u_init = torch.cat((nominal_actions[1:], torch.zeros(1, 1, m)), dim=0)
 
