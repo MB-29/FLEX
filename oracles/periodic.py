@@ -5,8 +5,8 @@ from agents import Agent
 
 class Periodic1D(Agent):
 
-    def __init__(self, model, d, m, gamma):
-        super().__init__(model, d, m, gamma)
+    def __init__(self, model, d, m, gamma, dt):
+        super().__init__(model, d, m, gamma, dt=dt)
         self.t_period = model.t_period
 
     def policy(self, x, t):

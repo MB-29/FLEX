@@ -52,6 +52,7 @@ class Cartpole(Environment):
         self.goal_weights = torch.Tensor([4., 0.1,  10., 6, 0.1])
         self.goal_weights = torch.Tensor([100., 0.1,  100., 100., 0.1])
         self.goal_weights = torch.Tensor([1., 0.1,  10., 5.0, 0.1])
+        self.goal_weights = torch.Tensor([10., 0.1,  20., 40., 0.1])
         # self.goal_weights = torch.Tensor([1., 0.1,  20., 20., 0.1])
         self.goal_weights_relaxed = torch.Tensor([10., 0.1,  20., 10., 0.1])
         self.goal_state = torch.Tensor([.0, .0, 1., 0., 0.])
@@ -214,19 +215,27 @@ class DmCartpole(RlCartpole):
 
 
         
-class DampedCartpole(Cartpole):
+class DampedCartpole(RlCartpole):
 
     def __init__(self, dt=0.02):
 
-        mass, Mass, l = 1.0, 2.0, 1.0
-        g = 9.8
-        alpha, beta = 0.2, 0.5
-        self.period = 2*np.pi / np.sqrt(g/l)
-        dt = 1e-2 * self.period
-        sigma = 0.01
-        gamma = 4
+        alpha, beta = 0.05, 0.5
+        sigma = 0.0
 
-        super().__init__(dt, sigma, gamma, g, mass, Mass, l, alpha, beta)
+        super().__init__(dt, sigma, alpha, beta)
+# class DampedCartpole(Cartpole):
+
+#     def __init__(self, dt=0.02):
+
+#         mass, Mass, l = 1.0, 2.0, 1.0
+#         g = 9.8
+#         alpha, beta = 0.2, 0.5
+#         self.period = 2*np.pi / np.sqrt(g/l)
+#         dt = 1e-2 * self.period
+#         sigma = 0.01
+#         gamma = 4
+
+#         super().__init__(dt, sigma, gamma, g, mass, Mass, l, alpha, beta)
 
 
 

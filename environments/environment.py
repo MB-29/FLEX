@@ -27,7 +27,7 @@ class Environment:
     def step(self, u):
         x_dot = self.dynamics(self.x, u)
         dx = x_dot * self.dt
-        noise = np.sqrt(self.dt) * self.sigma * np.random.randn(self.d)
+        noise =  self.sigma * np.random.randn(self.d)
         dx += noise
         self.x += dx
         self.x = np.clip(self.x, self.x_min, self.x_max)

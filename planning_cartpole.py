@@ -144,7 +144,7 @@ if __name__ == '__main__':
     Environment = get_environment(ENVIRONMENT_NAME)
 
     T, mpc_H = 100, 100
-    # T, mpc_H = 100, None
+    T, mpc_H = 100, None
     lqr_iter = 5
 
     environment = Environment()

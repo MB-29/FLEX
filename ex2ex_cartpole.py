@@ -63,7 +63,7 @@ for episode in range(n_episodes):
     # torch.save(model, model_path)
 
     z_values, estimation_error = exploration(
-        environment, agent, evaluation, T)
+        environment, agent, T, evaluation)
 
     estimation_values[episode * T:(episode+1)*T] = estimation_error
 
@@ -73,7 +73,6 @@ for episode in range(n_episodes):
 plt.plot(estimation_values, label=name)
 plt.show()
 
-cost_values = np.zeros(T)
 model_dynamics = model.forward
 print('exploit')
 cost_values = exploit(environment, model_dynamics, dt, T, H, lqr_iter=lqr_iter, plot=True)
