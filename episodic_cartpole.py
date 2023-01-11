@@ -38,7 +38,7 @@ agents = {
     'random': Random}
 name = 'random'
 name = 'D-optimal'
-name = 'max_random'
+# name = 'max_random'
 Agent = agents[name]
 output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma, 'H': H, 'lqr_iter': lqr_iter}
 
