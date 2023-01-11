@@ -2,10 +2,10 @@ import numpy as np
 from scipy.optimize import brentq
 import torch
 
-def lstsq_update(prior_estimate, prior_gram, z, y, sigma):
+def lstsq_update(prior_estimate, prior_gram, z, y):
 
-    posterior_gram = prior_gram +  z[:, None]@z[None, :] / sigma**2
-    combination = prior_gram@prior_estimate + y*z / sigma**2
+    posterior_gram = prior_gram +  z[:, None]@z[None, :] 
+    combination = prior_gram@prior_estimate + y*z 
     posterior_estimate = np.linalg.solve(posterior_gram, combination)
 
     return posterior_estimate, posterior_gram
@@ -32,7 +32,7 @@ def greedy_optimal_input(M, A, B, x, gamma):
 
     x0 = A @ x
     return linear_D_optimal(M, B, x0, gamma)
-def linear_D_optimal(M,  B, v, gamma):
+def linear_D_optimal(M_inv,  B, v, gamma):
     """Compute the one-step-ahead optimal design for the estimation of A:
         maximize log det (M + x x^T)
         with x = v + Bu and u of norm gamma
@@ -51,7 +51,7 @@ def linear_D_optimal(M,  B, v, gamma):
     :rtype: size m numpy array
     """
 
-    M_inv = np.linalg.inv(M)
+    # M_inv = np.linalg.inv(M)
     Q = - B.T @ M_inv @ B
     b = B.T @ M_inv @ v
 

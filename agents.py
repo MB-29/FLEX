@@ -9,19 +9,21 @@ from computations import jacobian, lstsq_update
 
 class Agent:
 
-    def __init__(self, model, d, m, gamma, sigma=1e-2, batch_size=100):
+    def __init__(self, model, d, m, gamma, batch_size=100, dt=None):
 
         self.d = d
         self.m = m
+        self.dt = dt
 
         self.model = model
         self.q = sum(parameter.numel() for parameter in model.parameters())
-        self.M = 1e-3*np.diag(np.random.rand(self.q))
+        diag =1e-3*np.random.rand(self.q)
+        self.M = np.diag(diag)
+        self.M_inv =np.diag(1/diag)
         # self.Mx = 1e-3*np.diag(np.random.rand(self.d))
         # self.My = 1e-3*np.diag(np.random.rand(self.d))
 
         self.gamma = gamma
-        self.sigma = sigma
 
         self.batch_size = batch_size
         self.z_values = torch.zeros(batch_size, d+m)
@@ -42,9 +44,9 @@ class Agent:
         # print(z)
 
 
-        J = jacobian(self.model, z).detach().numpy()
 
         if self.optimizer == 'OLS':
+            J = jacobian(self.model, z).detach().numpy()
             prediction = self.model(z)
             theta = parameters_to_vector(self.model.parameters()).detach().numpy()
             c = prediction.detach().numpy().squeeze() - J@theta
@@ -52,7 +54,14 @@ class Agent:
             # print(c.shape)
             for j in range(self.d):
                 # print(f'j={j}, M={self.M}')
-                theta, self.M = lstsq_update(theta, self.M, J[j], observation[j], self.sigma)
+                v = J[j]
+                theta, self.M = lstsq_update(theta, self.M, v, observation[j])
+                matrix = self.M_inv@v[:, None]@v[None, :]@self.M_inv
+                scalar = -1/(1+v.T@self.M_inv@v)
+                increment = scalar*matrix
+                # print(f'scalar {scalar}')
+                # print(f'matrix {matrix}')
+                self.M_inv += increment
             vector_to_parameters(torch.tensor(
                 theta, dtype=torch.float), self.model.parameters())
             return
@@ -71,10 +80,22 @@ class Agent:
         # 08/23/2022 : zeta instead of z
         # 09/02/2022 : z instead of zeta
         # self.M += J[:, None]@J[None, :]
-        self.M += J.T @ J / self.sigma**2
+        J = jacobian(self.model, z).detach().numpy()
+        self.M += J.T @ J 
+        for j in range(self.d):
+            # print(f'matrix {self.M_inv}')
+            v = J[j][:, None]
+            # print(f'v {v}')
+            matrix = self.M_inv@v@v.T@self.M_inv
+            scalar = -1/(1+v.T@self.M_inv@v)
+            increment = scalar*matrix
+            # print(f'scalar {scalar}')
+            # print(f'matrix {matrix}')
+            self.M_inv += increment
+        # diff = np.abs(self.M_inv - np.linalg.inv(self.M))/self.M_inv
         # self.J = J
 
-        # print(f'J = {J}')
+        # print(f'diff = {diff}')
         # self.Mx += self.x[:, None]@self.x[None, :]
 
     def draw_random_control_max(self):

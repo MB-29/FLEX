@@ -6,17 +6,17 @@ from computations import jacobian, compute_gradient, linear_D_optimal
 
 class Active(Agent):
 
-    def predict_x(self, u):
+    def predict_x(self, x, u):
 
         for param in self.model.parameters():
             param.requires_grad = False
 
-        x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
+        x = torch.tensor(x, dtype=torch.float32).unsqueeze(0)
         z = torch.zeros(1, self.d + self.m)
         z[:, :self.d] = x
-        z[:, self.d:] += u
-        dx = self.model(z)
-        x_ = x + self.dt * dx
+        z[:, self.d:] = torch.tensor(u, dtype=torch.float)
+        x_dot = self.model(z)
+        x_ = x + self.dt * x_dot
 
         for param in self.model.parameters():
             param.requires_grad = True
@@ -47,12 +47,12 @@ class Active(Agent):
 
 class Gradient(Active):
 
-    def maximum_utility(self, t, n_gradient=10):
+    def maximum_utility(self, x, t, n_gradient=10):
         u = torch.randn(1, self.m)
         u *= self.gamma / torch.linalg.norm(u)
         if self.m == 1:
-            utility = self.utility(u, t)
-            utility_ = self.utility(-u, t)
+            utility = self.utility(u, x, t)
+            utility_ = self.utility(-u, x, t)
             # print(f'u: {u}, -u: {-u}')
             # print(f'u: {utility}, -u: {utility_}')
             u = -u if utility_ > utility else u
@@ -63,7 +63,7 @@ class Gradient(Active):
         designer = torch.optim.Adam([u], lr=0.1)
         # print(f't = {t}')
         for step_index in range(n_gradient):
-            loss = -self.utility(u, t)
+            loss = -self.utility(u, x, t)
             # print(f'loss = {loss}')
             designer.zero_grad()
             loss.backward()
@@ -74,10 +74,7 @@ class Gradient(Active):
         return u
 
     def policy(self, x, t):
-        if t < self.T_random:
-            # or t%100 == 0:
-            return self.draw_random_control(t)
-        u = self.maximum_utility(t)
+        u = self.maximum_utility(x, t)
         # print(f't={t}, u = {u}')
         return u
 
@@ -102,11 +99,11 @@ class GradientDesign(Gradient):
 
         return uncertainty
 
-    def utility(self, u, t):
+    def utility(self, u, x, t):
         # z.requires_grad = True
         # print(z)
         # with torch.no_grad():
-        x_ = self.predict_x(u)
+        x_ = self.predict_x(x, u)
         z = torch.zeros(1, self.d + self.m)
         z[:, :self.d] = x_
         M_z = torch.tensor(self.M, dtype=torch.float)
@@ -146,7 +143,7 @@ class GradientDesign(Gradient):
 
 
 class Variation(Active):
-    def utility(self, u, t):
+    def utility(self, u, x, t):
         # z.requires_grad = True
         # print(z)
         x_ = self.predict_x(u)
@@ -160,17 +157,23 @@ class Variation(Active):
 
 class Spacing(Gradient):
 
-    def utility(self, u, t):
+    def utility(self, u, x, t):
 
-        x_ = self.predict_x(u)
+        x_ = self.predict_x(x, u)
         z_ = torch.zeros(1, self.d + self.m)
         z_[:, :self.d] += x_
         # z_[:, self.d:] = u
-        z_values = torch.zeros(t, self.d + self.m)
-        z_values[:, :self.d] = torch.tensor(self.x_values[:t])
+        # z_values = torch.zeros(t, self.d + self.m)
+        # z_values[:, :self.d] = torch.tensor(self.x_values[:t])
+        z_values = torch.tensor(self.z_values, dtype=torch.float)
         # z_values[:, self.d:] = torch.tensor(self.u_values[:t])
-        past = self.model.transform(z_values)
-        future = self.model.transform(z_)
+
+        past = z_values
+        future = z_
+        # past = self.model.transform(z_values)
+        # future = self.model.transform(z_)
+
+
         differences = past - future
         # print(f'x {x}, u = {u}')
         # print(f'transform {self.model.transform(z)}')
@@ -195,7 +198,7 @@ class D_optimal(Active):
         z[:, self.d:] = u
 
         j = np.random.choice([1, 3])
-        # j = 1
+        j = 1
 
         y = self.model(z)
         df_dtheta = compute_gradient(self.model, y[:, j])
@@ -220,7 +223,8 @@ class D_optimal(Active):
         B = D @ B_
 
         v = df_dtheta.detach().numpy()
-        u = linear_D_optimal(self.M, B, v, self.gamma)
+        # return u.detach().numpy()
+        u = linear_D_optimal(self.M_inv, B, v, self.gamma)
         u *= self.gamma / np.linalg.norm(u)
-
         return u
+
