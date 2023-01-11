@@ -20,7 +20,7 @@ class NeuralA(nn.Module):
         self.t_period = environment.period/environment.dt
         self.acceleration_u = environment.acceleration_u
         self.acc_u = environment.acc_u
-        self.lr = 0.01
+        self.lr = 0.1
 
         self.evaluation = XGrid(environment)
 
