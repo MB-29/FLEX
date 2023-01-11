@@ -5,7 +5,7 @@ from matplotlib import rc, rcParams
 from tqdm import tqdm
 import pickle
 
-from agents import Random
+from agents import Random, MaxRandom
 from active_agents import D_optimal
 from environments.cartpole import DmCartpole as Environment
 # from environments.pendulum import GymPendulum as Environment
@@ -34,9 +34,11 @@ x0 = environment.x0
 agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
     'D-optimal': D_optimal,
+    'max_random': MaxRandom,
     'random': Random}
 name = 'random'
 name = 'D-optimal'
+name = 'max_random'
 Agent = agents[name]
 output = {'n_samples': n_samples, 'gamma': gamma, 'sigma': sigma, 'H': H, 'lqr_iter': lqr_iter}
 
@@ -75,7 +77,7 @@ if __name__ == '__main__':
                 plot=False)
 
             z_values, estimation_error = exploration(
-                environment, agent, evaluation, T)
+                environment, agent, T, evaluation)
 
             estimation_values[sample_index, episode*T:(episode+1)*T] = estimation_error
             exploitation_values[sample_index, episode] = cost_values.sum()
