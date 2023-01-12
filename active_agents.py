@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from agents import Agent
-from computations import jacobian, compute_gradient, linear_D_optimal
+from computations import jacobian, compute_gradient, maximizer_quadratic
 
 class Active(Agent):
 
@@ -197,8 +197,8 @@ class D_optimal(Active):
         z[:, :self.d] = x
         z[:, self.d:] = u
 
-        j = np.random.choice([1, 3])
-        j = 1
+        j = np.random.choice(self.d)
+        # j = 1
 
         y = self.model(z)
         df_dtheta = compute_gradient(self.model, y[:, j])
@@ -219,12 +219,12 @@ class D_optimal(Active):
             y = self.model(z)
             for i in range(self.d):
                 dfi_du = torch.autograd.grad(y[:, i], u, retain_graph=True)
-                B_[i, :] = dfi_du
+                B_[i, :] = dfi_du[0].numpy()
         B = D @ B_
 
         v = df_dtheta.detach().numpy()
         # return u.detach().numpy()
-        u = linear_D_optimal(self.M_inv, B, v, self.gamma)
+        u = maximizer_quadratic(self.M_inv, B, v, self.gamma)
         u *= self.gamma / np.linalg.norm(u)
         return u
 

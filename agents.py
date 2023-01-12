@@ -17,7 +17,7 @@ class Agent:
 
         self.model = model
         self.q = sum(parameter.numel() for parameter in model.parameters())
-        diag =1e-3*np.random.rand(self.q)
+        diag = 1e-3*np.random.rand(self.q)
         self.M = np.diag(diag)
         self.M_inv =np.diag(1/diag)
         # self.Mx = 1e-3*np.diag(np.random.rand(self.d))
@@ -33,6 +33,7 @@ class Agent:
         self.loss_function = nn.MSELoss()
 
     def learning_step(self, x, dx_dt, u):
+        
         z = torch.zeros(1, self.d + self.m, requires_grad=False)
         x = torch.tensor(x, dtype=torch.float,
                          requires_grad=False).unsqueeze(0)
@@ -42,8 +43,6 @@ class Agent:
         z[:, self.d:] = u
 
         # print(z)
-
-
 
         if self.optimizer == 'OLS':
             J = jacobian(self.model, z).detach().numpy()
@@ -71,7 +70,7 @@ class Agent:
         self.z_values  = torch.cat((self.z_values[1:, :], z), dim=0)
         # print(f'z_values = {self.z_values}')
         # print(f'target_values = {self.target_values}')
-
+        # print(f'learn')
         predictions = self.model(self.z_values)
         loss = self.loss_function(predictions, self.target_values)
         self.optimizer.zero_grad() , loss.backward() ; self.optimizer.step()
@@ -80,6 +79,7 @@ class Agent:
         # 08/23/2022 : zeta instead of z
         # 09/02/2022 : z instead of zeta
         # self.M += J[:, None]@J[None, :]
+        # print('update')
         J = jacobian(self.model, z).detach().numpy()
         self.M += J.T @ J 
         for j in range(self.d):

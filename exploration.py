@@ -24,6 +24,7 @@ def exploration(
         # u = 0*u if t>20 else u
         dx = environment.step(u)
         dx_dt = dx/environment.dt
+
         agent.learning_step(x, dx_dt, u)
 
         z_values[t:, :d] = x.copy()
@@ -47,11 +48,18 @@ if __name__=='__main__':
     from models.pendulum import LinearTheta as Model
 
     from environments.cartpole import GymCartpole as Environment
-    from environments.cartpole import DampedCartpole as Environment
     # from models.cartpole import RFF as Model
     from models.cartpole import NeuralA as Model
-    # from models.cartpole import NeuralAB as Model
-    # from models.cartpole import Neural as Model
+    from models.cartpole import NeuralAB as Model
+
+    from environments.cartpole import DampedCartpole as Environment
+    from models.cartpole import NeuralA as Model
+
+    from environments.arm import DampedArm as Environment
+    from models.arm import NeuralA as Model
+
+    from environments.quadrotor import DefaultQuadrotor as Environment
+    from models.quadrotor import NeuralModel as Model
 
     from agents import Passive as Agent
     from agents import Random as Agent
@@ -60,7 +68,7 @@ if __name__=='__main__':
     from active_agents import D_optimal as Agent
 
     plot = False
-    plot = True
+    # plot = True
 
     environment = Environment()
     # environment = Environment(0.08)
@@ -72,7 +80,8 @@ if __name__=='__main__':
     environment.d,
     environment.m,
     environment.gamma,
-    dt=environment.dt
+    dt=environment.dt,
+    batch_size=100
     )
 
     T = 800
@@ -80,9 +89,9 @@ if __name__=='__main__':
     z_values, error_values = exploration(environment, agent, T, evaluation, plot=plot)
     # plt.subplot(211)
     plt.plot(error_values)
-    plt.yscale('log')
+    # plt.yscale('log')
     plt.show()
     # plt.subplot(212)
-    # plt.plot(z_values[:, 0], z_values[:, 1])
+    plt.plot(z_values[:, 1], z_values[:, 3])
     # plt.yscale('log')
-    # plt.show()
+    plt.show()

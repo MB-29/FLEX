@@ -31,8 +31,8 @@ def greedy_optimal_input(M, A, B, x, gamma):
     """
 
     x0 = A @ x
-    return linear_D_optimal(M, B, x0, gamma)
-def linear_D_optimal(M_inv,  B, v, gamma):
+    return maximizer_quadratic(M, B, x0, gamma)
+def maximizer_quadratic(M_inv,  B, v, gamma):
     """Compute the one-step-ahead optimal design for the estimation of A:
         maximize log det (M + x x^T)
         with x = v + Bu and u of norm gamma

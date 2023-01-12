@@ -114,46 +114,46 @@ class NeuralAB(nn.Module):
         # x_dot = prediction
         return x_dot
 
-class Neural(nn.Module):
+# class Neural(nn.Module):
 
-    def __init__(self, environment):
-        super().__init__()
-        self.d, self.m = environment.d, environment.m
-        self.evaluation = ZGrid(environment)
-        self.t_period = environment.period / environment.dt
+#     def __init__(self, environment):
+#         super().__init__()
+#         self.d, self.m = environment.d, environment.m
+#         self.evaluation = ZGrid(environment)
+#         self.t_period = environment.period / environment.dt
 
-        self.net = nn.Sequential(
-            nn.Linear(5, 8),
-            nn.Tanh(),
-            # nn.Linear(8, 8),
-            # nn.Tanh(),
-            # nn.Linear(8, 8),
-            # nn.Tanh(),
-            nn.Linear(8, 2)
-        )
+#         self.net = nn.Sequential(
+#             nn.Linear(5, 8),
+#             nn.Tanh(),
+#             # nn.Linear(8, 8),
+#             # nn.Tanh(),
+#             # nn.Linear(8, 8),
+#             # nn.Tanh(),
+#             nn.Linear(8, 2)
+#         )
 
-        self.lr = 0.005
+#         self.lr = 0.005
 
-    def predict(self, obs_u):
-        d_y, cphi, sphi, d_phi, u = torch.unbind(obs_u, dim=1)
-        zeta = obs_u[:, :-1]
-        # u = zeta_u[:, -1:]
-        # zeta = torch.stack((cphi, sphi, d_phi**2), dim=1)
-        return self.net(obs_u)
+#     def predict(self, obs_u):
+#         d_y, cphi, sphi, d_phi, u = torch.unbind(obs_u, dim=1)
+#         zeta = obs_u[:, :-1]
+#         # u = zeta_u[:, -1:]
+#         # zeta = torch.stack((cphi, sphi, d_phi**2), dim=1)
+#         return self.net(obs_u)
 
-    def forward(self, z):
-        y, d_y, phi, d_phi, u = torch.unbind(z, dim=1)
-        cphi, sphi = torch.cos(phi), torch.sin(phi)
-        obs = torch.stack((d_y, cphi, sphi, d_phi), dim=1)
-        obs_u = torch.cat((obs, u.unsqueeze(1)), dim=1)
-        # print(obs_u)
-        prediction = self.predict(obs_u)
-        dd_y, dd_phi = torch.unbind(prediction, dim=1)
-        # x = z[:, :self.d]
-        # u = z[:, self.d]
-        x_dot = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
-        # x_dot = prediction
-        return x_dot
+#     def forward(self, z):
+#         y, d_y, phi, d_phi, u = torch.unbind(z, dim=1)
+#         cphi, sphi = torch.cos(phi), torch.sin(phi)
+#         obs = torch.stack((d_y, cphi, sphi, d_phi), dim=1)
+#         obs_u = torch.cat((obs, u.unsqueeze(1)), dim=1)
+#         # print(obs_u)
+#         prediction = self.predict(obs_u)
+#         dd_y, dd_phi = torch.unbind(prediction, dim=1)
+#         # x = z[:, :self.d]
+#         # u = z[:, self.d]
+#         x_dot = torch.stack((d_y, dd_y, d_phi, dd_phi), dim=1)
+#         # x_dot = prediction
+#         return x_dot
 
 class RFF(nn.Module):
     def __init__(self, environment) -> None:

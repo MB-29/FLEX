@@ -5,33 +5,25 @@ import matplotlib.pyplot as plt
 
 from environments.environment import Environment
 
-d, m = 6, 2
 
 class Quadrotor(Environment):
+    d, m = 6, 2
 
     def __init__(self, dt, sigma, gamma, mass, g, I, r, rho):
-        super().__init__(d, m, dt, sigma, gamma)
+        self.x0 = np.array([0, 0, 0.0, 0, 0, 0])
+        super().__init__(self.x0, self.d, self.m, dt, sigma, gamma)
         self.mass = mass
         self.g = g
         self.I = I
         self.rho = rho
         self.r = r
 
-        self.x0 = np.array([0, 0, 0.0, 0, 0, 0])
+        2*np.sqrt(self.gamma)
 
-        n_points = 20
+        self.v_max = 2*np.sqrt(gamma)
 
-        v_max = 2*np.sqrt(gamma)
-        interval_v = torch.linspace(-v_max, v_max, n_points)
-        grid_vx, grid_vy = torch.meshgrid(
-            interval_v,
-            interval_v,
-        )
-        self.grid = torch.cat([
-            grid_vx.reshape(-1, 1),
-            grid_vy.reshape(-1, 1)
-            # grid_u.reshape(-1, 1),
-        ], 1)
+        self.x_min = np.array([-np.inf, -self.v_max, -np.inf, -np.inf, -np.inf, -np.inf])
+        self.x_max = np.array([+np.inf, +self.v_max, +np.inf, +np.inf, +np.inf, +np.inf])
 
     def get_B(self, X):
         x, v_x, y, v_y, phi, d_phi = X[0], X[1], X[2], X[3], X[4], X[5]
@@ -70,28 +62,8 @@ class Quadrotor(Environment):
         X_dot[5] = a_phi
         return X_dot
 
-    def f_star(self, v):
-        return -(self.rho/self.mass)*torch.abs(v)*v
 
-
-    def test_error(self, model, X, u, plot, t=0):
-        loss_function = nn.MSELoss()
-        truth = self.f_star(self.grid)
-        predictions = model.net(self.grid.clone()).squeeze()
-        # # # print(f'prediction {predictions.shape} target {truth.shape} ')
-        loss = loss_function(predictions, truth)
-        if plot and t%10==0:
-            plt.subplot(121)
-            self.plot(X, u)
-            plt.subplot(122)
-            # plot_portrait(g_star)
-            # plot_portrait(model.net)
-            plt.pause(0.1)
-            plt.close()
-        # print(f'loss = {loss}')
-        return loss
-
-    def plot(self, X, u):
+    def plot_system(self, X, u, t):
         x, v_x, y, v_y, phi, d_phi = X[0], X[1], X[2], X[3], X[4], X[5]
         c_phi, s_phi = np.cos(phi), np.sin(phi)
         l0 = u[0]/self.gamma
@@ -117,7 +89,7 @@ class DefaultQuadrotor(Quadrotor):
         sigma = 0.0
         gamma = 10
         rho = 0.2
-        super().__init__(dt, sigma, gamma, mass, g ,I, r, rho)
+        super().__init__(dt, sigma, gamma, mass, g, I, r, rho)
 
 
 

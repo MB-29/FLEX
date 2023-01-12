@@ -93,8 +93,8 @@ class Pendulum(Environment):
         #     theta1, theta2 = 180, -50
 
         # draw_self_loop(plt.gca(), (0.0, 0.0), 0.1*self.l, 'red', 'white', theta1, theta2)
-        circle = plt.Circle((0, 0), 0.03, color='black')
-        plt.gca().add_patch(circle)
+        # circle = plt.Circle((0, 0), 0.03, color='black')
+        # plt.gca().add_patch(circle)
         plt.arrow(
             self.l*s_phi,
             -self.l*c_phi,
