@@ -56,7 +56,14 @@ class XGrid(GridEvaluation):
             self.grid_dphi.reshape(-1, 1),
         ], 1)
 
+    def f_star(self, x):
+        batch_size, _ = x.shape
+        u = torch.zeros(batch_size, 1)
+        z = torch.cat((x, u), dim=1)
+        x_dot = self.environment.d_dynamics(z)
 
+        # x_dot = torch.stack((d_phi, dd_phi), dim=1)                               
+        return x_dot
 
 class ZGrid(GridEvaluation):
     def __init__(self, environment):

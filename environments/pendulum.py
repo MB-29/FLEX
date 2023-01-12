@@ -52,7 +52,9 @@ class Pendulum(Environment):
         ])
         self.theta_star = np.hstack((self.A_star, self.B_star))
 
-        self.goal_weights = torch.Tensor((1., 1., 0.1))
+        self.goal_weights = torch.Tensor((10., 10., 50.))
+        self.goal_weights_relaxed = torch.Tensor((1., 1., 0.1))
+        # self.goal_weights_relaxed = torch.Tensor((1., 1., 0.1))
         # self.goal_weights = torch.Tensor((100, .1, 0.1))
         self.goal_state = torch.Tensor((-1., 0., 0.))
         self.R = 0.001
@@ -120,10 +122,12 @@ class Pendulum(Environment):
         ], 1)
         predictions = f(grid)
 
-        plt.xlim((-self.phi_max, self.phi_max))
-        plt.ylim((-self.dphi_max, self.dphi_max))
-        vector_x = predictions[:, 0].reshape(self.n_points, self.n_points).detach().numpy()
-        vector_y = predictions[:, 1].reshape(self.n_points, self.n_points).detach().numpy()
+        n_points, _ = grid_phi.shape
+
+        # plt.xlim((-self.phi_max, self.phi_max))
+        # plt.ylim((-self.dphi_max, self.dphi_max))
+        vector_x = predictions[:, 0].reshape(n_points, n_points).detach().numpy()
+        vector_y = predictions[:, 1].reshape(n_points, n_points).detach().numpy()
         magnitude = np.sqrt(vector_x.T**2 + vector_y.T**2)
         linewidth = magnitude / magnitude.max()
         plt.streamplot(
@@ -132,13 +136,15 @@ class Pendulum(Environment):
             vector_x.T,
             vector_y.T,
             color='black',
-            linewidth=linewidth)
+            linewidth=linewidth*2,
+            arrowsize=.8,
+            density=.6)
 
 
 class DampedPendulum(Pendulum):
 
-    def __init__(self, dt=5e-2):
-        sigma = .1
+    def __init__(self, dt=5e-2, sigma=1e-3):
+        # sigma = .1
         gamma = 1.0
         mass = 1.0
         l = 1.0
@@ -161,8 +167,7 @@ class GymPendulum(Pendulum):
 
 class DmPendulum(Pendulum):
 
-    def __init__(self, dt=80e-3):
-        sigma = 0.
+    def __init__(self, dt=80e-3, sigma=0):
         mass = 1.0
         l = 0.5
         g = 10.0

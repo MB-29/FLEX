@@ -7,8 +7,9 @@ from evaluation.pendulum import XGrid, ZGrid, NormA, NormTheta
 
 class Model(nn.Module):
 
-    def __init__(self, environment, evaluation):
+    def __init__(self, environment, evaluation=None):
         super().__init__()
+        self.t_period = environment.period / environment.dt
         self.period = environment.period
         self.B_star = torch.tensor(environment.B_star, dtype=torch.float)
         self.d, self.m = environment.d, environment.m
@@ -19,34 +20,6 @@ class Model(nn.Module):
     def transform(self, z):
         return z[:, :self.d]
 
-    def forward_x(self, x):
-        raise NotImplementedError
-
-    def forward_u(self, dx, u):
-        dx += self.B_star @ u
-        return dx
-
-    def predictor(self, z):
-        zeta = self.transform(z)
-        return self.net(zeta).view(-1)
-
-    def forward(self, z):
-        x = self.transform(z)
-        # x = z[:, :d]
-        u = z[:, self.d]
-
-        dx = self.forward_x(x)
-        dx = self.forward_u(dx, u)
-        return dx
-
-    def forward_x(self, x):
-        dx = torch.zeros_like(x)
-        dx[:, 0] = x[:, 1]
-        zeta = x.clone()
-        zeta[:, 0] = torch.sin(x[:, 0])
-        # x[:, 1] = torch.sin(x[:, 1])
-        dx[:, 1] = self.net(zeta).view(-1)
-        return dx
 
 class NeuralModel(Model):
 
@@ -60,16 +33,40 @@ class NeuralModel(Model):
             nn.Linear(16, 1)
         )
         self.lr = 0.005
+    def predict(self, x):
+        return self.forward_x(x)
 
+    def forward_u(self, dx, u):
+        # print(f'u = {u.shape}')
+        # print(f'self.B_star = {self.B_star.shape}')
+        # print(f'dx = {dx.shape}')
+        dx += (self.B_star @ u.unsqueeze(1).T).T
+        return dx
 
-class LinearNeural(NeuralModel):
+    def forward(self, z):
+        x = self.transform(z)
+        # x = z[:, :d]
+        u = z[:, self.d]
 
-    def __init__(self, environment):
-        super().__init__(environment)
-        self.net = nn.Sequential(
-            nn.Linear(2, 1, bias=False),
-        )
-        self.lr = 0.05
+        x_dot = self.forward_x(x)
+        x_dot = self.forward_u(x_dot, u)
+        return x_dot
+
+    def forward_x(self, x):
+        x_dot = torch.zeros_like(x)
+        x_dot[:, 0] = x[:, 1]
+        # x[:, 1] = torch.sin(x[:, 1])
+        x_dot[:, 1] = self.net(x).view(-1)
+        return x_dot
+
+# class LinearNeural(NeuralModel):
+
+#     def __init__(self, environment):
+#         super().__init__(environment)
+#         self.net = nn.Sequential(
+#             nn.Linear(2, 1, bias=False),
+#         )
+#         self.lr = 0.05
 # class FullLinear(Model):
 #     def __init__(self, environment):
 #         super().__init__(environment)
@@ -165,6 +162,7 @@ class LinearA(NeuralAB):
 class LinearTheta(NeuralAB):
 
     def __init__(self, environment, evaluation=None):
+        
         evaluation = NormTheta(environment) if evaluation is None else evaluation
         # evaluation = NormA(environment) if evaluation is None else evaluation
         super().__init__(environment, evaluation)

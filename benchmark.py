@@ -15,9 +15,9 @@ ENVIRONMENT_NAME = 'arm'
 ENVIRONMENT_NAME = 'cartpole'
 ENVIRONMENT_NAME = 'pendulum'
 ENVIRONMENT_NAME = 'gym_cartpole'
-ENVIRONMENT_NAME = 'damped_pendulum'
 ENVIRONMENT_NAME = 'quadrotor'
 ENVIRONMENT_NAME = 'dm_pendulum'
+ENVIRONMENT_NAME = 'damped_pendulum'
 # ENVIRONMENT_NAME = 'damped_pendulum'
 # ENVIRONMENT_NAME = 'dm_cartpole'
 # ENVIRONMENT_NAME = 'damped_cartpole'
@@ -32,27 +32,27 @@ models = importlib.import_module(MODEL_PATH)
 Model = models.LinearA
 Model = models.LinearTheta
 
-T = 500
+T = 400
 T_random = 0
 
-n_samples = 50
+n_samples = 200
 
-environment = Environment(dt=2e-2)
-dt = environment.dt
+environment = Environment()
+# sigma = 1e-1
+# environment = Environment(sigma=sigma)
 gamma = environment.gamma
-sigma = environment.sigma
 
 
-from oracles.cartpole import PeriodicOracle
+from oracles.pendulum import PeriodicOracle
 
 # for Agent in [Random, Active]:
 agents = {
     # 'passive':{'agent': Passive, 'color': 'black'},
-    # 'periodic': {'agent': PeriodicOracle, 'color': 'blue'},
+    'periodic': {'agent': PeriodicOracle, 'color': 'blue'},
     'D-optimal': {'agent': D_optimal, 'color': 'blue'},
     'random': {'agent': Random, 'color': 'red'},
     # 'passive': {'agent': Passive, 'color': 'black'},
-    # 'uniform': {'agent': Spacing, 'color': 'green'},
+    'uniform': {'agent': Spacing, 'color': 'green'},
     # # 'variation': {'agent': Variation, 'color': 'color'},
     }
 output = {}
@@ -72,7 +72,8 @@ for name, value in agents.items():
             model,
             environment.d,
             environment.m,
-            gamma
+            gamma,
+            dt=environment.dt
             )
 
         z_values, sample_error = exploration(
