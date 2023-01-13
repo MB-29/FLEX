@@ -166,7 +166,7 @@ class Spacing(Gradient):
         # z_[:, self.d:] = u
         # z_values = torch.zeros(t, self.d + self.m)
         # z_values[:, :self.d] = torch.tensor(self.x_values[:t])
-        z_values = torch.tensor(self.z_values, dtype=torch.float)
+        z_values = self.z_values.clone()
         # z_values[:, self.d:] = torch.tensor(self.u_values[:t])
 
         past = z_values

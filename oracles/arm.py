@@ -5,8 +5,8 @@ from oracles.periodic import Periodic2D
 
 class PeriodicOracle(Periodic2D):
 
-    def __init__(self, x0, m, dynamics, model, gamma, dt):
-        super().__init__(x0, m, dynamics, model, gamma, dt, cartpole.period)
+    def __init__(self, model, d, m, gamma, **kwargs):
+        super().__init__(model, d, m, gamma, **kwargs)
 
 
 oracles = {'periodic': PeriodicOracle}
