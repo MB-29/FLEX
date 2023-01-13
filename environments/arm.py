@@ -3,144 +3,139 @@ import torch as torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
-d, m = 4, 2
+from environments.environment import Environment
 
-alpha = 0.1
-m1, m2 = 1, 1
-l1, l2 = 1, 1
-g = 9.8
 
-period = 2*np.pi * np.sqrt(l1 / g)
-T = 1000
-dt = 1e-2 * period
-sigma = 0.01
 
-gamma = 1
 
 x0 = np.array([0.0, 0.0, 0.0, 0.0])
 
+class Arm(Environment):
+    d, m = 4, 2
 
-def get_B(x):
-    phi1, d_phi1, phi2, d_phi2 = x[0], x[1], x[2], x[3]
-    c_phi1, s_phi1 = np.cos(phi1), np.sin(phi1)
-    c_phi2, s_phi2 = np.cos(phi2), np.sin(phi2)
-    c_dphi = np.cos(phi1-phi2)
-    s_dphi = np.sin(phi1-phi2)
-    M = (m1 + m2 * s_dphi**2)
-    B = np.array([
-        [0, 0],
-        [1 / (l1*M), -c_dphi / (l1*M)],
-        [0, 0],
-        [-c_dphi / (l2*M), ((m1+m2)/m2) / (l2*M)]
-    ])
-    return B
+    def __init__(self, dt, sigma, gamma, g, m1, m2, l1, l2, alpha):
+        self.x0 = np.array([0.0, 0.0, 0.0, 0.0])
+        super().__init__(self.x0, self.d, self.m, dt, sigma, gamma)
 
-def acceleration_x(c_phi1, c_phi2, s_phi1, s_phi2, c_dphi, s_dphi, s_2dphi, d_phi1, d_phi2):
-    friction1 = - alpha*d_phi1
-    friction2 = - alpha*d_phi2
+        self.g = g
+        self.alpha = alpha
+        self.m1, self.m2 = m1, m2
+        self.l1, self.l2 = l1, l2
+        self.period = 2*np.pi * np.sqrt(l1 / g)
 
-    a_phi1 = m2*l1*d_phi1**2*s_2dphi
-    a_phi1 += 2*m2*l2*d_phi2**2*s_dphi
-    a_phi1 += 2*g*m2*c_phi2*s_dphi
-    a_phi1 += 2*g*m1*s_phi1
-    a_phi1 += -2*friction1 + 2*friction2*c_dphi
-    a_phi1 /= -2*l1*(m1+m2*s_dphi**2)
+        self.phi_max = np.pi/5
+        self.dphi_max = 2*np.sqrt(2*g/(l1+l2))
+        self.dphi_max = 3.0
 
-    a_phi2 = m2*l2*d_phi2**2*s_2dphi
-    a_phi2 += 2*(m1+m2)*l1*d_phi1**2*s_dphi
-    a_phi2 += 2*g*(m1+m2)*c_phi1*s_dphi
-    a_phi2 += 2*((m1+m2)/m2)*friction2 - 2*friction1*c_dphi
-    a_phi2 /= 2*l2*(m1+m2*s_dphi**2)
-
-    return a_phi1, a_phi2
-    
-def acceleration_u(u1, u2, c_dphi, s_dphi):
-    a_phi1 = -2*u1
-    a_phi1 /= -2*l1*(m1+m2*s_dphi**2)
-    a_phi2 = 2*((m1+m2)/m2)*u2 - 2*u1*c_dphi
-    a_phi2 /= 2*l2*(m1+m2*s_dphi**2)
-
-    return a_phi1, a_phi2
-
-def dynamics(x, u):
-    assert np.linalg.norm(u) < 1.1*gamma
-    phi1, d_phi1, phi2, d_phi2 = x[0], x[1], x[2], x[3]
-    c_phi1, c_phi2 = np.cos(phi1), np.cos(phi2)
-    s_phi1, s_phi2 = np.sin(phi1), np.sin(phi2)
-    dphi = phi1 - phi2
-    c_dphi, s_dphi = np.cos(dphi), np.sin(dphi)
-    s_2dphi = np.sin(2*(dphi))
-    dx = np.zeros_like(x)
-    dx[0] = x[1]
-    dx[2] = x[3]
-    a_phi1, a_phi2 = acceleration_x(
-        c_phi1, c_phi2, s_phi1, s_phi2, c_dphi, s_dphi, s_2dphi, d_phi1, d_phi2)
-    a_phi1_u, a_phi2_u = acceleration_u(u[0], u[1], c_dphi, s_dphi)
-    dx[1] = a_phi1 + a_phi1_u
-    dx[3] = a_phi2 + a_phi2_u
-    return dx
+        self.x_min = np.array([-np.inf, -self.dphi_max, -np.inf, -self.dphi_max])
+        self.x_max = np.array([+np.inf, +self.dphi_max, +np.inf, +self.dphi_max])
 
 
-def f_star(zeta):
-    c_phi1, c_phi2, s_phi1, s_phi2 = zeta[:, 0], zeta[:, 1], zeta[:, 2], zeta[:, 3]
-    d_phi1, d_phi2 = zeta[:, 4], zeta[:, 5]
-    c_dphi = c_phi1*c_phi2 + s_phi1*s_phi2
-    s_dphi = s_phi1*c_phi2 - c_phi1*s_phi2
-    s_2dphi = 2*s_dphi*c_dphi
-    dx = torch.zeros_like(zeta[:, :2])
-    a_phi1, a_phi2 = acceleration_x(
-        c_phi1, c_phi2, s_phi1, s_phi2, c_dphi, s_dphi, s_2dphi, d_phi1, d_phi2)
-    dx[:, 0] = a_phi1
-    dx[:, 1] = a_phi2
-    return dx
+    def acceleration_x(self, cphi1, cphi2, sphi1, cdelta, sdelta, s2delta, d_phi1, d_phi2):
+        friction1 = - self.alpha*d_phi1
+        friction2 = - self.alpha*d_phi2
+
+        a_phi1 = self.m2*self.l1*d_phi1**2*s2delta
+        a_phi1 += 2*self.m2*self.l2*d_phi2**2*sdelta
+        a_phi1 += 2*self.g*self.m2*cphi2*sdelta
+        a_phi1 += 2*self.g*self.m1*sphi1
+        a_phi1 += -2*friction1 + 2*friction2*cdelta
+        a_phi1 /= -2*self.l1*(self.m1+self.m2*sdelta**2)
+
+        a_phi2 = self.m2*self.l2*d_phi2**2*s2delta
+        a_phi2 += 2*(self.m1+self.m2)*self.l1*d_phi1**2*sdelta
+        a_phi2 += 2*self.g*(self.m1+self.m2)*cphi1*sdelta
+        a_phi2 += 2*((self.m1+self.m2)/self.m2)*friction2 - 2*friction1*cdelta
+        a_phi2 /= 2*self.l2*(self.m1+self.m2*sdelta**2)
+
+        return a_phi1, a_phi2
+        
+    def acceleration_u(self, u1, u2, c_dphi, s_dphi):
+        a_phi1 = -2*u1
+        a_phi1 /= -2*self.l1*(self.m1+self.m2*s_dphi**2)
+        a_phi2 = 2*((self.m1+self.m2)/self.m2)*u2 - 2*u1*c_dphi
+        a_phi2 /= 2*self.l2*(self.m1+self.m2*s_dphi**2)
+
+        return a_phi1, a_phi2
+
+    # def get_B(self, x):
+    #     phi1, d_phi1, phi2, d_phi2 = x
+    #     c_phi1, s_phi1 = np.cos(phi1), np.sin(phi1)
+    #     c_phi2, s_phi2 = np.cos(phi2), np.sin(phi2)
+    #     c_dphi = np.cos(phi1-phi2)
+    #     s_dphi = np.sin(phi1-phi2)
+    #     M = (self.m1 + self.m2 * s_dphi**2)
+    #     B = np.array([
+    #         [0, 0],
+    #         [1 / (self.l1*M), -c_dphi / (self.l1*M)],
+    #         [0, 0],
+    #         [-c_dphi / (self.l2*M), ((self.m1+self.m2)/self.m2) / (self.l2*M)]
+    #     ])
+    #     return B
+
+    def dynamics(self, x, u):
+        phi1, d_phi1, phi2, d_phi2 = x
+        cphi1, sphi1 = np.cos(phi1), np.sin(phi1)
+        cphi2, sphi2 = np.cos(phi2), np.sin(phi2)
+        delta = phi1 - phi2
+        cdelta, sdelta = np.cos(delta), np.sin(delta)
+        s2delta = np.sin(2*(delta))
+        x_dot = np.zeros_like(x)
+        x_dot[0] = x[1]
+        x_dot[2] = x[3]
+        a_phi1, a_phi2 = self.acceleration_x(
+            cphi1, cphi2, sphi1, cdelta, sdelta, s2delta, d_phi1, d_phi2)
+        a_phi1_u, a_phi2_u = self.acceleration_u(u[0], u[1], cdelta, sdelta)
+        # print(a_phi1_u)
+        # print(a_phi2_u)
+        x_dot[1] = a_phi1 + a_phi1_u
+        x_dot[3] = a_phi2 + a_phi2_u
+        return x_dot
 
 
-n_points = 10
-phi_max = np.pi
-dphi_max = 2*np.sqrt(2*g/(l1+l2))
-interval_phi = torch.linspace(0, 2*np.pi, n_points)
-interval_dphi = torch.linspace(-dphi_max, dphi_max, n_points)
-grid_phi1, grid_phi2, grid_d_phi1, grid_d_phi2 = torch.meshgrid(
-    interval_phi,
-    interval_phi,
-    interval_dphi,
-    interval_dphi,
-)
-grid = torch.cat([
-    torch.cos(grid_phi1.reshape(-1, 1)),
-    torch.cos(grid_phi2.reshape(-1, 1)),
-    torch.sin(grid_phi1.reshape(-1, 1)),
-    torch.sin(grid_phi2.reshape(-1, 1)),
-    grid_d_phi1.reshape(-1, 1),
-    grid_d_phi2.reshape(-1, 1)
-], 1)
+    def plot_system(self, x, u, t):
+        phi1, d_phi1, phi2, d_phi2 = x[0], x[1], x[2], x[3]
+        # push = 0.7*np.sign(np.mean(u))
+        c_phi1, s_phi1 = np.cos(phi1), np.sin(phi1)
+        c_phi2, s_phi2 = np.cos(phi2), np.sin(phi2)
 
+        plt.arrow(
+            self.l1*s_phi1,
+            -self.l1*c_phi1,
+            0.05*u[0]*c_phi1,
+            0.05*u[0]*s_phi1,
+            color='red',
+            head_width=0.1,
+            head_length=0.01*abs(u[0]),
+            alpha=0.5)
+        plt.arrow(
+            self.l1*s_phi1 + self.l2*s_phi2,
+            -self.l1*c_phi1 - self.l2*c_phi2,
+            0.05*u[1]*c_phi2,
+            0.05*u[1]*s_phi2,
+            color='red',
+            head_width=0.1,
+            head_length=0.01*abs(u[1]),
+            alpha=0.5)
 
-def test_error(model, x, u, plot, t=0):
-    truth = f_star(grid)
-    loss_function = nn.MSELoss()
-    predictions = model.net(grid.clone()).squeeze()
-    # # # print(f'prediction {predictions.shape} target {truth.shape} ')
-    loss = loss_function(predictions, truth)
-    if plot and t % 10 == 0:
-        plot_arm(x, u)
-        plt.title(t)
-        # plot_portrait(model.net)
-        plt.pause(0.1)
-        plt.close()
-    # print(f'loss = {loss}')
-    return loss
+        plt.plot([0, self.l1*s_phi1], [0, -self.l1*c_phi1], color='black')
+        plt.plot([self.l1*s_phi1, self.l1*s_phi1 + self.l2*s_phi2],
+                [-self.l1*c_phi1, -self.l1*c_phi1-self.l2*c_phi2], color='blue')
+        total_length=self.l1+self.l2
+        plt.xlim((-(1.5*total_length), 1.5*total_length))
+        plt.ylim((-(1.5*total_length), 1.5*total_length))
+        plt.gca().set_aspect('equal', adjustable='box')
 
+class DampedArm(Arm):
 
-def plot_arm(x, u):
-    phi1, d_phi1, phi2, d_phi2 = x[0], x[1], x[2], x[3]
-    # push = 0.7*np.sign(np.mean(u))
-    c_phi1, s_phi1 = np.cos(phi1), np.sin(phi1)
-    c_phi2, s_phi2 = np.cos(phi2), np.sin(phi2)
-    # plt.arrow(y, 0, push, 0, color='red', head_width=0.1, alpha=0.5)
-    plt.plot([0, l1*s_phi1], [0, -l1*c_phi1], color='black')
-    plt.plot([l1*s_phi1, l1*s_phi1 + l2*s_phi2],
-             [-l1*c_phi1, -l1*c_phi1-l2*c_phi2], color='blue')
-    plt.xlim((-(l1+l2), l1+l2))
-    plt.ylim((-(l1+l2), l1+l2))
-    plt.gca().set_aspect('equal', adjustable='box')
+    def __init__(self):
+        m1, m2 = 1, 1
+        l1, l2 = 1, 1
+        g = 9.8
+        alpha = 2.0
+
+        period = 2*np.pi * np.sqrt(l1 / g)
+        dt = 2*1e-2 * period
+        sigma = 0.0
+        gamma = 5.0
+        super().__init__(dt, sigma, gamma, g, m1, m2, l1, l2, alpha)

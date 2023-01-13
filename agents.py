@@ -72,7 +72,10 @@ class Agent:
         # print(f'target_values = {self.target_values}')
         # print(f'learn')
         predictions = self.model(self.z_values)
+        # print(f'residual {predictions-self.target_values}')
+
         loss = self.loss_function(predictions, self.target_values)
+        # print(f'learning loss {loss}')
         self.optimizer.zero_grad() , loss.backward() ; self.optimizer.step()
         # zeta = self.model.transform(x)
 
@@ -81,7 +84,7 @@ class Agent:
         # self.M += J[:, None]@J[None, :]
         # print('update')
         J = jacobian(self.model, z).detach().numpy()
-        self.M += J.T @ J 
+        # self.M += J.T @ J 
         for j in range(self.d):
             # print(f'matrix {self.M_inv}')
             v = J[j][:, None]

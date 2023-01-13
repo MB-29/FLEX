@@ -11,10 +11,10 @@ class Active(Agent):
         for param in self.model.parameters():
             param.requires_grad = False
 
-        x = torch.tensor(x, dtype=torch.float32).unsqueeze(0)
+        x = torch.tensor(x, dtype=torch.float).unsqueeze(0)
         z = torch.zeros(1, self.d + self.m)
         z[:, :self.d] = x
-        z[:, self.d:] = torch.tensor(u, dtype=torch.float)
+        z = torch.cat((x, u), dim=1)
         x_dot = self.model(z)
         x_ = x + self.dt * x_dot
 
@@ -61,6 +61,7 @@ class Gradient(Active):
 
         u.requires_grad = True
         designer = torch.optim.Adam([u], lr=0.1)
+        # print(f't={t}, u = {u}')
         # print(f't = {t}')
         for step_index in range(n_gradient):
             loss = -self.utility(u, x, t)
@@ -198,7 +199,7 @@ class D_optimal(Active):
         z[:, self.d:] = u
 
         j = np.random.choice(self.d)
-        # j = 1
+        j = 3
 
         y = self.model(z)
         df_dtheta = compute_gradient(self.model, y[:, j])

@@ -58,8 +58,8 @@ if __name__=='__main__':
     from environments.arm import DampedArm as Environment
     from models.arm import NeuralA as Model
 
-    from environments.quadrotor import DefaultQuadrotor as Environment
-    from models.quadrotor import NeuralModel as Model
+    # from environments.quadrotor import DefaultQuadrotor as Environment
+    # from models.quadrotor import NeuralModel as Model
 
     from agents import Passive as Agent
     from agents import Random as Agent
@@ -84,7 +84,7 @@ if __name__=='__main__':
     batch_size=100
     )
 
-    T = 800
+    T = 500
 
     z_values, error_values = exploration(environment, agent, T, evaluation, plot=plot)
     # plt.subplot(211)
@@ -92,6 +92,6 @@ if __name__=='__main__':
     # plt.yscale('log')
     plt.show()
     # plt.subplot(212)
-    plt.plot(z_values[:, 1], z_values[:, 3])
-    # plt.yscale('log')
-    plt.show()
+    # plt.plot(z_values[:, 1], z_values[:, 3])
+    # # plt.yscale('log')
+    # plt.show()
