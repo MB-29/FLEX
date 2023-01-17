@@ -73,7 +73,7 @@ class Arm(Environment):
     #     ])
     #     return B
 
-    def dynamics(self, x, u):
+    def dynamics(self, x, u, t):
         phi1, d_phi1, phi2, d_phi2 = x
         cphi1, sphi1 = np.cos(phi1), np.sin(phi1)
         cphi2, sphi2 = np.cos(phi2), np.sin(phi2)

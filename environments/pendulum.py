@@ -52,15 +52,15 @@ class Pendulum(Environment):
         ])
         self.theta_star = np.hstack((self.A_star, self.B_star))
 
-        self.goal_weights = torch.Tensor((10., 10., 50.))
-        self.goal_weights_relaxed = torch.Tensor((1., 1., 0.1))
+        self.goal_weights = torch.Tensor((1., 1., 0.1))
+        self.goal_weights_relaxed = torch.Tensor((10., 1., 0.1))
         # self.goal_weights_relaxed = torch.Tensor((1., 1., 0.1))
         # self.goal_weights = torch.Tensor((100, .1, 0.1))
         self.goal_state = torch.Tensor((-1., 0., 0.))
         self.R = 0.001
 
 
-    def dynamics(self, x, u):
+    def dynamics(self, x, u, t):
         phi, d_phi = x
         cphi, sphi = np.cos(phi), np.sin(phi)
         obs = np.array([cphi, sphi, d_phi])
@@ -87,7 +87,7 @@ class Pendulum(Environment):
         plt.xlim((-2*self.l, 2*self.l))
         plt.ylim((-2*self.l, 2*self.l))
         plt.gca().set_aspect('equal', adjustable='box')
-        # if u > 0:
+        # if u > 0: 
         #     theta1, theta2 = -50, 180
         # else:
         #     theta1, theta2 = 180, -50
@@ -204,7 +204,7 @@ class LinearizedPendulum(Pendulum):
         plt.xlim((-.8*self.l, .8*self.l))
         plt.ylim((-1.2*self.l, .1*self.l))
 
-    def dynamics(self, x, u):
+    def dynamics(self, x, u, t):
         x_dot = self.A @ x + self.B@u
         # x_dot += np.array([[0.0], [1/self.inertia]]) @ u
         # x_dot[1] = d_phi

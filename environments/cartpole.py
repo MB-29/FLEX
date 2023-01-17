@@ -92,7 +92,7 @@ class Cartpole(Environment):
         return B
 
 
-    def dynamics(self, x, u):
+    def dynamics(self, x, u, t):
         y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
         dx = np.zeros_like(x)
         cphi, s_phi = np.cos(phi), np.sin(phi)
@@ -163,7 +163,7 @@ class RlCartpole(Cartpole):
         yacc0, phiacc0 = self.acc(d_y, cphi, s_phi, d_phi, u0, tensor)
         return yacc-yacc0, phiacc-phiacc0
 
-    def dynamics(self, x, u):
+    def dynamics(self, x, u, t):
         y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
         cphi, s_phi = np.cos(phi), np.sin(phi)
         dd_y, dd_phi = self.acc(d_y, cphi, s_phi, d_phi, u)

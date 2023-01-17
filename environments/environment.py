@@ -21,11 +21,11 @@ class Environment:
 
         self.x = x0.copy()
     
-    def dynamics(self, x, u):
+    def dynamics(self, x, u, t=None):
         raise NotImplementedError
 
-    def step(self, u):
-        x_dot = self.dynamics(self.x, u)
+    def step(self, u, t):
+        x_dot = self.dynamics(self.x, u, t)
         dx = x_dot * self.dt
         noise =  self.sigma * np.random.randn(self.d)
         dx += noise

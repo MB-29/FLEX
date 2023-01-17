@@ -18,7 +18,6 @@ class Quadrotor(Environment):
         self.rho = rho
         self.r = r
 
-        2*np.sqrt(self.gamma)
 
         self.v_max = 2*np.sqrt(gamma)
 
@@ -45,7 +44,7 @@ class Quadrotor(Environment):
         return a_x, a_y, a_phi
 
 
-    def dynamics(self, X, u):
+    def dynamics(self, X, u, t):
         x, v_x, y, v_y, phi, d_phi = X[0], X[1], X[2], X[3], X[4], X[5]
         X_dot = np.zeros_like(X)
         c_phi, s_phi = np.cos(phi), np.sin(phi)

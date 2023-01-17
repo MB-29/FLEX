@@ -32,7 +32,7 @@ class GridEvaluation(Evaluation):
         super().__init__(environment)
         self.loss_function = nn.MSELoss()
 
-    def evaluate(self, model):
+    def evaluate(self, model, t):
         predictions = model.predict(self.grid.clone())
         truth = self.f_star(self.grid.clone())
         # print(predictions)
@@ -99,7 +99,7 @@ class NormA(Evaluation):
         super().__init__(environment)
         self.A_star = torch.tensor(environment.A_star, dtype=torch.float)
 
-    def evaluate(self, model):
+    def evaluate(self, model, t):
 
         loss = torch.linalg.norm(self.A_star-model.net[0].weight[:, :3])
         return loss
@@ -111,7 +111,7 @@ class NormTheta(Evaluation):
         super().__init__(environment)
         self.theta_star = torch.tensor(environment.theta_star, dtype=torch.float)
 
-    def evaluate(self, model):
+    def evaluate(self, model, t):
 
         loss = torch.linalg.norm(self.theta_star-model.net[0].weight)
         return loss

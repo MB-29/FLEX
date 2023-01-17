@@ -199,10 +199,12 @@ class D_optimal(Active):
         z[:, self.d:] = u
 
         j = np.random.choice(self.d)
-        j = 3
+        # j = np.random.choice([1, 3])
+        j = 1
 
         y = self.model(z)
         df_dtheta = compute_gradient(self.model, y[:, j])
+        # print(f'gradient {df_dtheta}')
 
         D = np.zeros((self.q, self.d))
         y = self.model(z)
@@ -210,9 +212,9 @@ class D_optimal(Active):
             0].unsqueeze(0)
 
         for i in range(self.d):
-            d2a_dxidtheta = compute_gradient(
+            d2f_dxidtheta = compute_gradient(
                 self.model, df_dx[:, i], retain_graph=True, allow_unused=True)
-            D[:, i] = d2a_dxidtheta
+            D[:, i] = d2f_dxidtheta
         try:
             B_ = self.dt * self.model.get_B(x)
         except AttributeError:
@@ -221,11 +223,15 @@ class D_optimal(Active):
             for i in range(self.d):
                 dfi_du = torch.autograd.grad(y[:, i], u, retain_graph=True)
                 B_[i, :] = dfi_du[0].numpy()
+        # print(f'D = {D}')
+        # print(f'B_ = {B_}')
         B = D @ B_
-
+        # print(f'B = {B}')
         v = df_dtheta.detach().numpy()
         # return u.detach().numpy()
+        # print(f'M_inv = {self.M_inv}')
         u = maximizer_quadratic(self.M_inv, B, v, self.gamma)
+        # print(f'u = {u}')
         u *= self.gamma / np.linalg.norm(u)
         return u
 

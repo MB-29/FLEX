@@ -45,7 +45,7 @@ class XGrid:
         # self.grid = 10*torch.randn(10, 2)
 
 
-    def evaluate(self, model):
+    def evaluate(self, model, t):
         # print("evaluate")
         predictions = model.predict(self.grid.clone())
         truth = self.f_star(self.grid.clone())  

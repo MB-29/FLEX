@@ -26,7 +26,7 @@ class GridEvaluation:
         self.loss_function = nn.MSELoss()
         
   
-    def evaluate(self, model):
+    def evaluate(self, model, t):
         predictions = model.predict(self.grid.clone())
         truth = self.f_star(self.grid.clone())
         # print(predictions)

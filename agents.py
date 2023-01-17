@@ -17,10 +17,10 @@ class Agent:
 
         self.model = model
         self.q = sum(parameter.numel() for parameter in model.parameters())
-        diag = 1e-3*np.random.rand(self.q)
+        diag = 1e-5*np.random.rand(self.q)
         self.M = np.diag(diag)
         self.M_inv =np.diag(1/diag)
-        # self.Mx = 1e-3*np.diag(np.random.rand(self.d))
+        # self.Mx = 1e-3*np.diag(np.random.rand(self.d))    
         # self.My = 1e-3*np.diag(np.random.rand(self.d))
 
         self.gamma = gamma
@@ -84,7 +84,6 @@ class Agent:
         # self.M += J[:, None]@J[None, :]
         # print('update')
         J = jacobian(self.model, z).detach().numpy()
-        # self.M += J.T @ J 
         for j in range(self.d):
             # print(f'matrix {self.M_inv}')
             v = J[j][:, None]
@@ -95,10 +94,11 @@ class Agent:
             # print(f'scalar {scalar}')
             # print(f'matrix {matrix}')
             self.M_inv += increment
+        # self.M += J.T @ J 
         # diff = np.abs(self.M_inv - np.linalg.inv(self.M))/self.M_inv
+        # print(f'diff = {diff}')
         # self.J = J
 
-        # print(f'diff = {diff}')
         # self.Mx += self.x[:, None]@self.x[None, :]
 
     def draw_random_control_max(self):
