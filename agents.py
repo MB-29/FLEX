@@ -45,7 +45,7 @@ class Agent:
         # print(z)
 
         if self.optimizer == 'OLS':
-            J = jacobian(self.model, z).detach().numpy()
+            J = jacobian(self.model, z, retain_graph=True).detach().numpy()
             prediction = self.model(z)
             theta = parameters_to_vector(self.model.parameters()).detach().numpy()
             c = prediction.detach().numpy().squeeze() - J@theta
@@ -83,7 +83,7 @@ class Agent:
         # 09/02/2022 : z instead of zeta
         # self.M += J[:, None]@J[None, :]
         # print('update')
-        J = jacobian(self.model, z).detach().numpy()
+        J = jacobian(self.model, z, retain_graph=True).detach().numpy()
         for j in range(self.d):
             # print(f'matrix {self.M_inv}')
             v = J[j][:, None]
@@ -94,7 +94,7 @@ class Agent:
             # print(f'scalar {scalar}')
             # print(f'matrix {matrix}')
             self.M_inv += increment
-        # self.M += J.T @ J 
+        self.M += J.T @ J 
         # diff = np.abs(self.M_inv - np.linalg.inv(self.M))/self.M_inv
         # print(f'diff = {diff}')
         # self.J = J

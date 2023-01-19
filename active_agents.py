@@ -12,8 +12,8 @@ class Active(Agent):
             param.requires_grad = False
 
         x = torch.tensor(x, dtype=torch.float).unsqueeze(0)
-        z = torch.zeros(1, self.d + self.m)
-        z[:, :self.d] = x
+        # z = torch.zeros(1, self.d + self.m)
+        # z[:, :self.d] = x
         z = torch.cat((x, u), dim=1)
         x_dot = self.model(z)
         x_ = x + self.dt * x_dot
@@ -22,27 +22,27 @@ class Active(Agent):
             param.requires_grad = True
         return x_
 
-    def predict_x_(self, u):
-        for param in self.model.parameters():
-            param.requires_grad = False
+    # def predict_x_(self, u):
+    #     for param in self.model.parameters():
+    #         param.requires_grad = False
 
-        x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
-        z = torch.zeros(1, self.d + self.m)
-        z[:, :self.d] = x
-        z[:, self.d:] += u
-        dx = self.model(z)
-        x_ = x + self.dt * dx
+    #     x = torch.tensor(self.x, dtype=torch.float32).unsqueeze(0)
+    #     z = torch.zeros(1, self.d + self.m)
+    #     z[:, :self.d] = x
+    #     z[:, self.d:] += u
+    #     dx = self.model(z)
+    #     x_ = x + self.dt * dx
 
-        z_ = torch.zeros(1, self.d + self.m)
-        z_[:, :self.d] += x_
-        z_[:, self.d:] += u
-        dx_ = self.model(z_)
-        x__ = x_ + self.dt * dx_
+    #     z_ = torch.zeros(1, self.d + self.m)
+    #     z_[:, :self.d] += x_
+    #     z_[:, self.d:] += u
+    #     dx_ = self.model(z_)
+    #     x__ = x_ + self.dt * dx_
 
-        for param in self.model.parameters():
-            param.requires_grad = True
+    #     for param in self.model.parameters():
+    #         param.requires_grad = True
 
-        return x__
+    #     return x__
 
 
 class Gradient(Active):
@@ -235,3 +235,69 @@ class D_optimal(Active):
         u *= self.gamma / np.linalg.norm(u)
         return u
 
+class Episodic(Active):
+
+    def __init__(self, model, d, m, gamma, planning_horizon, n_gradient, **kwargs):
+        self.planning_horizon = planning_horizon
+        self.n_gradient = n_gradient
+        super().__init__(model, d, m, gamma, **kwargs)
+
+        U = np.random.randn(planning_horizon, m) 
+        self.planned_inputs = self.gamma * U / np.linalg.norm(U, axis=1)[:, None]
+
+    def policy(self, x, t):
+        schedule = t % self.planning_horizon
+        if schedule == 0:
+            self.plan_inputs(x)
+        return self.planned_inputs[schedule]
+
+    def plan_inputs(self, x):
+        print(f'planning')
+        U = torch.randn(self.planning_horizon, self.m)
+        U *= self.gamma / torch.linalg.norm(U, dim=1).unsqueeze(1)
+        U.requires_grad = True
+        designer = torch.optim.Adam([U], lr=10.)
+        # print(f'U {U.shape}')
+        # print(f't={t}, u = {u}')
+        # print(f't = {t}')
+        for step_index in range(self.n_gradient):
+            loss = -self.information_gain(x, U)
+            # print(f'loss = {loss}')
+            
+            designer.zero_grad() ; loss.backward() ; designer.step()
+        U.data *= self.gamma/torch.linalg.norm(U.data, dim=1).unsqueeze(1)
+        self.planned_inputs = U.squeeze().detach().numpy()
+
+        for param in self.model.parameters():
+            param.requires_grad = True
+
+
+    def information_gain(self, x, U):
+        x = torch.tensor(x, requires_grad=True).unsqueeze(0)
+        M = torch.tensor(self.M, requires_grad=True)
+        
+        for t in range(self.planning_horizon):
+            
+            u = U[t].unsqueeze(0)
+            z = torch.cat((x, u), dim=1)
+            x_dot = self.model(z)
+            x = x + self.dt * x_dot
+            u_ = torch.zeros(1, self.m)
+            if t < self.planning_horizon-1:
+                u_ = U[t+1].unsqueeze(0)
+            z_ = torch.cat((x, u_), dim=1)
+            # print(f'z_ {z_}')
+
+            for param in self.model.parameters():
+                param.requires_grad = True
+            V = jacobian(self.model, z_, create_graph=True, retain_graph=True)
+            for param in self.model.parameters():
+                param.requires_grad = False
+            # print(f"V {V.requires_grad}")
+
+            M = M + V.T @ V 
+
+        gain = torch.det(M)/torch.det(torch.tensor(self.M))
+        # print(gain)
+
+        return gain
