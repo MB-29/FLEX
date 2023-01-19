@@ -19,7 +19,7 @@ from planning_pendulum import exploit
 T = 100
 H, lqr_iter = 30, 5
 n_samples = 50
-n_episodes = 2
+n_episodes = 4
 
 environment = Environment()
 gamma = environment.gamma
