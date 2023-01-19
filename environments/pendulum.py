@@ -105,7 +105,7 @@ class Pendulum(Environment):
             head_length=0.1*abs(u[0]),
             alpha=0.5)
         plt.xticks([]) ; plt.yticks([])
-        plt.title(rf'$t = {t}$')
+        # plt.title(rf'$t = {t}$')
 
         # plt.title('periodic inputs')
         # plt.savefig(f'output/animations/pendulum/periodic-{t//5}.png')
@@ -138,7 +138,7 @@ class Pendulum(Environment):
             color='black',
             linewidth=linewidth*2,
             arrowsize=.8,
-            density=.6)
+            density=.7)
 
 
 class DampedPendulum(Pendulum):

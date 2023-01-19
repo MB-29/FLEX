@@ -46,24 +46,23 @@ def planning(obs, u_init, transition_model, goal_weights, goal_state, R, gamma, 
     # print(f"u_init = {u_init.shape}")
     quadcost = get_quadcost(goal_weights, goal_state, R, H, m)
     nominal_states, nominal_actions, nominal_objs = mpc.MPC(
-        5, 1, H,
+        3, 1, H,
         u_init=u_init,
         u_lower=-gamma, u_upper=gamma,
         lqr_iter=lqr_iter,
         verbose=0,
         exit_unconverged=False,
         detach_unconverged=False,
-        # linesearch_decay=transition_model.linesearch_decay,
-        # max_linesearch_iter=transition_model.max_linesearch_iter,
+        # linesearch_decay=dx.linesearch_decay,
+        # max_linesearch_iter=dx.max_linesearch_iter,
         grad_method=GradMethods.AUTO_DIFF,
-        backprop=False,
         # eps=1e-2,
     )(obs, quadcost, transition_model)
     return nominal_actions
 
 
 def exploit(environment, model_dynamics, dt, T, mpc_H, lqr_iter, plot=False):
-    # print(f"mpc_H = {mpc_H},")
+    print(f"mpc_H = {mpc_H},")
     dynamics = environment.d_dynamics
     gamma = environment.gamma
     m = environment.m
@@ -84,17 +83,19 @@ def exploit(environment, model_dynamics, dt, T, mpc_H, lqr_iter, plot=False):
     u_periodic = gamma * \
         torch.sign(torch.cos(2*np.pi*torch.arange(T)
                              * dt/(0.3*period))).view(T, 1, 1)
-
     first_guess = torch.zeros(T, 1, 1)
     first_guess[:mpc_H, :, :] = planning(obs, u_periodic[:mpc_H], transition_model,
-                                         goal_weights_relaxed, goal_state, R, gamma, lqr_iter=100)
+                      goal_weights_relaxed, goal_state, R, gamma, lqr_iter=200)
     u_init = first_guess.clone()
 
     cost_values = np.zeros(T)
     for t in range(T):
         next_action = first_guess[t]       
         if lqr_iter is not None:
-            goal_weights_t = (t/T) * goal_weights + (1-t/T)*goal_weights_relaxed
+            lambd = min(1, 3*t/T)
+            # lambd = 1
+            goal_weights_t = lambd * goal_weights + (1-lambd)*goal_weights_relaxed
+            # print(goal_weights_t)
             nominal_actions = planning(
                 obs, u_init[:mpc_H], transition_model, goal_weights_t, goal_state, R, gamma, lqr_iter)
             next_action = nominal_actions[0]
@@ -107,15 +108,15 @@ def exploit(environment, model_dynamics, dt, T, mpc_H, lqr_iter, plot=False):
         z_tilde = torch.cat((obs-goal_state, next_action), dim=1)
 
         C = torch.diag(torch.tensor(
-            [100., 0.1, 100, .1, .1, .1], dtype=torch.float))
+            [100., .1, .1, .001], dtype=torch.float))
         cost = torch.sum(z_tilde*(C@z_tilde.T).T, axis=1)
         cost_values[t] = cost.detach()
 
         obs = transition(obs, next_action)
-        y = obs[0, 0]
-        if abs(y) > 1.8:
-            obs[0, 0] *= 1.8/abs(y)
-            obs[0, 1] = 0
+        d_phi = obs[0, 1]
+        # print(d_phi)
+        # if abs(d_phi) > 1.0:
+        #     obs[0, 1] *= 1.0/abs(d_phi)
 
         if not plot:
             continue
@@ -139,14 +140,14 @@ if __name__ == '__main__':
     plot = False
     plot = True
 
-    ENVIRONMENT_NAME = 'gym_cartpole'
-    ENVIRONMENT_NAME = 'dm_cartpole'
+    ENVIRONMENT_NAME = 'dm_pendulum'
     ENVIRONMENT_PATH = f'environments.{ENVIRONMENT_NAME}'
     Environment = get_environment(ENVIRONMENT_NAME)
 
-    T = 100
-    mpc_H = 100
+    T, mpc_H = 100, 30
+    # T, mpc_H = 100, None
     lqr_iter = None
+    lqr_iter = 5
 
     environment = Environment()
     dt = environment.dt

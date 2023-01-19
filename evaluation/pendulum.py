@@ -33,12 +33,12 @@ class GridEvaluation(Evaluation):
         self.loss_function = nn.MSELoss()
 
     def evaluate(self, model, t):
-        predictions = model.predict(self.grid.clone())
-        truth = self.f_star(self.grid.clone())
-        # print(predictions)
+        # predictions = model.predict(self.grid.clone())
+        # truth = self.f_star(self.grid.clone())
+        # # print(predictions)
 
-        loss = self.loss_function(predictions, truth)
-        return loss
+        # loss = self.loss_function(predictions, truth)
+        return 0
 
 
 class XGrid(GridEvaluation):
@@ -64,6 +64,60 @@ class XGrid(GridEvaluation):
 
         # x_dot = torch.stack((d_phi, dd_phi), dim=1)                               
         return x_dot
+
+# class Animations(XGrid):
+#     def __init__(self, environment):
+#         super().__init__(environment)
+#     def evaluate(self, model, t):
+#         rate = 3
+
+#         loss = torch.zeros(1)
+#         print(f't={t}')
+#         fig = plt.figure(1, figsize=(12, 4))
+#         fig.set_tight_layout(True)
+#         fig.suptitle(fr'exploration, $t={t}$')
+#         # fig.suptitle(fr'{agent_name} inputs, $t={t}$')
+
+#         plt.subplot(131)
+#         plt.title('state')
+#         self.environment.plot_system(x, u, t)
+#         # plt.savefig(f'output/animations/pendulum/{agent_name}-{t//rate}.pdf')
+#         # if plot:
+#         #     plt.pause(0.1)
+#         # plt.close()
+
+#         plt.subplot(132)
+#         plt.title('trajectory')
+#         self.environment.plot_portrait(
+#             self.environment.f_star, self..grid_phi, self..grid_dphi)
+#         plt.plot(agent.x_values[:t:3, 0], agent.x_values[:t:3,
+#                                                          1], alpha=0.7, lw=2, color=color)
+#         plt.xlabel(r'$\varphi$')
+#         plt.ylabel(r'$\dot{\varphi}$', rotation=0)
+#         plt.gca().yaxis.set_label_coords(-0.15, .5)
+#         plt.xticks([-np.pi, 0, np.pi], [r'$-\pi$', r'$0$', r'$\pi$'])
+#         plt.yticks([-self.environment.dphi_max, 0, self.environment.dphi_max],
+#                    [r'$-\omega_0$', r'$0$', r'$\omega_0$'])
+
+#         plt.subplot(133)
+#         # plt.title(r'$f_\theta$')
+#         plt.title(r'learned model')
+#         # self.environment.plot_error(model.forward_x)
+#         self.environment.plot_portrait(
+#             model.forward_x, self..grid_phi, self..grid_dphi)
+#         # plt.scatter(x[0], x[1], color=color)
+#         plt.xlabel(r'$\varphi$')
+#         plt.ylabel(r'$\dot{\varphi}$', rotation=0)
+#         plt.gca().yaxis.set_label_coords(-0.15, .5)
+#         plt.xticks([-np.pi, 0, np.pi], [r'$-\pi$', r'$0$', r'$\pi$'])
+#         plt.yticks([-self.environment.dphi_max, 0, self.environment.dphi_max],
+#                    [r'$-\omega_0$', r'$0$', r'$\omega_0$'])
+
+#         plt.savefig(f'output/animations/pendulum/periodic-{t//rate}.pdf')
+#         plt.pause(0.1)
+#         plt.close()
+
+
 
 class ZGrid(GridEvaluation):
     def __init__(self, environment):

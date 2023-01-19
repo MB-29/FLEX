@@ -20,7 +20,11 @@ class Model(nn.Module):
     def transform(self, z):
         return z[:, :self.d]
 
-
+    def forward_x(self, x):
+        phi, d_phi = torch.unbind(x, dim=1)
+        cphi, sphi = torch.cos(phi), torch.sin(phi)
+        zeta = torch.stack((cphi, sphi, d_phi), dim=1)
+        return self.net(zeta)
 class NeuralModel(Model):
 
     def __init__(self, environment):

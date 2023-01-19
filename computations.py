@@ -114,7 +114,7 @@ def compute_gradient(model, output, **grad_kwargs):
     return gradient
 
 
-def jacobian(model, z):
+def jacobian(model, z, **kwargs):
     y = model(z)
     # g = torch.autograd.grad(z.sum(), u)
     # print(f'g = {g}')
@@ -126,8 +126,7 @@ def jacobian(model, z):
         tensor_gradients = torch.autograd.grad(
             y[:, i],
             model.parameters(),
-            create_graph=True,
-            retain_graph=True,
+            **kwargs
             # allow_unused=True
         )
         derivatives = []

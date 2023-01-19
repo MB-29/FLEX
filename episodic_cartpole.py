@@ -20,8 +20,9 @@ ENVIRONMENT_NAME = 'dm_cartpole'
 
 T = 100
 H, lqr_iter = 100, 5
-n_samples = 4
-n_episodes = 10
+H, lqr_iter = 100, None
+n_samples = 10
+n_episodes = 5
 
 environment = Environment()
 gamma = environment.gamma
@@ -93,24 +94,24 @@ OUTPUT_PATH = f'output/{ENVIRONMENT_NAME}_{name}_{n_samples}-samples_episodic-{t
 with open(OUTPUT_PATH, 'wb') as output_file:
     pickle.dump(output, output_file)
 
-# fig, (ax1, ax2) = plt.subplots(2, 1)
-# ax1.plot(exploitation_values[1], label=name)
-# # ax1.fill_between(
-# #     np.arange(n_episodes),
-# #     exploitation_mean-exploitation_std,
-# #     exploitation_mean+exploitation_std,
-# #     alpha=0.5)
+fig, (ax1, ax2) = plt.subplots(2, 1)
+ax1.plot(exploitation_mean, label=name)
+ax1.fill_between(
+    np.arange(n_episodes),
+    exploitation_mean-exploitation_std,
+    exploitation_mean+exploitation_std,
+    alpha=0.5)
 
-# estimation_mean = estimation_values.mean(axis=0)
-# estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
-# ax2.plot(estimation_values[1], label=name)
-# ax2.fill_between(
-#     np.arange(n_episodes*T),
-#     estimation_mean-estimation_std,
-#     estimation_mean+estimation_std,
-#     alpha=0.5)
+estimation_mean = estimation_values.mean(axis=0)
+estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
+ax2.plot(estimation_mean, label=name)
+ax2.fill_between(
+    np.arange(n_episodes*T),
+    estimation_mean-estimation_std,
+    estimation_mean+estimation_std,
+    alpha=0.5)
 # ax2.set_yscale('log')
-# plt.legend()
-# plt.title(r'Test loss')
-# plt.show()
-# # plt.savefig(f'output/{ENVIRONMENT_NAME}_benchmark.pdf')
+plt.legend()
+plt.title(r'Test loss')
+plt.show()
+# plt.savefig(f'output/{ENVIRONMENT_NAME}_benchmark.pdf')
