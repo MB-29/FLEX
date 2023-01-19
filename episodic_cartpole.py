@@ -20,7 +20,7 @@ ENVIRONMENT_NAME = 'dm_cartpole'
 
 T = 100
 H, lqr_iter = 100, 5
-H, lqr_iter = 100, None
+# H, lqr_iter = 100, None
 n_samples = 1
 n_episodes = 8
 
