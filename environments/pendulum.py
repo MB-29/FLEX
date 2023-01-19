@@ -138,7 +138,7 @@ class Pendulum(Environment):
             color='black',
             linewidth=linewidth*2,
             arrowsize=.8,
-            density=.7)
+            density=.8)
 
 
 class DampedPendulum(Pendulum):

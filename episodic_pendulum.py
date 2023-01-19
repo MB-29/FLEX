@@ -19,7 +19,7 @@ from planning_pendulum import exploit
 T = 20
 task_T = 100
 H, lqr_iter = 30, 5
-n_samples = 50
+n_samples = 4
 n_episodes = 20
 
 environment = Environment()
