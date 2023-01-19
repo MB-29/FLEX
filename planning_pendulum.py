@@ -62,7 +62,6 @@ def planning(obs, u_init, transition_model, goal_weights, goal_state, R, gamma, 
 
 
 def exploit(environment, model_dynamics, dt, T, mpc_H, lqr_iter, plot=False):
-    print(f"mpc_H = {mpc_H},")
     dynamics = environment.d_dynamics
     gamma = environment.gamma
     m = environment.m
