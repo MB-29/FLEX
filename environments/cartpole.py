@@ -166,8 +166,8 @@ class RlCartpole(Cartpole):
     def dynamics(self, x, u, t):
         y, d_y, phi, d_phi = x[0], x[1], x[2], x[3]
         cphi, s_phi = np.cos(phi), np.sin(phi)
-        dd_y, dd_phi = self.acc(d_y, cphi, s_phi, d_phi, u)
-        x_dot = np.array([d_y, dd_y, d_phi, dd_phi], dtype=float)
+        dd_y, dd_phi = self.acc(d_y, cphi, s_phi, d_phi, u.squeeze())
+        x_dot = np.array([d_y, dd_y, d_phi, dd_phi])
         # x_dot_bounded = np.clip(
         #     x_dot, self.velocity_bounds[:, 0], self.velocity_bounds[:, 1])
         return x_dot

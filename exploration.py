@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 def exploration(
@@ -7,15 +8,16 @@ def exploration(
     T,
     evaluation, 
     T_random=0,
-    episodic=False,
+    reset=True,
     plot=False,
     animate=None):
+
 
     d, m = environment.d, environment.m
     z_values = np.zeros((T, d+m))
     error_values = np.zeros(T)  
 
-    if not episodic:
+    if reset:
         environment.reset()
     for t in range(T):
         # if t%100 == 0:

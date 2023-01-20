@@ -21,7 +21,7 @@ ENVIRONMENT_NAME = 'dm_cartpole'
 T = 100
 H, lqr_iter = 100, 5
 # H, lqr_iter = 100, None
-n_samples = 1
+n_samples = 4
 n_episodes = 8
 
 environment = Environment()
@@ -77,12 +77,12 @@ if __name__ == '__main__':
                 H,
                 lqr_iter=lqr_iter,
                 plot=False)
+            exploitation_values[sample_index, episode] = cost_values.sum()
 
             z_values, estimation_error = exploration(
-                environment, agent, T, evaluation, T_random=T_random)
+                environment, agent, T, evaluation, T_random=T_random, reset=False)
 
             estimation_values[sample_index, episode*T:(episode+1)*T] = estimation_error
-            exploitation_values[sample_index, episode] = cost_values.sum()
 
     output[name]['estimation'] = estimation_values
     output[name]['exploitation'] = exploitation_values
@@ -103,16 +103,16 @@ with open(OUTPUT_PATH, 'wb') as output_file:
 #     exploitation_mean+exploitation_std,
 #     alpha=0.5)
 
-# estimation_mean = estimation_values.mean(axis=0)
-# estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
-# ax2.plot(estimation_mean, label=name)
-# ax2.fill_between(
-#     np.arange(n_episodes*T),
-#     estimation_mean-estimation_std,
-#     estimation_mean+estimation_std,
-#     alpha=0.5)
-# # ax2.set_yscale('log')
-# plt.legend()
-# plt.title(r'Test loss')
-# plt.show()
+estimation_mean = estimation_values.mean(axis=0)
+estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
+plt.plot(estimation_mean, label=name)
+plt.fill_between(
+    np.arange(n_episodes*T),
+    estimation_mean-estimation_std,
+    estimation_mean+estimation_std,
+    alpha=0.5)
+# ax2.set_yscale('log')
+plt.legend()
+plt.title(r'Test loss')
+plt.show()
 # # plt.savefig(f'output/{ENVIRONMENT_NAME}_benchmark.pdf')
