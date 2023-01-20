@@ -66,7 +66,8 @@ if __name__ == '__main__':
         )
         for episode in range(n_episodes):
             print(f'episode {episode}')
-            T_random = T if episode==0 else 0
+            # T_random = T if episode==0 else 0
+            T_random = 0
             model_dynamics = model.forward
 
             cost_values = exploit(

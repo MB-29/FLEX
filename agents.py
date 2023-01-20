@@ -17,7 +17,7 @@ class Agent:
 
         self.model = model
         self.q = sum(parameter.numel() for parameter in model.parameters())
-        diag = 1e-5*np.random.rand(self.q)
+        diag = 1e-7*np.random.rand(self.q)
         self.M = np.diag(diag)
         self.M_inv =np.diag(1/diag)
         # self.Mx = 1e-3*np.diag(np.random.rand(self.d))    
