@@ -1,5 +1,3 @@
-
-from black import Line
 import environments.pendulum as pendulum
 from active_agents import D_optimal, GradientDesign
 from oracles.periodic import Periodic1D

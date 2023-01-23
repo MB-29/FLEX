@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -10,7 +11,8 @@ def exploration(
     T_random=0,
     reset=True,
     plot=False,
-    animate=None):
+    animate=None,
+    save_models=None):
 
 
     d, m = environment.d, environment.m
@@ -39,7 +41,12 @@ def exploration(
         if evaluation is not None:
             error_values[t] = evaluation.evaluate(agent.model, t)
         if animate is not None:
-            animate(agent.model, z_values, u, t, plot=plot)
+            animate(agent.model, u, t, z_values, error_values, plot=plot)
+            continue
+        if save_models is not None:
+            path = f'{save_models}_{t}.dat'
+            with open(path, 'wb') as file:
+                torch.save(agent.model, file)
             continue
         if plot:
             environment.plot_system(x, u, t)

@@ -16,13 +16,13 @@ from exploration import exploration
 from planning_pendulum import exploit
 
 
-T = 20
+T = 10
 task_T = 100
 H, lqr_iter = 30, 5
 n_samples = 4
-n_episodes = 20
-
-environment = Environment()
+n_episodes = 10
+sigma = .001
+environment = Environment(sigma=sigma)
 gamma = environment.gamma
 sigma = environment.sigma
 dt = environment.dt
@@ -77,7 +77,7 @@ if __name__ == '__main__':
             exploitation_values[sample_index, episode] = cost_values.sum()
 
             z_values, estimation_error = exploration(
-                environment, agent, T, evaluation, episodic=True)
+                environment, agent, T, evaluation, reset=False)
 
             estimation_values[sample_index, episode*T:(episode+1)*T] = estimation_error
 
