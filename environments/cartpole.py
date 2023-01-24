@@ -190,8 +190,7 @@ class GymCartpole(RlCartpole):
 
 class DmCartpole(RlCartpole):
 
-    def __init__(self, dt=0.02):
-        sigma = 0
+    def __init__(self, dt=0.02, sigma=0.0):
         alpha = 2e-6
         beta = 5e-4
 

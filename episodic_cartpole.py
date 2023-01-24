@@ -23,10 +23,10 @@ H, lqr_iter = 100, 5
 # H, lqr_iter = 100, None
 n_samples = 4
 n_episodes = 8
+sigma = 0.02
 
-environment = Environment()
+environment = Environment(sigma = sigma)
 gamma = environment.gamma
-sigma = environment.sigma
 dt = environment.dt
 x0 = environment.x0
 

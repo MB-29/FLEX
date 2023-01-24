@@ -6,6 +6,10 @@ from computations import jacobian, compute_gradient, maximizer_quadratic
 
 class Active(Agent):
 
+    def __init__(self, model, d, m, gamma, batch_size=100, dt=None):
+        super().__init__(model, d, m, gamma, batch_size, dt)
+        self.active = True  
+
     def predict_x(self, x, u):
 
         for param in self.model.parameters():

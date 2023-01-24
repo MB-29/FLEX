@@ -32,6 +32,8 @@ class Agent:
         self.optimizer = 'OLS' if self.lr is None else torch.optim.Adam(self.model.parameters(), lr=self.lr)
         self.loss_function = nn.MSELoss()
 
+        self.active = False
+
     def learning_step(self, x, dx_dt, u):
         
         z = torch.zeros(1, self.d + self.m, requires_grad=False)
@@ -78,6 +80,8 @@ class Agent:
         # print(f'learning loss {loss}')
         self.optimizer.zero_grad() , loss.backward() ; self.optimizer.step()
         # zeta = self.model.transform(x)
+        if not self.active:
+            return
 
         # 08/23/2022 : zeta instead of z
         # 09/02/2022 : z instead of zeta
