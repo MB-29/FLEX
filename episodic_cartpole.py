@@ -104,16 +104,16 @@ with open(OUTPUT_PATH, 'wb') as output_file:
 #     exploitation_mean+exploitation_std,
 #     alpha=0.5)
 
-estimation_mean = estimation_values.mean(axis=0)
-estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
-plt.plot(estimation_mean, label=name)
-plt.fill_between(
-    np.arange(n_episodes*T),
-    estimation_mean-estimation_std,
-    estimation_mean+estimation_std,
-    alpha=0.5)
-# ax2.set_yscale('log')
-plt.legend()
-plt.title(r'Test loss')
-plt.show()
+# estimation_mean = estimation_values.mean(axis=0)
+# estimation_std = np.sqrt(estimation_values.var(axis=0)/n_samples)
+# plt.plot(estimation_mean, label=name)
+# plt.fill_between(
+#     np.arange(n_episodes*T),
+#     estimation_mean-estimation_std,
+#     estimation_mean+estimation_std,
+#     alpha=0.5)
+# # ax2.set_yscale('log')
+# plt.legend()
+# plt.title(r'Test loss')
+# plt.show()
 # # plt.savefig(f'output/{ENVIRONMENT_NAME}_benchmark.pdf')
