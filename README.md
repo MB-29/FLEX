@@ -11,8 +11,7 @@ Implementation of our D-optimal  exploration algorithm along with baselines. Pre
 ```python
 from environments.pendulum import DampedPendulum
 from models.pendulum import LinearTheta
-from agents import Random
-from active_agents import D_optimal
+from policies import Random, Flex
 
 T = 300
 dt = 1e-2
@@ -24,7 +23,7 @@ model = Model(environment)
 evaluation = model.evaluation
 
 # agent = Random(
-agent = D_optimal(
+agent = Flex(
 model,
 environment.d,
 environment.m,
