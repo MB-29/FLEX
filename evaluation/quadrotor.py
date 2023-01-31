@@ -16,13 +16,13 @@ class GridEvaluation:
 
         self.v_max = environment.v_max
         interval_v = torch.linspace(-self.v_max, self.v_max, n_points)
-        grid_vx, grid_vy = torch.meshgrid(
+        self.grid_vx, self.grid_vy = torch.meshgrid(
             interval_v,
             interval_v,
         )
         self.grid = torch.cat([
-            grid_vx.reshape(-1, 1),
-            grid_vy.reshape(-1, 1)
+            self.grid_vx.reshape(-1, 1),
+            self.grid_vy.reshape(-1, 1)
             # grid_u.reshape(-1, 1),
         ], 1)
 

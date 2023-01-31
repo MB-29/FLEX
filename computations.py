@@ -13,7 +13,7 @@ def lstsq_update(prior_estimate, prior_gram, z, y):
     return posterior_estimate, posterior_gram
 
 
-def maximizer_quadratic(M_inv,  B, v, gamma):
+def solve_D_optimal(M_inv,  B, v, gamma):
     """Compute the one-step-ahead optimal design for the estimation of A:
         maximize log det (M + v v^T)
         with v = Ax + Bu and u of norm gamma

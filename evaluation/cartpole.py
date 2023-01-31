@@ -35,7 +35,7 @@ class GridEvaluation:
         return loss
 
         
-class XGrid(GridEvaluation):
+class GridA(GridEvaluation):
     def __init__(self, environment):
         super().__init__(environment)
         grid_dy, grid_phi, grid_dphi = torch.meshgrid(
@@ -63,7 +63,7 @@ class XGrid(GridEvaluation):
         return dd
 
         
-class ZGrid(GridEvaluation):
+class GridAB(GridEvaluation):
     def __init__(self, environment):
         super().__init__(environment)
         grid_dy, grid_phi, grid_dphi, grid_u = torch.meshgrid(

@@ -26,23 +26,14 @@ class Evaluation:
         self.grid = torch.cat([
             self.grid_qx.reshape(-1, 1),
             self.grid_qy.reshape(-1, 1)
-            # grid_u.reshape(-1, 1),
         ], 1)
 
         self.loss_function = nn.MSELoss()
 
     def evaluate(self, model, t):
-        # print(f'model c = {model.c}')
-        # predictions = model.predict(self.grid.clone())
-        # truth = self.f_star(self.grid.clone(), t)
         cx, cy = self.center_position(t)
         c_hat = model.c.detach().numpy()
         loss = (1/2) * ((c_hat[0]-cx)**2 + (c_hat[1]-cy)**2)
-        # print(predictions)
-        # loss = self.loss_function(predictions, truth)
-
-        # self.plot_parameters(model)
-        # self.plot_portrait(model.predict)
         return loss
 
     def f_star(self, q, t):
@@ -53,10 +44,6 @@ class Evaluation:
 
     def plot_portrait(self, f):
         predictions = f(self.grid)
-
-        # plt.xlim((-phi_max, phi_max))
-        # plt.ylim((-dphi_max, dphi_max))
-        # vectors = predictions.shape(n_points, n_points, n_points, n_points, 2)
         vector_x = predictions[:, 0].reshape(
             self.n_points, self.n_points).detach().numpy()
         vector_y = predictions[:, 1].reshape(

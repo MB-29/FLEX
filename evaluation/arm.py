@@ -5,7 +5,7 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 
 
-class XGrid:
+class GridA:
 
     def __init__(self, environment, n_points=10):
 
@@ -73,7 +73,7 @@ class XGrid:
         return dd
 
 
-# class ZGrid(GridEvaluation):
+# class GridAB(GridEvaluation):
 #     def __init__(self, environment):
 #         super().__init__(environment)
 #         grid_dy, grid_phi, grid_dphi, grid_u = torch.meshgrid(

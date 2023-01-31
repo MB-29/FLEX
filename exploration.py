@@ -21,15 +21,16 @@ def exploration(
 
     if reset:
         environment.reset()
-    for t in range(T):
-        x = environment.x.copy()
 
+    for t in range(T):
+
+        x = environment.x.copy()
         u = agent.draw_random_control()
         if t > T_random:
             u = agent.policy(x, t)
+
         dx = environment.step(u, t)
         dx_dt = dx/environment.dt
-
         agent.learning_step(x, dx_dt, u)
 
         z_values[t:, :d] = x.copy()
@@ -37,27 +38,32 @@ def exploration(
 
         if evaluation is not None:
             error_values[t] = evaluation.evaluate(agent.model, t)
-        if animate is not None:
-            animate(agent.model, u, t, z_values, error_values, plot=plot)
-            continue
+        
+        illustrate(x, u, t, agent.model, z_values, error_values, environment.plot_system, plot, animate, save_models)
+    return z_values, error_values
+
+
+def illustrate(x, u, t, model, z_values, error_values, plot_system, plot, animate, save_models):        
+
         if save_models is not None:
             path = f'{save_models}_{t}.dat'
             with open(path, 'wb') as file:
-                torch.save(agent.model, file)
-            continue
+                torch.save(model, file)
+        if animate is not None:
+            animate(model, u, t, z_values, error_values, plot=plot)
+            return
         if plot:
-            environment.plot_system(x, u, t)
+            plot_system(x, u, t)
             plt.pause(0.1)
             plt.close()
 
-    return z_values, error_values
 
 if __name__=='__main__':
     from environments.pendulum import DmPendulum as Environment
     from environments.pendulum import DampedPendulum as Environment
     # from environments.pendulum import GymPendulum as Environment
     from models.pendulum import LinearA as Model
-    from models.pendulum import LinearTheta as Model
+    from models.pendulum import LinearAB as Model
 
     # from environments.cartpole import GymCartpole as Environment
     # # from models.cartpole import RFF as Model
@@ -70,11 +76,14 @@ if __name__=='__main__':
     from environments.arm import DampedArm as Environment
     from models.arm import NeuralA as Model
 
+    from environments.quadrotor import DefaultQuadrotor as Environment
+    from models.quadrotor import NeuralModel as Model
+
     # from policies import Passive as Agent
     # from policies import Random as Agent
     from policies import MaxRandom as Agent
     # from oracles.arm import PeriodicOracle as Agent
-    # from policies import Flex as Agent
+    from policies import Flex as Agent
 
     plot = False
     plot = True
@@ -88,13 +97,10 @@ if __name__=='__main__':
     model,
     environment.d,
     environment.m,
-    environment.gamma,
-    dt=environment.dt,
-    batch_size=100
+    environment.gamma
     )
 
-    T = 50
-
+    T = 400
     z_values, error_values = exploration(environment, agent, T, evaluation, plot=plot)
     # plt.subplot(211)
     plt.plot(error_values)

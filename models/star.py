@@ -2,20 +2,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from evaluation.potential import Evaluation
+from evaluation.star import Evaluation
 
 
 class NeuralModel(nn.Module):
 
     def __init__(self, environment):
         super().__init__()
-        # self.net = nn.Sequential(
-        #     nn.Linear(2, 8),
-        #     nn.Tanh(),
-        #     # nn.Linear(8, 8),
-        #     # nn.Tanh(),
-        #     nn.Linear(8, 2)
-        # )
         self.c = nn.Parameter(torch.tensor([0.1, 0.1]))
         self.c.requires_grad = True
 
@@ -34,7 +27,6 @@ class NeuralModel(nn.Module):
             [0.0, 1.0],
             [0.0, 0.0],
             ])
-        # self.evaluation = None
 
     def get_B(self, x):
         return self.B

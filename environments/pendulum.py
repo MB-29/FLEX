@@ -54,8 +54,6 @@ class Pendulum(Environment):
 
         self.goal_weights = torch.Tensor((1., 1., 0.1))
         self.goal_weights_relaxed = torch.Tensor((10., 1., 0.1))
-        # self.goal_weights_relaxed = torch.Tensor((1., 1., 0.1))
-        # self.goal_weights = torch.Tensor((100, .1, 0.1))
         self.goal_state = torch.Tensor((-1., 0., 0.))
         self.R = 0.001
 
@@ -70,10 +68,7 @@ class Pendulum(Environment):
     
 
     def d_dynamics(self, z):
-        # x_dot[0] = torch.clip(x[1], -8, 8)
         phi, d_phi, u = torch.unbind(z, dim=1)
-        # print(f'u = {u.shape}')
-        # print(f'phi = {phi.shape}')
         sphi = torch.sin(phi)
         dd_phi = -self.omega_2*sphi -self.alpha*d_phi + (1/self.inertia)*u.squeeze()
         x_dot = torch.stack((d_phi, dd_phi), dim=1)
@@ -87,14 +82,6 @@ class Pendulum(Environment):
         plt.xlim((-2*self.l, 2*self.l))
         plt.ylim((-2*self.l, 2*self.l))
         plt.gca().set_aspect('equal', adjustable='box')
-        # if u > 0: 
-        #     theta1, theta2 = -50, 180
-        # else:
-        #     theta1, theta2 = 180, -50
-
-        # draw_self_loop(plt.gca(), (0.0, 0.0), 0.1*self.l, 'red', 'white', theta1, theta2)
-        # circle = plt.Circle((0, 0), 0.03, color='black')
-        # plt.gca().add_patch(circle)
         plt.arrow(
             self.l*s_phi,
             -self.l*c_phi,
@@ -105,10 +92,6 @@ class Pendulum(Environment):
             head_length=0.1*abs(u[0]),
             alpha=0.5)
         plt.xticks([]) ; plt.yticks([])
-        # plt.title(rf'$t = {t}$')
-
-        # plt.title('periodic inputs')
-        # plt.savefig(f'output/animations/pendulum/periodic-{t//5}.png')
 
     def plot_phase(self, x):
         plt.scatter(x[0], x[1])
@@ -124,8 +107,8 @@ class Pendulum(Environment):
 
         n_points, _ = grid_phi.shape
 
-        # plt.xlim((-self.phi_max, self.phi_max))
-        # plt.ylim((-self.dphi_max, self.dphi_max))
+        plt.xlim((-self.phi_max, self.phi_max))
+        plt.ylim((-self.dphi_max, self.dphi_max))
         vector_x = predictions[:, 0].reshape(n_points, n_points).detach().numpy()
         vector_y = predictions[:, 1].reshape(n_points, n_points).detach().numpy()
         magnitude = np.sqrt(vector_x.T**2 + vector_y.T**2)
@@ -144,7 +127,6 @@ class Pendulum(Environment):
 class DampedPendulum(Pendulum):
 
     def __init__(self, dt=5e-2, sigma=1e-3):
-        # sigma = .1
         gamma = 1.0
         mass = 1.0
         l = 1.0
@@ -187,8 +169,6 @@ class LinearizedPendulum(Pendulum):
         alpha = .5
         super().__init__(dt, sigma, gamma, mass, g, l, alpha)
 
-        # self.period = 2*self.period
-
         self.dphi_max = np.sqrt(self.omega_2*2)
 
         self.A = np.array([
@@ -206,12 +186,7 @@ class LinearizedPendulum(Pendulum):
 
     def dynamics(self, x, u, t):
         x_dot = self.A @ x + self.B@u
-        # x_dot += np.array([[0.0], [1/self.inertia]]) @ u
-        # x_dot[1] = d_phi
-        # x_dot[1] = np.clip(d_phi, -10, 10)
-        
         return x_dot
 
 
 
-    # plt.gca().set_aspect('equal', adjustable='box')

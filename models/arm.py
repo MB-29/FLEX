@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from evaluation.arm import XGrid
+from evaluation.arm import GridA
 
 class NeuralA(nn.Module):
 
@@ -11,7 +11,7 @@ class NeuralA(nn.Module):
         self.t_period = environment.period/environment.dt
         self.acceleration_u = environment.acceleration_u
 
-        self.evaluation  = XGrid(environment)
+        self.evaluation  = GridA(environment)
 
         self.net = nn.Sequential(
             nn.Linear(6, 8),

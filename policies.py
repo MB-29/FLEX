@@ -1,9 +1,8 @@
 import numpy as np
 import torch
 
-from agents import Agent
-from computations import jacobian, compute_gradient, maximizer_quadratic
-
+from agent import Agent
+from computations import jacobian, compute_gradient, solve_D_optimal
 
 
 class Random(Agent):
@@ -91,14 +90,16 @@ class Flex(Agent):
         z[:, :self.d] = x
         z[:, self.d:] = u
 
-        j = np.random.choice(self.d)
+        k = np.random.choice(self.d)
+        k = np.random.choice([1, 3])
+        # j = 1
 
         y = self.model(z)
-        df_dtheta = compute_gradient(self.model, y[:, j])
+        df_dtheta = compute_gradient(self.model, y[:, k])
 
         D = np.zeros((self.q, self.d))
         y = self.model(z)
-        df_dx = torch.autograd.grad(y[:, j], x, create_graph=True)[
+        df_dx = torch.autograd.grad(y[:, k], x, create_graph=True)[
             0].unsqueeze(0)
 
         for i in range(self.d):
@@ -115,7 +116,7 @@ class Flex(Agent):
                 B_[i, :] = dfi_du[0].numpy()
         B = D @ B_
         v = df_dtheta.detach().numpy()
-        u = maximizer_quadratic(self.M_inv, B, v, self.gamma)
+        u = solve_D_optimal(self.M_inv, B, v, self.gamma)
         u *= self.gamma / np.linalg.norm(u)
         return u
 
@@ -136,7 +137,6 @@ class Episodic(Agent):
         return self.planned_inputs[schedule]
 
     def plan_inputs(self, x):
-        print(f'planning')
         U = torch.randn(self.planning_horizon, self.m)
         U *= self.gamma / torch.linalg.norm(U, dim=1).unsqueeze(1)
         U.requires_grad = True

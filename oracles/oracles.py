@@ -1,4 +1,4 @@
-from agents import Agent
+from agent import Agent
 
 class Oracle(Agent):
 

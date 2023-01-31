@@ -65,49 +65,54 @@ class Quadrotor(Environment):
     def plot_system(self, X, u, t):
         x, v_x, y, v_y, phi, d_phi = X[0], X[1], X[2], X[3], X[4], X[5]
         c_phi, s_phi = np.cos(phi), np.sin(phi)
-        l0 = u[0]/self.gamma
-        l1 = u[1]/self.gamma
-        plt.arrow(x-self.r*c_phi, y-self.r*s_phi, -l0*s_phi, l0*c_phi,
+        l0 = 10*u[0]/self.gamma
+        l1 = 10*u[1]/self.gamma
+        plt.xlim((-100, 100))
+        plt.ylim((-100, 100))
+        length = 10*self.r
+        plt.arrow(x-length*c_phi, y-length*s_phi, -l0*s_phi, l0*c_phi,
                 color='red', head_width=0.1, alpha=0.5)
-        plt.arrow(x+self.r*c_phi, y+self.r*s_phi, -l1*s_phi, l1*c_phi,
+        plt.arrow(x+length*c_phi, y+length*s_phi, -l1*s_phi, l1*c_phi,
                 color='red', head_width=0.1, alpha=0.5)
-        plt.plot([x-self.r*c_phi, x+self.r*c_phi],
-                [y-self.r*s_phi, y+self.r*s_phi], color='blue')
-        # plt.xlim((x-2*r, x+2*r))
-        # plt.ylim((y-2*r, y+2*r))
-        plt.xlim((-10, 10))
-        plt.ylim((-10, 10))
+        plt.plot([x-length*c_phi, x+length*c_phi],
+                [y-length*s_phi, y+length*s_phi], color='blue')
         plt.gca().set_aspect('equal', adjustable='box')
+
+    def plot_portrait(self, f, grid_vx, grid_vy):
+        grid = torch.cat([
+            grid_vx.reshape(-1, 1),
+            grid_vy.reshape(-1, 1),
+        ], 1)
+        predictions = f(grid)
+
+        n_points, _ = grid_vx.shape
+
+        plt.xlim((-self.v_max, self.v_max))
+        plt.ylim((-self.v_max, self.v_max))
+        vector_x = predictions[:, 0].reshape(
+            n_points, n_points).detach().numpy()
+        vector_y = predictions[:, 1].reshape(
+            n_points, n_points).detach().numpy()
+        magnitude = np.sqrt(vector_x.T**2 + vector_y.T**2)
+        linewidth = magnitude / magnitude.max()
+        plt.streamplot(
+            grid_vx.numpy().T,
+            grid_vy.numpy().T,
+            vector_x.T,
+            vector_y.T,
+            color='black',
+            linewidth=linewidth*2,
+            arrowsize=.8,
+            density=.8)
 
 
 class DefaultQuadrotor(Quadrotor):
 
-    def __init__(self, dt=0.1):
+    def __init__(self, dt=0.1, sigma=.0):
         mass, I, r = 2.0, 10, 1.0
-        g = 0.0
-        sigma = 0.0
+        g = 1.0
         gamma = 10
         rho = 0.2
         super().__init__(dt, sigma, gamma, mass, g, I, r, rho)
 
 
-
-
-def plot_portrait(f):
-    predictions = f(grid)
-
-    # plt.xlim((-phi_max, phi_max))
-    # plt.ylim((-dphi_max, dphi_max))
-    # vectors = predictions.shape(n_points, n_points, n_points, n_points, 2)
-    vector_x = predictions[:, 0].reshape(n_points, n_points).detach().numpy()
-    vector_y = predictions[:, 1].reshape(n_points, n_points).detach().numpy()
-    magnitude = np.sqrt(vector_x.T**2 + vector_y.T**2)
-    linewidth = magnitude / magnitude.max()
-    plt.streamplot(
-        grid_vx.numpy().T,
-        grid_vy.numpy().T,
-        vector_x.T,
-        vector_y.T,
-        color='black',
-        linewidth=linewidth
-        )

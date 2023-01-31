@@ -8,7 +8,7 @@ from computations import jacobian, lstsq_update
 
 class Agent:
 
-    def __init__(self, model, d, m, gamma, batch_size=100, dt=None):
+    def __init__(self, model, d, m, gamma, batch_size=100, dt=None, regularization=1e-7):
 
         self.d = d
         self.m = m
@@ -16,7 +16,7 @@ class Agent:
 
         self.model = model
         self.q = sum(parameter.numel() for parameter in model.parameters())
-        diag = 1e-7*np.random.rand(self.q)
+        diag = regularization*np.random.rand(self.q)
         self.M = np.diag(diag)
         self.M_inv =np.diag(1/diag)
 

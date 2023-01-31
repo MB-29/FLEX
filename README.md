@@ -10,7 +10,7 @@ Implementation of our D-optimal  exploration algorithm along with baselines. Pre
 
 ```python
 from environments.pendulum import DampedPendulum
-from models.pendulum import LinearTheta
+from models.pendulum import LinearAB
 from policies import Random, Flex
 
 T = 300

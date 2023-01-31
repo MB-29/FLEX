@@ -1,6 +1,6 @@
 import numpy as np
 
-from agents import Agent
+from agent import Agent
 
 
 class Periodic1D(Agent):
