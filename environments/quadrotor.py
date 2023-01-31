@@ -67,8 +67,8 @@ class Quadrotor(Environment):
         c_phi, s_phi = np.cos(phi), np.sin(phi)
         l0 = 10*u[0]/self.gamma
         l1 = 10*u[1]/self.gamma
-        plt.xlim((-100, 100))
-        plt.ylim((-100, 100))
+        plt.xlim((-50, 50))
+        plt.ylim((-50, 50))
         length = 10*self.r
         plt.arrow(x-length*c_phi, y-length*s_phi, -l0*s_phi, l0*c_phi,
                 color='red', head_width=0.1, alpha=0.5)
