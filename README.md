@@ -4,7 +4,7 @@ Implementation of our D-optimal  exploration algorithm along with baselines. Pre
 
 ## Demo
 
-
+https://youtu.be/BPD9JQzkraE
 
 ## Example
 
