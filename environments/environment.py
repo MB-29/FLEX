@@ -12,6 +12,20 @@ def get_environment(name):
 class Environment:
 
     def __init__(self, x0, d, m, dt, sigma, gamma):
+        """
+        :param x0: Initial state
+        :type x0: array of size d
+        :param d: state space dimension
+        :type d: int
+        :param m: action space dimension
+        :type m: int
+        :param dt: time step
+        :type dt: float
+        :param sigma: noise size
+        :type sigma: float
+        :param gamma: input amplitude
+        :type gamma: float
+        """
         self.d = d
         self.m = m
         self.dt = dt
@@ -22,9 +36,21 @@ class Environment:
         self.x = x0.copy()
     
     def dynamics(self, x, u, t=None):
+        """Flow of the dynamics.
+
+        :param x: state
+        :type x: array of size d
+        :param u: action
+        :type u: array of size m
+        :param t: time
+        :type t: float, optional
+        :raises NotImplementedError: _description_
+        """
         raise NotImplementedError
 
     def step(self, u, t):
+        """Compute the state increment as a function of the action and time.
+        """
         x_dot = self.dynamics(self.x, u, t)
         dx = x_dot * self.dt
         noise =  self.sigma * np.random.randn(self.d)

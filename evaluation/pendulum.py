@@ -101,7 +101,7 @@ class NormA(Evaluation):
         return loss
 
 
-class NormTheta(Evaluation):
+class ParameterNorm(Evaluation):
 
     def __init__(self, environment):
         super().__init__(environment)

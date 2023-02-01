@@ -52,6 +52,8 @@ class Pendulum(Environment):
         ])
         self.theta_star = np.hstack((self.A_star, self.B_star))
 
+
+        # Swingup task
         self.goal_weights = torch.Tensor((1., 1., 0.1))
         self.goal_weights_relaxed = torch.Tensor((10., 1., 0.1))
         self.goal_state = torch.Tensor((-1., 0., 0.))
@@ -133,7 +135,6 @@ class DampedPendulum(Pendulum):
         g = 10.0
         alpha = 1.
         super().__init__(dt, sigma, gamma, mass, g, l, alpha)
-
 
 
 class GymPendulum(Pendulum):

@@ -6,6 +6,8 @@ from computations import jacobian, compute_gradient, solve_D_optimal
 
 
 class Random(Agent):
+    """Random inputs
+    """
 
     def policy(self, x, t):
         u = self.draw_random_control()
@@ -13,6 +15,8 @@ class Random(Agent):
 
 
 class MaxRandom(Agent):
+    """Random policy with maximal amplitude.
+    """
 
     def policy(self, x, t):
         u = self.draw_random_control_max()
@@ -20,11 +24,12 @@ class MaxRandom(Agent):
 
 
 class Passive(Agent):
-
     def policy(self, x, t):
         return np.zeros(self.m)
 
 class Uniform(Agent):
+    """Baseline 'uniform'
+    """
 
     def maximum_utility(self, x, t, n_gradient=10):
         u = torch.randn(1, self.m)
@@ -81,6 +86,8 @@ class Uniform(Agent):
 
 
 class Flex(Agent):
+    """The adaptive policy presented in the article.
+    """
 
     def policy(self, x, t):
 
@@ -90,22 +97,23 @@ class Flex(Agent):
         z[:, :self.d] = x
         z[:, self.d:] = u
 
-        k = np.random.choice(self.d)
-        k = np.random.choice([1, 3])
-        # j = 1
-
+        
+        # compute v(z)
+        k = np.random.choice(self.d)  
         y = self.model(z)
         df_dtheta = compute_gradient(self.model, y[:, k])
-
+        
+        # compute dv/dx
         D = np.zeros((self.q, self.d))
         y = self.model(z)
         df_dx = torch.autograd.grad(y[:, k], x, create_graph=True)[
             0].unsqueeze(0)
-
         for i in range(self.d):
             d2f_dxidtheta = compute_gradient(
                 self.model, df_dx[:, i], retain_graph=True, allow_unused=True)
             D[:, i] = d2f_dxidtheta
+
+        # compute df/du
         try:
             B_ = self.dt * self.model.get_B(x)
         except AttributeError:
@@ -114,13 +122,18 @@ class Flex(Agent):
             for i in range(self.d):
                 dfi_du = torch.autograd.grad(y[:, i], u, retain_graph=True)
                 B_[i, :] = dfi_du[0].numpy()
+
+        # build and solve the quadratic problem
         B = D @ B_
         v = df_dtheta.detach().numpy()
         u = solve_D_optimal(self.M_inv, B, v, self.gamma)
         u *= self.gamma / np.linalg.norm(u)
+
         return u
 
 class Episodic(Agent):
+    """Episodic optimization of D-optimal inputs .
+    """
 
     def __init__(self, model, d, m, gamma, planning_horizon, n_gradient, **kwargs):
         self.planning_horizon = planning_horizon

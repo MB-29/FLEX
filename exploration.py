@@ -13,6 +13,27 @@ def exploration(
     plot=False,
     animate=None,
     save_models=None):
+    """Run exploration
+
+    :type environment: environment object
+    :type agent: agent object
+    :param T: time horizon
+    :type T: int
+    :type evaluation: evaluation object
+    :param T_random: number of time steps for which random inputs are played in the beginning,
+        defaults to 0
+    :type T_random: int, optional
+    :param reset: reset the environment before running exploration, defaults to True
+    :type reset: bool, optional
+    :param plot: plot the system, defaults to False
+    :type plot: bool, optional
+    :param animate: animation function, defaults to None
+    :type animate: function, optional
+    :param save_models: path to save model parameters, defaults to None
+    :type save_models: str, optional
+    :return: state-action values, evaluation values
+    :rtype: array of shape T x (d+m),  array of size T
+    """
 
 
     d, m = environment.d, environment.m
@@ -40,6 +61,7 @@ def exploration(
             error_values[t] = evaluation.evaluate(agent.model, t)
         
         illustrate(x, u, t, agent.model, z_values, error_values, environment.plot_system, plot, animate, save_models)
+
     return z_values, error_values
 
 
@@ -59,54 +81,27 @@ def illustrate(x, u, t, model, z_values, error_values, plot_system, plot, animat
 
 
 if __name__=='__main__':
-    from environments.pendulum import DmPendulum as Environment
-    from environments.pendulum import DampedPendulum as Environment
-    # from environments.pendulum import GymPendulum as Environment
-    from models.pendulum import LinearA as Model
-    from models.pendulum import LinearAB as Model
+    from environments.pendulum import DampedPendulum
+    from models.pendulum import Linear
+    from evaluation.pendulum import ParameterNorm
+    from policies import Random, Flex
+    from exploration import exploration
 
-    # from environments.cartpole import GymCartpole as Environment
-    # # from models.cartpole import RFF as Model
-    # from models.cartpole import NeuralA as Model
-    # from models.cartpole import NeuralAB as Model
+    T = 300
+    dt = 5e-2
 
-    from environments.cartpole import DampedCartpole as Environment
-    from models.cartpole import NeuralA as Model
 
-    from environments.arm import DampedArm as Environment
-    from models.arm import NeuralA as Model
+    environment = DampedPendulum(dt)
+    model = Linear(environment)
+    evaluation = ParameterNorm(environment)
 
-    from environments.quadrotor import DefaultQuadrotor as Environment
-    from models.quadrotor import NeuralModel as Model
-
-    # from policies import Passive as Agent
-    # from policies import Random as Agent
-    from policies import MaxRandom as Agent
-    # from oracles.arm import PeriodicOracle as Agent
-    from policies import Flex as Agent
-
-    plot = False
-    plot = True
-
-    environment = Environment()
-    # environment = Environment(0.08)
-    model = Model(environment)
-    evaluation = model.evaluation
-
-    agent = Agent(
+    # agent = Random(
+    agent = Flex(
     model,
     environment.d,
     environment.m,
-    environment.gamma
+    environment.gamma,
+    dt=environment.dt
     )
 
-    T = 400
-    z_values, error_values = exploration(environment, agent, T, evaluation, plot=plot)
-    # plt.subplot(211)
-    plt.plot(error_values)
-    # plt.yscale('log')
-    plt.show()
-    # plt.subplot(212)
-    # plt.plot(z_values[:, 1], z_values[:, 3])
-    # plt.yscale('log')
-    plt.show()
+    z_values, error_values = exploration(environment, agent, T, evaluation, plot=False)
