@@ -5,7 +5,7 @@ We implement FLEX, a D-optimal adaptive exploration algorithm for nonlinear syst
 
 ## Demo
 An animated demonstration of our algorithm in various environments can be found in
-[this video.](https://youtu.be/BPD9JQzkraE)
+[this video.](https://youtu.be/Moo9tXJvh4g)
 
 ## Organization
 
@@ -45,7 +45,7 @@ z_values, error_values = exploration(environment, agent, T, evaluation)
 
 ```
 
-The phase space trajectories and the error curves obtained in the example above for agents Random (blue) and FLEX (red) are presented in the figure below.
+The phase space trajectories and the error curves obtained in the example above for agents Random (blue) and FLEX (red) are presented in the figures below.
 
 ![Trajectories of the example above, for agents Random (blue) and FLEX (red)](demo/trajectories.png).
 ![Error curves of the example above, for agents Random (blue) and FLEX (red)](demo/error.png).
