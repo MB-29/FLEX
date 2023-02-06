@@ -2,13 +2,14 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from models.models import Model
 from evaluation.pendulum import NormA, ParameterNorm
 
 
-class Model(nn.Module):
+class Model(Model):
 
     def __init__(self, environment, evaluation=None):
-        super().__init__()
+        super().__init__(environment, evaluation)
         self.t_period = environment.period / environment.dt
         self.period = environment.period
         self.B_star = torch.tensor(environment.B_star, dtype=torch.float)

@@ -52,7 +52,7 @@ def exploration(
 
         dx = environment.step(u, t)
         dx_dt = dx/environment.dt
-        agent.learning_step(x, dx_dt, u)
+        agent.learning_step(x, u, dx_dt)
 
         z_values[t:, :d] = x.copy()
         z_values[t:, d:] = u.copy()
@@ -87,9 +87,8 @@ if __name__=='__main__':
     from policies import Random, Flex
     from exploration import exploration
 
-    T = 300
+    T = 100
     dt = 5e-2
-
 
     environment = DampedPendulum(dt)
     model = Linear(environment)
@@ -104,4 +103,6 @@ if __name__=='__main__':
     dt=environment.dt
     )
 
-    z_values, error_values = exploration(environment, agent, T, evaluation, plot=False)
+    z_values, error_values = exploration(environment, agent, T, evaluation, plot=True)
+
+    plt.plot(error_values) ; plt.yscale('log') ; plt.show()
