@@ -47,5 +47,5 @@ z_values, error_values = exploration(environment, agent, T, evaluation)
 
 The phase space trajectories and the error curves obtained in the example above for agents Random (blue) and FLEX (red) are presented in the figures below.
 
-![Trajectories of the example above, for agents Random (blue) and FLEX (red)](demo/trajectories.png).
-![Error curves of the example above, for agents Random (blue) and FLEX (red)](demo/error.png).
+![Trajectories of the example above, for agents Random (blue) and FLEX (red)](demo/trajectories.png)
+![Error curves of the example above, for agents Random (blue) and FLEX (red)](demo/error.png)
