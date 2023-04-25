@@ -88,7 +88,7 @@ class Agent:
                 theta, dtype=torch.float), self.model.parameters())
             return
         
-        # Online graident descent
+        # Online gradient descent
         dx_dt = torch.tensor(dx_dt, dtype=torch.float, requires_grad=False)
         self.target_values  = torch.cat((self.target_values[1:, :], dx_dt.unsqueeze(0)), dim=0)
         self.z_values  = torch.cat((self.z_values[1:, :], z), dim=0)

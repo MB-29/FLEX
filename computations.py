@@ -34,6 +34,8 @@ def solve_D_optimal(M_inv,  B, v, gamma):
 
     Q = - B.T @ M_inv @ B
     b = B.T @ M_inv @ v
+    # print(f'Q = {Q}')
+    # print(f'b = {b}')
     u = minimize_quadratic_sphere(Q, b, gamma)
     return u
 
