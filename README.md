@@ -1,7 +1,7 @@
 # Adaptive exploration of nonlinear systems
 
 
-Code for the paper [FLEX: an Adaptive Exploration Algorithm for Nonlinear Systems](https://arxiv.org/abs/2304.13426), accepted at ICML2023.
+Code for the paper [FLEX: an Adaptive Exploration Algorithm for Nonlinear Systems](https://arxiv.org/abs/2304.13426), accepted at ICML 2023.
 
 ## Demo
 An animated demonstration of our algorithm in various environments can be found in
