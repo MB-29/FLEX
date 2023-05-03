@@ -1,7 +1,10 @@
 # Adaptive exploration of nonlinear systems
 
+We introduce a fast exploration algorithm for nonlinear system. FLEX is a lightweight model-based pure exploration policy maximizing the Fisher information.
 
-Code for the paper [FLEX: an Adaptive Exploration Algorithm for Nonlinear Systems](https://arxiv.org/abs/2304.13426), accepted at ICML 2023.
+## Paper
+
+Our algorithm is described in our paper [FLEX: an Adaptive Exploration Algorithm for Nonlinear Systems](https://arxiv.org/abs/2304.13426), accepted at ICML 2023.
 
 ## Demo
 An animated demonstration of our algorithm in various environments can be found in
