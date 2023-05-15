@@ -10,6 +10,22 @@ Our algorithm is described in our paper [FLEX: an Adaptive Exploration Algorithm
 An animated demonstration of our algorithm in various environments can be found in
 [this video](https://youtu.be/hGpkdz8-8vU).
 
+
+## Citation
+
+To cite this work, please use the following references.
+
+> Blanke, M., & Lelarge, M. (2023). FLEX: an Adaptive Exploration Algorithm for Nonlinear Systems. arXiv preprint arXiv:2304.13426.
+
+
+~~~bib
+@article{blanke2023flex,
+  title={FLEX: an Adaptive Exploration Algorithm for Nonlinear Systems},
+  author={Blanke, Matthieu and Lelarge, Marc},
+  journal={arXiv preprint arXiv:2304.13426},
+  year={2023}
+}
+~~~
 ## Organization
 
 An agent is defined by an exploration policy, which can be found in `policies.py` along with baselines. Pre-defined environments and models  available in directories `environments` and `models`. Given an environment, an agent, a time horizon, and an evaluation function, the function `exploration` runs the exploration algorithm and returns the resulting state-action values and evaluation values.
@@ -52,3 +68,5 @@ The phase space trajectories and the error curves obtained in the example above 
 
 ![Trajectories of the example above, for agents Random (blue) and FLEX (red)](demo/trajectories.png)
 ![Error curves of the example above, for agents Random (blue) and FLEX (red)](demo/error.png)
+
+
