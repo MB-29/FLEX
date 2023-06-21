@@ -2,19 +2,15 @@
 
 We introduce a fast exploration algorithm for nonlinear system. FLEX is a lightweight model-based pure exploration policy maximizing the Fisher information.
 
+![Exploration of the pendulum environment](demo/random_flex.gif)
+
+An animated demonstration of our algorithm in various environments can be found in
+[this video](https://youtu.be/hGpkdz8-8vU).
+
 ## Paper
 
 Our algorithm is described in our paper [FLEX: an Adaptive Exploration Algorithm for Nonlinear Systems](https://arxiv.org/abs/2304.13426), accepted at ICML 2023.
 
-## Demo
-An animated demonstration of our algorithm in various environments can be found in
-[this video](https://youtu.be/hGpkdz8-8vU).
-
-![Exploration of the pendulum environment](demo/random_flex.gif)
-
-
-
-## Citation
 
 To cite this work, please use the following references.
 
